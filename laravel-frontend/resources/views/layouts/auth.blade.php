@@ -19,7 +19,7 @@
 <body class="relative min-h-screen flex flex-col items-center justify-center overflow-hidden">
     
     <div class="absolute inset-0 bg-cover bg-center blur-sm scale-105" 
-         style="background-image: url('{{ asset('images/anh1.jpg') }}'); z-index: -2;">
+         style="background-image: url('{{ asset('images/background.jpg') }}'); z-index: -2;">
     </div>
     
     <div class="absolute inset-0 bg-white/30" style="z-index: -1;"></div>

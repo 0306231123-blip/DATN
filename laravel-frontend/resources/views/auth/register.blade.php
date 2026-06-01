@@ -3,11 +3,14 @@
 @section('title', 'Đăng ký tài khoản')
 
 @section('content')
-<div class="flex flex-col items-center w-full max-w-lg">
+<div class="flex flex-col items-center w-full max-w-2xl">
     
     <!-- Khối Form Đăng Ký -->
     <div class="bg-[#fce4e4] w-full p-10 flex flex-col items-center rounded-3xl shadow-lg">
         
+        <div class="mb-4 flex items-center justify-center">
+            <img src="{{ asset('images/logo.jpg') }}" alt="Logo" class="w-24 h-24 rounded-full object-cover shadow-md border-2 border-white">
+        </div>
 
         <!-- Khối Tiêu đề (Đã xóa nền trắng, phóng to và in đậm chữ) -->
         <h2 class="text-2xl text-gray-800 font-extrabold mb-8 uppercase tracking-wider">
@@ -15,7 +18,7 @@
         </h2>
 
         <!-- Form nhập liệu -->
-        <form action="#" method="POST" class="w-full max-w-sm">
+        <form action="#" method="POST" class="w-full max-w-md">
             @csrf
             
             <!-- Tài khoản -->
