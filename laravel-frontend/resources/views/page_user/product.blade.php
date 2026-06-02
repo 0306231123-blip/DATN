@@ -17,79 +17,79 @@
         <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-10">
             
             <!-- Sản phẩm 1 -->
-            <div class="bg-gray-200 aspect-square rounded-3xl flex items-center justify-center shadow-md hover:-translate-y-2 hover:shadow-xl transition-all duration-300 cursor-pointer overflow-hidden relative">
+            <a href="/detail" class="bg-gray-200 aspect-square rounded-3xl flex items-center justify-center shadow-md hover:-translate-y-2 hover:shadow-xl transition-all duration-300 cursor-pointer overflow-hidden relative">
                 <span class="text-gray-600 font-bold text-xl z-10">Sản phẩm 1</span>
-            </div>
+            </a>
 
             <!-- Sản phẩm 2 -->
-            <div class="bg-gray-200 aspect-square rounded-3xl flex items-center justify-center shadow-md hover:-translate-y-2 hover:shadow-xl transition-all duration-300 cursor-pointer overflow-hidden relative">
+            <a href="/detail" class="bg-gray-200 aspect-square rounded-3xl flex items-center justify-center shadow-md hover:-translate-y-2 hover:shadow-xl transition-all duration-300 cursor-pointer overflow-hidden relative">
                 <span class="text-gray-600 font-bold text-xl z-10">Sản phẩm 2</span>
-            </div>
+            </a>
 
             <!-- Sản phẩm 3 -->
-            <div class="bg-gray-200 aspect-square rounded-3xl flex items-center justify-center shadow-md hover:-translate-y-2 hover:shadow-xl transition-all duration-300 cursor-pointer overflow-hidden relative">
+            <a href="/detail" class="bg-gray-200 aspect-square rounded-3xl flex items-center justify-center shadow-md hover:-translate-y-2 hover:shadow-xl transition-all duration-300 cursor-pointer overflow-hidden relative">
                 <span class="text-gray-600 font-bold text-xl z-10">Sản phẩm 3</span>
-            </div>
+            </a>
 
             <!-- Sản phẩm 4 -->
-            <div class="bg-gray-200 aspect-square rounded-3xl flex items-center justify-center shadow-md hover:-translate-y-2 hover:shadow-xl transition-all duration-300 cursor-pointer overflow-hidden relative">
+            <a href="/detail" class="bg-gray-200 aspect-square rounded-3xl flex items-center justify-center shadow-md hover:-translate-y-2 hover:shadow-xl transition-all duration-300 cursor-pointer overflow-hidden relative">
                 <span class="text-gray-600 font-bold text-xl z-10">Sản phẩm 4</span>
-            </div>
+            </a>
 
             <!-- Sản phẩm 5 -->
-            <div class="bg-gray-200 aspect-square rounded-3xl flex items-center justify-center shadow-md hover:-translate-y-2 hover:shadow-xl transition-all duration-300 cursor-pointer overflow-hidden relative">
+            <a href="/detail" class="bg-gray-200 aspect-square rounded-3xl flex items-center justify-center shadow-md hover:-translate-y-2 hover:shadow-xl transition-all duration-300 cursor-pointer overflow-hidden relative">
                 <span class="text-gray-600 font-bold text-xl z-10">Sản phẩm 5</span>
-            </div>
+            </a>
 
             <!-- Sản phẩm 6 -->
-            <div class="bg-gray-200 aspect-square rounded-3xl flex items-center justify-center shadow-md hover:-translate-y-2 hover:shadow-xl transition-all duration-300 cursor-pointer overflow-hidden relative">
+            <a href="/detail" class="bg-gray-200 aspect-square rounded-3xl flex items-center justify-center shadow-md hover:-translate-y-2 hover:shadow-xl transition-all duration-300 cursor-pointer overflow-hidden relative">
                 <span class="text-gray-600 font-bold text-xl z-10">Sản phẩm 6</span>
-            </div>
+            </a>
 
             <!-- Sản phẩm 7 -->
-            <div class="bg-gray-200 aspect-square rounded-3xl flex items-center justify-center shadow-md hover:-translate-y-2 hover:shadow-xl transition-all duration-300 cursor-pointer overflow-hidden relative">
+            <a href="/detail" class="bg-gray-200 aspect-square rounded-3xl flex items-center justify-center shadow-md hover:-translate-y-2 hover:shadow-xl transition-all duration-300 cursor-pointer overflow-hidden relative">
                 <span class="text-gray-600 font-bold text-xl z-10">Sản phẩm 7</span>
-            </div>
+            </a>
 
             <!-- Sản phẩm 8 -->
-            <div class="bg-gray-200 aspect-square rounded-3xl flex items-center justify-center shadow-md hover:-translate-y-2 hover:shadow-xl transition-all duration-300 cursor-pointer overflow-hidden relative">
+            <a href="/detail" class="bg-gray-200 aspect-square rounded-3xl flex items-center justify-center shadow-md hover:-translate-y-2 hover:shadow-xl transition-all duration-300 cursor-pointer overflow-hidden relative">
                 <span class="text-gray-600 font-bold text-xl z-10">Sản phẩm 8</span>
-            </div>
+            </a>
 
             <!-- Sản phẩm 9 -->
-            <div class="bg-gray-200 aspect-square rounded-3xl flex items-center justify-center shadow-md hover:-translate-y-2 hover:shadow-xl transition-all duration-300 cursor-pointer overflow-hidden relative">
+            <a href="/detail" class="bg-gray-200 aspect-square rounded-3xl flex items-center justify-center shadow-md hover:-translate-y-2 hover:shadow-xl transition-all duration-300 cursor-pointer overflow-hidden relative">
                 <span class="text-gray-600 font-bold text-xl z-10">Sản phẩm 9</span>
-            </div>
+            </a>
 
             <!-- Sản phẩm 10 -->
-            <div class="bg-gray-200 aspect-square rounded-3xl flex items-center justify-center shadow-md hover:-translate-y-2 hover:shadow-xl transition-all duration-300 cursor-pointer overflow-hidden relative">
+            <a href="/detail" class="bg-gray-200 aspect-square rounded-3xl flex items-center justify-center shadow-md hover:-translate-y-2 hover:shadow-xl transition-all duration-300 cursor-pointer overflow-hidden relative">
                 <span class="text-gray-600 font-bold text-xl z-10">Sản phẩm 10</span>
-            </div>
+            </a>
 
             <!-- Sản phẩm 11 -->
-            <div class="bg-gray-200 aspect-square rounded-3xl flex items-center justify-center shadow-md hover:-translate-y-2 hover:shadow-xl transition-all duration-300 cursor-pointer overflow-hidden relative">
+            <a href="/detail" class="bg-gray-200 aspect-square rounded-3xl flex items-center justify-center shadow-md hover:-translate-y-2 hover:shadow-xl transition-all duration-300 cursor-pointer overflow-hidden relative">
                 <span class="text-gray-600 font-bold text-xl z-10">Sản phẩm 11</span>
-            </div>
+            </a>
 
             <!-- Sản phẩm 12 -->
-            <div class="bg-gray-200 aspect-square rounded-3xl flex items-center justify-center shadow-md hover:-translate-y-2 hover:shadow-xl transition-all duration-300 cursor-pointer overflow-hidden relative">
+            <a href="/detail" class="bg-gray-200 aspect-square rounded-3xl flex items-center justify-center shadow-md hover:-translate-y-2 hover:shadow-xl transition-all duration-300 cursor-pointer overflow-hidden relative">
                 <span class="text-gray-600 font-bold text-xl z-10">Sản phẩm 12</span>
-            </div>
+            </a>
 
             <!-- Sản phẩm 13 -->
-            <div class="bg-gray-200 aspect-square rounded-3xl flex items-center justify-center shadow-md hover:-translate-y-2 hover:shadow-xl transition-all duration-300 cursor-pointer overflow-hidden relative">
+            <a href="/detail" class="bg-gray-200 aspect-square rounded-3xl flex items-center justify-center shadow-md hover:-translate-y-2 hover:shadow-xl transition-all duration-300 cursor-pointer overflow-hidden relative">
                 <span class="text-gray-600 font-bold text-xl z-10">Sản phẩm 13</span>
-            </div>
+            </a>
 
             <!-- Sản phẩm 14 -->
-            <div class="bg-gray-200 aspect-square rounded-3xl flex items-center justify-center shadow-md hover:-translate-y-2 hover:shadow-xl transition-all duration-300 cursor-pointer overflow-hidden relative">
+            <a href="/detail" class="bg-gray-200 aspect-square rounded-3xl flex items-center justify-center shadow-md hover:-translate-y-2 hover:shadow-xl transition-all duration-300 cursor-pointer overflow-hidden relative">
                 <span class="text-gray-600 font-bold text-xl z-10">Sản phẩm 14</span>
-            </div>
+            </a>
 
             <!-- Sản phẩm 15 -->
-            <div class="bg-gray-200 aspect-square rounded-3xl flex items-center justify-center shadow-md hover:-translate-y-2 hover:shadow-xl transition-all duration-300 cursor-pointer overflow-hidden relative">
+            <a href="/detail" class="bg-gray-200 aspect-square rounded-3xl flex items-center justify-center shadow-md hover:-translate-y-2 hover:shadow-xl transition-all duration-300 cursor-pointer overflow-hidden relative">
                 <span class="text-gray-600 font-bold text-xl z-10">Sản phẩm 15</span>
-            </div>
+            </a>
 
         </div>
 

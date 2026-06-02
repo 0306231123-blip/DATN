@@ -11,24 +11,24 @@
         </h2>
         
         <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-10">
-            <div class="bg-gray-200 aspect-square rounded-3xl flex items-center justify-center shadow-md hover:-translate-y-2 hover:shadow-xl transition-all duration-300 cursor-pointer relative">
-                <span class="text-gray-600 font-bold text-lg text-center z-10 px-4">Sản phẩm<br>bán chạy</span>
-            </div>
-            <div class="bg-gray-200 aspect-square rounded-3xl flex items-center justify-center shadow-md hover:-translate-y-2 hover:shadow-xl transition-all duration-300 cursor-pointer relative">
-                <span class="text-gray-600 font-bold text-lg text-center z-10 px-4">Sản phẩm<br>bán chạy</span>
-            </div>
-            <div class="bg-gray-200 aspect-square rounded-3xl flex items-center justify-center shadow-md hover:-translate-y-2 hover:shadow-xl transition-all duration-300 cursor-pointer relative">
-                <span class="text-gray-600 font-bold text-lg text-center z-10 px-4">Sản phẩm<br>bán chạy</span>
-            </div>
-            <div class="bg-gray-200 aspect-square rounded-3xl flex items-center justify-center shadow-md hover:-translate-y-2 hover:shadow-xl transition-all duration-300 cursor-pointer relative">
-                <span class="text-gray-600 font-bold text-lg text-center z-10 px-4">Sản phẩm<br>bán chạy</span>
-            </div>
-            <div class="bg-gray-200 aspect-square rounded-3xl flex items-center justify-center shadow-md hover:-translate-y-2 hover:shadow-xl transition-all duration-300 cursor-pointer relative">
-                <span class="text-gray-600 font-bold text-lg text-center z-10 px-4">Sản phẩm<br>bán chạy</span>
-            </div>
-            <div class="bg-gray-200 aspect-square rounded-3xl flex items-center justify-center shadow-md hover:-translate-y-2 hover:shadow-xl transition-all duration-300 cursor-pointer relative">
-                <span class="text-gray-600 font-bold text-lg text-center z-10 px-4">Sản phẩm<br>bán chạy</span>
-            </div>
+            <a href="/detail" class="bg-gray-200 aspect-square rounded-3xl flex items-center justify-center shadow-md hover:-translate-y-2 hover:shadow-xl transition-all duration-300 cursor-pointer overflow-hidden relative">
+                <span class="text-gray-600 font-bold text-xl z-10">Bán chạy</span>
+            </a>
+            <a href="/detail" class="bg-gray-200 aspect-square rounded-3xl flex items-center justify-center shadow-md hover:-translate-y-2 hover:shadow-xl transition-all duration-300 cursor-pointer overflow-hidden relative">
+                <span class="text-gray-600 font-bold text-xl z-10">Bán chạy</span>
+            </a>
+            <a href="/detail" class="bg-gray-200 aspect-square rounded-3xl flex items-center justify-center shadow-md hover:-translate-y-2 hover:shadow-xl transition-all duration-300 cursor-pointer overflow-hidden relative">
+                <span class="text-gray-600 font-bold text-xl z-10">Bán chạy</span>
+            </a>
+            <a href="/detail" class="bg-gray-200 aspect-square rounded-3xl flex items-center justify-center shadow-md hover:-translate-y-2 hover:shadow-xl transition-all duration-300 cursor-pointer overflow-hidden relative">
+                <span class="text-gray-600 font-bold text-xl z-10">Bán chạy</span>
+            </a>
+            <a href="/detail" class="bg-gray-200 aspect-square rounded-3xl flex items-center justify-center shadow-md hover:-translate-y-2 hover:shadow-xl transition-all duration-300 cursor-pointer overflow-hidden relative">
+                <span class="text-gray-600 font-bold text-xl z-10">Bán chạy</span>
+            </a>
+            <a href="/detail" class="bg-gray-200 aspect-square rounded-3xl flex items-center justify-center shadow-md hover:-translate-y-2 hover:shadow-xl transition-all duration-300 cursor-pointer overflow-hidden relative">
+                <span class="text-gray-600 font-bold text-xl z-10">Bán chạy</span>
+            </a>
         </div>
 
     </div>
