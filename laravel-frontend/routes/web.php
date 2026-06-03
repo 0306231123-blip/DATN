@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\ProductController;
 
 Route::get('/', function () {
     return view('welcome');
@@ -23,9 +24,7 @@ Route::prefix('user')->group(function () {
         return view('page_user.home');
     });
 
-    Route::get('/product', function () {
-        return view('page_user.product');
-    });
+    Route::get('/product', [ProductController::class, 'index']);
 
     Route::get('/bestseller', function () {
         return view('page_user.bestseller');
@@ -39,9 +38,7 @@ Route::prefix('user')->group(function () {
         return view('page_user.profileuser');
     });
 
-    Route::get('/detail', function () {
-        return view('page_user.detail');
-    });
+    Route::get('/detail/{id}', [ProductController::class, 'detail']);
 
     Route::get('/cart', function () {
         return view('page_user.cart');

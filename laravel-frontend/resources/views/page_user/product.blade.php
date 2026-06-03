@@ -16,80 +16,21 @@
         <!-- Khung chứa 15 Sản phẩm (Grid 3 cột) -->
         <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-10">
             
-            <!-- Sản phẩm 1 -->
-            <a href="/user/detail" class="bg-gray-200 aspect-square rounded-3xl flex items-center justify-center shadow-md hover:-translate-y-2 hover:shadow-xl transition-all duration-300 cursor-pointer overflow-hidden relative">
-                <span class="text-gray-600 font-bold text-xl z-10">Sản phẩm 1</span>
-            </a>
+            @foreach($danhSachSanPham as $sp)
+                <a href="/user/detail/{{ $sp->ma_san_pham }}" class="bg-gray-200 aspect-square rounded-3xl flex flex-col items-center justify-center shadow-md hover:-translate-y-2 hover:shadow-xl transition-all duration-300 cursor-pointer overflow-hidden relative p-4 text-center">
+                    
+                    <span class="text-gray-800 font-bold text-lg z-10 mb-2 line-clamp-2">
+                        {{ $sp->ten_san_pham }}
+                    </span>
+                    
+                    <span class="text-pink-600 font-black text-xl z-10">
+                        {{ number_format($sp->gia, 0, ',', '.') }} đ
+                    </span>
+                    
+                </a>
+            @endforeach
 
-            <!-- Sản phẩm 2 -->
-            <a href="/user/detail" class="bg-gray-200 aspect-square rounded-3xl flex items-center justify-center shadow-md hover:-translate-y-2 hover:shadow-xl transition-all duration-300 cursor-pointer overflow-hidden relative">
-                <span class="text-gray-600 font-bold text-xl z-10">Sản phẩm 2</span>
-            </a>
-
-            <!-- Sản phẩm 3 -->
-            <a href="/user/detail" class="bg-gray-200 aspect-square rounded-3xl flex items-center justify-center shadow-md hover:-translate-y-2 hover:shadow-xl transition-all duration-300 cursor-pointer overflow-hidden relative">
-                <span class="text-gray-600 font-bold text-xl z-10">Sản phẩm 3</span>
-            </a>
-
-            <!-- Sản phẩm 4 -->
-            <a href="/user/detail" class="bg-gray-200 aspect-square rounded-3xl flex items-center justify-center shadow-md hover:-translate-y-2 hover:shadow-xl transition-all duration-300 cursor-pointer overflow-hidden relative">
-                <span class="text-gray-600 font-bold text-xl z-10">Sản phẩm 4</span>
-            </a>
-
-            <!-- Sản phẩm 5 -->
-            <a href="/user/detail" class="bg-gray-200 aspect-square rounded-3xl flex items-center justify-center shadow-md hover:-translate-y-2 hover:shadow-xl transition-all duration-300 cursor-pointer overflow-hidden relative">
-                <span class="text-gray-600 font-bold text-xl z-10">Sản phẩm 5</span>
-            </a>
-
-            <!-- Sản phẩm 6 -->
-            <a href="/user/detail" class="bg-gray-200 aspect-square rounded-3xl flex items-center justify-center shadow-md hover:-translate-y-2 hover:shadow-xl transition-all duration-300 cursor-pointer overflow-hidden relative">
-                <span class="text-gray-600 font-bold text-xl z-10">Sản phẩm 6</span>
-            </a>
-
-            <!-- Sản phẩm 7 -->
-            <a href="/user/detail" class="bg-gray-200 aspect-square rounded-3xl flex items-center justify-center shadow-md hover:-translate-y-2 hover:shadow-xl transition-all duration-300 cursor-pointer overflow-hidden relative">
-                <span class="text-gray-600 font-bold text-xl z-10">Sản phẩm 7</span>
-            </a>
-
-            <!-- Sản phẩm 8 -->
-            <a href="/user/detail" class="bg-gray-200 aspect-square rounded-3xl flex items-center justify-center shadow-md hover:-translate-y-2 hover:shadow-xl transition-all duration-300 cursor-pointer overflow-hidden relative">
-                <span class="text-gray-600 font-bold text-xl z-10">Sản phẩm 8</span>
-            </a>
-
-            <!-- Sản phẩm 9 -->
-            <a href="/user/detail" class="bg-gray-200 aspect-square rounded-3xl flex items-center justify-center shadow-md hover:-translate-y-2 hover:shadow-xl transition-all duration-300 cursor-pointer overflow-hidden relative">
-                <span class="text-gray-600 font-bold text-xl z-10">Sản phẩm 9</span>
-            </a>
-
-            <!-- Sản phẩm 10 -->
-            <a href="/user/detail" class="bg-gray-200 aspect-square rounded-3xl flex items-center justify-center shadow-md hover:-translate-y-2 hover:shadow-xl transition-all duration-300 cursor-pointer overflow-hidden relative">
-                <span class="text-gray-600 font-bold text-xl z-10">Sản phẩm 10</span>
-            </a>
-
-            <!-- Sản phẩm 11 -->
-            <a href="/user/detail" class="bg-gray-200 aspect-square rounded-3xl flex items-center justify-center shadow-md hover:-translate-y-2 hover:shadow-xl transition-all duration-300 cursor-pointer overflow-hidden relative">
-                <span class="text-gray-600 font-bold text-xl z-10">Sản phẩm 11</span>
-            </a>
-
-            <!-- Sản phẩm 12 -->
-            <a href="/user/detail" class="bg-gray-200 aspect-square rounded-3xl flex items-center justify-center shadow-md hover:-translate-y-2 hover:shadow-xl transition-all duration-300 cursor-pointer overflow-hidden relative">
-                <span class="text-gray-600 font-bold text-xl z-10">Sản phẩm 12</span>
-            </a>
-
-            <!-- Sản phẩm 13 -->
-            <a href="/user/detail" class="bg-gray-200 aspect-square rounded-3xl flex items-center justify-center shadow-md hover:-translate-y-2 hover:shadow-xl transition-all duration-300 cursor-pointer overflow-hidden relative">
-                <span class="text-gray-600 font-bold text-xl z-10">Sản phẩm 13</span>
-            </a>
-
-            <!-- Sản phẩm 14 -->
-            <a href="/user/detail" class="bg-gray-200 aspect-square rounded-3xl flex items-center justify-center shadow-md hover:-translate-y-2 hover:shadow-xl transition-all duration-300 cursor-pointer overflow-hidden relative">
-                <span class="text-gray-600 font-bold text-xl z-10">Sản phẩm 14</span>
-            </a>
-
-            <!-- Sản phẩm 15 -->
-            <a href="/user/detail" class="bg-gray-200 aspect-square rounded-3xl flex items-center justify-center shadow-md hover:-translate-y-2 hover:shadow-xl transition-all duration-300 cursor-pointer overflow-hidden relative">
-                <span class="text-gray-600 font-bold text-xl z-10">Sản phẩm 15</span>
-            </a>
+        </div>
 
         </div>
 
