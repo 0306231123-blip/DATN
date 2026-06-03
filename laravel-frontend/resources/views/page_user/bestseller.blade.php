@@ -1,4 +1,4 @@
-@extends('layouts.app')
+@extends('layouts.user')
 
 @section('title', 'Sản phẩm Bán chạy')
 
@@ -11,22 +11,22 @@
         </h2>
         
         <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-10">
-            <a href="/detail" class="bg-gray-200 aspect-square rounded-3xl flex items-center justify-center shadow-md hover:-translate-y-2 hover:shadow-xl transition-all duration-300 cursor-pointer overflow-hidden relative">
+            <a href="/user/detail" class="bg-gray-200 aspect-square rounded-3xl flex items-center justify-center shadow-md hover:-translate-y-2 hover:shadow-xl transition-all duration-300 cursor-pointer overflow-hidden relative">
                 <span class="text-gray-600 font-bold text-xl z-10">Bán chạy</span>
             </a>
-            <a href="/detail" class="bg-gray-200 aspect-square rounded-3xl flex items-center justify-center shadow-md hover:-translate-y-2 hover:shadow-xl transition-all duration-300 cursor-pointer overflow-hidden relative">
+            <a href="/user/detail" class="bg-gray-200 aspect-square rounded-3xl flex items-center justify-center shadow-md hover:-translate-y-2 hover:shadow-xl transition-all duration-300 cursor-pointer overflow-hidden relative">
                 <span class="text-gray-600 font-bold text-xl z-10">Bán chạy</span>
             </a>
-            <a href="/detail" class="bg-gray-200 aspect-square rounded-3xl flex items-center justify-center shadow-md hover:-translate-y-2 hover:shadow-xl transition-all duration-300 cursor-pointer overflow-hidden relative">
+            <a href="/user/detail" class="bg-gray-200 aspect-square rounded-3xl flex items-center justify-center shadow-md hover:-translate-y-2 hover:shadow-xl transition-all duration-300 cursor-pointer overflow-hidden relative">
                 <span class="text-gray-600 font-bold text-xl z-10">Bán chạy</span>
             </a>
-            <a href="/detail" class="bg-gray-200 aspect-square rounded-3xl flex items-center justify-center shadow-md hover:-translate-y-2 hover:shadow-xl transition-all duration-300 cursor-pointer overflow-hidden relative">
+            <a href="/user/detail" class="bg-gray-200 aspect-square rounded-3xl flex items-center justify-center shadow-md hover:-translate-y-2 hover:shadow-xl transition-all duration-300 cursor-pointer overflow-hidden relative">
                 <span class="text-gray-600 font-bold text-xl z-10">Bán chạy</span>
             </a>
-            <a href="/detail" class="bg-gray-200 aspect-square rounded-3xl flex items-center justify-center shadow-md hover:-translate-y-2 hover:shadow-xl transition-all duration-300 cursor-pointer overflow-hidden relative">
+            <a href="/user/detail" class="bg-gray-200 aspect-square rounded-3xl flex items-center justify-center shadow-md hover:-translate-y-2 hover:shadow-xl transition-all duration-300 cursor-pointer overflow-hidden relative">
                 <span class="text-gray-600 font-bold text-xl z-10">Bán chạy</span>
             </a>
-            <a href="/detail" class="bg-gray-200 aspect-square rounded-3xl flex items-center justify-center shadow-md hover:-translate-y-2 hover:shadow-xl transition-all duration-300 cursor-pointer overflow-hidden relative">
+            <a href="/user/detail" class="bg-gray-200 aspect-square rounded-3xl flex items-center justify-center shadow-md hover:-translate-y-2 hover:shadow-xl transition-all duration-300 cursor-pointer overflow-hidden relative">
                 <span class="text-gray-600 font-bold text-xl z-10">Bán chạy</span>
             </a>
         </div>

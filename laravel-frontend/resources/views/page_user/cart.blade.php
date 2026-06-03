@@ -1,4 +1,4 @@
-@extends('layouts.app')
+@extends('layouts.user')
 @section('title', 'Giỏ hàng')
 @section('content')
 <section class="bg-[#fcfdf2] py-12 px-8 min-h-screen">
@@ -23,7 +23,7 @@
                 <span class="bg-white px-6 py-3 rounded-xl font-bold text-gray-700 shadow-sm">Tổng tiền</span>
                 <div class="bg-white w-48 h-12 rounded-xl shadow-sm"></div>
             </div>
-            <a href="/checkout" class="bg-pink-500 hover:bg-pink-600 text-white px-8 py-3 rounded-xl font-bold shadow-md transition">
+            <a href="/user/checkout" class="bg-pink-500 hover:bg-pink-600 text-white px-8 py-3 rounded-xl font-bold shadow-md transition">
                 Thanh toán
             </a>
         </div>

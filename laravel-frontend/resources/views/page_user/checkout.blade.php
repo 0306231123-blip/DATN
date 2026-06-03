@@ -1,4 +1,4 @@
-@extends('layouts.app')
+@extends('layouts.user')
 @section('title', 'Checkout')
 @section('content')
 <section class="bg-[#fcfdf2] py-12 px-8 min-h-screen relative">
