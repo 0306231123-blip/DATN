@@ -16,7 +16,6 @@ Route::get('/register', function () {
 
 
 
-
 // User Routes
 Route::prefix('user')->group(function () {
     
@@ -69,4 +68,3 @@ Route::prefix('admin')->group(function () {
         return view('admin.statistics');
     })->name('admin.statistics');
 });
-

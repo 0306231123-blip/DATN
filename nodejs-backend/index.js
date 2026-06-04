@@ -3,15 +3,31 @@ const cors = require('cors');
 const helmet = require('helmet');
 require('dotenv').config();
 
+const sequelize = require('./config/database');
+const authRoutes = require('./routes/auth');
+
 const app = express();
 
 app.use(helmet());
 app.use(cors({ origin: 'http://localhost:8000' }));
 app.use(express.json());
 
+// Routes
 app.get('/', (req, res) => {
   res.json({ message: 'Cosmetic Shop API running' });
 });
 
+app.use('/api/auth', authRoutes);
+
+// Kết nối database và khởi động server
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`API running on port ${PORT}`));
+
+sequelize
+  .authenticate()
+  .then(() => {
+    console.log('Database connected successfully.');
+    app.listen(PORT, () => console.log(`API running on port ${PORT}`));
+  })
+  .catch((err) => {
+    console.error('Database connection failed:', err.message);
+  });
