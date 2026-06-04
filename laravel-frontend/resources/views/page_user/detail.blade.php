@@ -11,13 +11,18 @@
                     <span class="text-gray-500 font-bold">Hình ảnh: {{ $sanPham->ten_san_pham }}</span>
                 </div>
                 <div class="flex space-x-4 w-full">
-                    <div class="flex-1 bg-white p-4 rounded-xl text-center shadow-sm font-bold text-pink-600 text-xl">
-                        {{-- Format giá tiền chuẩn VNĐ --}}
-                        {{ number_format($sanPham->gia, 0, ',', '.') }} VNĐ
-                    </div>
-                    <div class="flex-1 bg-white p-4 rounded-xl text-center shadow-sm font-bold text-gray-400 line-through flex items-center justify-center">
-                        Giá KM (nếu có)
-                    </div>
+                    @if($sanPham->gia_khuyen_mai)
+                        <div class="flex-1 bg-white p-4 rounded-xl text-center shadow-sm font-bold text-pink-600 text-xl">
+                            {{ number_format($sanPham->gia_khuyen_mai, 0, ',', '.') }} VNĐ
+                        </div>
+                        <div class="flex-1 bg-white p-4 rounded-xl text-center shadow-sm font-bold text-gray-400 line-through flex items-center justify-center">
+                            {{ number_format($sanPham->gia, 0, ',', '.') }} VNĐ
+                        </div>
+                    @else
+                        <div class="w-full bg-white p-4 rounded-xl text-center shadow-sm font-bold text-pink-600 text-xl">
+                            {{ number_format($sanPham->gia, 0, ',', '.') }} VNĐ
+                        </div>
+                    @endif
                 </div>
                 <button class="mt-6 w-full bg-pink-500 hover:bg-pink-600 text-white font-bold py-4 rounded-xl shadow-md transition uppercase tracking-wider">
                     Thêm vào giỏ hàng

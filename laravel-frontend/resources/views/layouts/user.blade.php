@@ -13,7 +13,7 @@
     <header class="bg-gray-200 py-4 px-8 sticky top-0 z-50 shadow-sm">
         <div class="max-w-7xl mx-auto flex items-center justify-between">
             
-            <a href="/home" class="flex items-center">
+            <a href="/user/home" class="flex items-center">
                 <img src="{{ asset('images/logo.jpg') }}" alt="Logo Trang Chủ" class="w-14 h-14 rounded-full object-cover shadow-sm border border-gray-200">
             </a>
 

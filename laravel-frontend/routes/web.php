@@ -20,19 +20,12 @@ Route::get('/register', function () {
 // User Routes
 Route::prefix('user')->group(function () {
     
-    Route::get('/home', function () {
-        return view('page_user.home');
-    });
+    Route::get('/home', [ProductController::class, 'home']);
 
     Route::get('/product', [ProductController::class, 'index']);
 
-    Route::get('/bestseller', function () {
-        return view('page_user.bestseller');
-    });
-
-    Route::get('/sale', function () {
-        return view('page_user.sale');
-    });
+    Route::get('/bestseller', [ProductController::class, 'bestseller']);
+    Route::get('/sale', [ProductController::class, 'sale']);
 
     Route::get('/profileuser', function () {
         return view('page_user.profileuser');

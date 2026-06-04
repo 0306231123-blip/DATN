@@ -13,6 +13,8 @@
             <div class="bg-white px-8 py-3 rounded-xl shadow-sm text-center font-bold text-gray-700 w-full">Tên khách hàng</div>
             <button class="bg-white hover:bg-gray-50 px-8 py-3 rounded-xl shadow-sm text-center font-bold text-gray-700 w-full transition">Lịch sử mua hàng</button>
             <button class="bg-white hover:bg-gray-50 px-8 py-3 rounded-xl shadow-sm text-center font-bold text-gray-700 w-full transition">Quản lý đơn hàng</button>
+            <button class="bg-white hover:bg-gray-50 px-8 py-3 rounded-xl shadow-sm text-center font-bold text-gray-700 w-full transition">Quản lý thông tin</button>
+        
         </div>
 
         <div class="col-span-2 bg-gray-200 rounded-3xl shadow-inner min-h-[500px]">

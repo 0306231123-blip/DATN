@@ -24,4 +24,37 @@ class ProductController extends Controller
         // Truyền sản phẩm đó sang giao diện trang chi tiết
         return view('page_user.detail', compact('sanPham'));
     }
+    public function sale()
+    {
+        // Ra lệnh: Lấy các sản phẩm đang bán VÀ cột gia_khuyen_mai không bị rỗng (khác NULL)
+        $danhSachKhuyenMai = SanPham::whereNotNull('gia_khuyen_mai')
+                                    ->where('trang_thai', 'dang_ban')
+                                    ->get();
+        
+        return view('page_user.sale', compact('danhSachKhuyenMai'));
+    }
+
+    // Hàm hiển thị trang Bán Chạy
+    public function bestseller()
+    {
+        // Ra lệnh: Nối bảng SAN_PHAM với cái View SQL 'v_san_pham_ban_chay' của bạn 
+        // để lấy ra danh sách sắp xếp theo số lượng bán giảm dần
+        $danhSachBanChay = SanPham::join('v_san_pham_ban_chay', 'SAN_PHAM.ma_san_pham', '=', 'v_san_pham_ban_chay.ma_san_pham')
+                                  ->where('SAN_PHAM.trang_thai', 'dang_ban')
+                                  ->orderBy('v_san_pham_ban_chay.tong_so_luong_ban', 'desc')
+                                  ->get();
+
+        return view('page_user.bestseller', compact('danhSachBanChay'));
+    }
+    public function home()
+    {
+        // Lấy 6 sản phẩm đang bán, sắp xếp theo điểm đánh giá từ cao xuống thấp
+        $sanPhamNoiBat = SanPham::where('trang_thai', 'dang_ban')
+                                ->orderBy('diem_danh_gia', 'desc') // Ưu tiên điểm cao
+                                ->orderBy('so_luot_danh_gia', 'desc') // Ưu tiên nhiều người đánh giá
+                                ->take(6) // Chỉ lấy 6 sản phẩm cho đẹp 2 hàng lưới
+                                ->get();
+                                
+        return view('page_user.home', compact('sanPhamNoiBat'));
+    }
 }
