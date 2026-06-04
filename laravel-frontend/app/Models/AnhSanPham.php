@@ -15,4 +15,9 @@ class AnhSanPham extends Model
     protected $fillable = [
         'ma_san_pham', 'duong_dan_anh', 'la_anh_chinh', 'thu_tu'
     ];
+    public function anhChinh()
+    {
+        return $this->hasOne(AnhSanPham::class, 'ma_san_pham', 'ma_san_pham')
+                    ->where('la_anh_chinh', 1);
+    }
 }

@@ -23,4 +23,9 @@ class SanPham extends Model
         'ma_danh_muc', 'loai_da_phu_hop', 'diem_danh_gia', 
         'so_luot_danh_gia', 'trang_thai'
     ];
+    public function anhChinh()
+    {
+        return $this->hasOne(AnhSanPham::class, 'ma_san_pham', 'ma_san_pham')
+                    ->where('la_anh_chinh', 1);
+    }
 }

@@ -1,29 +1,39 @@
 @extends('layouts.user') 
-{{-- Lưu ý: @extends có thể khác tùy thuộc vào tên layout của bạn --}}
-
 @section('content')
 <section class="bg-[#fcfdf2] py-12 px-8 min-h-screen">
     <div class="max-w-7xl mx-auto">
         <div class="grid grid-cols-1 md:grid-cols-2 gap-10">
             <div class="flex flex-col items-center">
-                <div class="w-full bg-gray-200 aspect-square rounded-3xl flex items-center justify-center shadow-inner mb-6 overflow-hidden">
-                    {{-- Chỗ này tạm để chữ, sau này mình gắn link ảnh thật vào đây --}}
-                    <span class="text-gray-500 font-bold">Hình ảnh: {{ $sanPham->ten_san_pham }}</span>
+                
+                <div class="w-full bg-gray-100 aspect-square rounded-3xl flex items-center justify-center shadow-inner mb-6 overflow-hidden">
+                    
+                    @php
+                        $anh = $sanPham->anhChinh()->first();
+                    @endphp
+
+                    @if($anh)
+                        <img src="{{ $anh->duong_dan_anh }}" alt="{{ $sanPham->ten_san_pham }}" class="w-full h-full object-cover hover:scale-110 transition-transform duration-500">
+                    @else
+                        <span class="text-gray-400 font-bold">Chưa cập nhật ảnh</span>
+                    @endif
+                    
                 </div>
+
                 <div class="flex space-x-4 w-full">
                     @if($sanPham->gia_khuyen_mai)
                         <div class="flex-1 bg-white p-4 rounded-xl text-center shadow-sm font-bold text-pink-600 text-xl">
-                            {{ number_format($sanPham->gia_khuyen_mai, 0, ',', '.') }} VNĐ
+                            {{ number_format($sanPham->gia_khuyen_mai, 0, ',', '.') }} đ
                         </div>
                         <div class="flex-1 bg-white p-4 rounded-xl text-center shadow-sm font-bold text-gray-400 line-through flex items-center justify-center">
-                            {{ number_format($sanPham->gia, 0, ',', '.') }} VNĐ
+                            {{ number_format($sanPham->gia, 0, ',', '.') }} đ
                         </div>
                     @else
                         <div class="w-full bg-white p-4 rounded-xl text-center shadow-sm font-bold text-pink-600 text-xl">
-                            {{ number_format($sanPham->gia, 0, ',', '.') }} VNĐ
+                            {{ number_format($sanPham->gia, 0, ',', '.') }} đ
                         </div>
                     @endif
                 </div>
+
                 <button class="mt-6 w-full bg-pink-500 hover:bg-pink-600 text-white font-bold py-4 rounded-xl shadow-md transition uppercase tracking-wider">
                     Thêm vào giỏ hàng
                 </button>
