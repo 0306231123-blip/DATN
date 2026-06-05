@@ -206,3 +206,64 @@ router.get('/me', async (req, res) => {
 });
 
 module.exports = router;
+router.put('/update-profile', async (req, res) => {
+  try {
+    // 1. Kiểm tra xem người dùng đã đăng nhập chưa (Kiểm tra Token)
+    const authHeader = req.headers.authorization;
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return res.status(401).json({
+        success: false,
+        message: 'Chưa đăng nhập hoặc phiên làm việc đã hết hạn.',
+      });
+    }
+
+    // Giải mã token để lấy ID của người dùng
+    const token = authHeader.split(' ')[1];
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+
+    // 2. Lấy các dữ liệu mà Frontend gửi sang
+    const { ho_ten, so_dien_thoai, dia_chi, loai_da, mat_khau_moi } = req.body;
+
+    // 3. Tìm người dùng trong Database
+    const nguoiDung = await NguoiDung.findByPk(decoded.ma_nguoi_dung);
+    if (!nguoiDung) {
+      return res.status(404).json({
+        success: false,
+        message: 'Người dùng không tồn tại.',
+      });
+    }
+
+    // 4. Ghi đè thông tin mới vào
+    if (ho_ten) nguoiDung.ho_ten = ho_ten;
+    if (so_dien_thoai !== undefined) nguoiDung.so_dien_thoai = so_dien_thoai;
+    if (dia_chi !== undefined) nguoiDung.dia_chi = dia_chi;
+    if (loai_da !== undefined) nguoiDung.loai_da = loai_da;
+
+    // 5. Nếu người dùng có nhập mật khẩu mới -> Mã hóa nó rồi mới lưu
+    if (mat_khau_moi) {
+      const salt = await bcrypt.genSalt(10);
+      nguoiDung.mat_khau = await bcrypt.hash(mat_khau_moi, salt);
+    }
+
+    // 6. Ra lệnh cho SQL lưu toàn bộ thay đổi
+    await nguoiDung.save();
+
+    res.json({
+      success: true,
+      message: 'Cập nhật thông tin thành công!',
+    });
+
+  } catch (error) {
+    if (error.name === 'JsonWebTokenError' || error.name === 'TokenExpiredError') {
+      return res.status(401).json({
+        success: false,
+        message: 'Token không hợp lệ hoặc đã hết hạn.',
+      });
+    }
+    console.error('Lỗi cập nhật profile:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Lỗi hệ thống. Vui lòng thử lại sau.',
+    });
+  }
+});

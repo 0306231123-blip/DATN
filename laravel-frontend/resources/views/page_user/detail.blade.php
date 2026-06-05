@@ -34,7 +34,9 @@
                     @endif
                 </div>
 
-                <button class="mt-6 w-full bg-pink-500 hover:bg-pink-600 text-white font-bold py-4 rounded-xl shadow-md transition uppercase tracking-wider">
+                <button 
+                    onclick="addToCart({{ $sanPham->ma_san_pham }})" 
+                    class="mt-6 w-full bg-pink-500 hover:bg-pink-600 text-white font-bold py-4 rounded-xl shadow-md transition uppercase tracking-wider">
                     Thêm vào giỏ hàng
                 </button>
             </div>
@@ -72,4 +74,47 @@
         </div>
     </div>
 </section>
+<script>
+    const API_URL = 'http://localhost:3000/api';
+
+    // Hàm gọi khi khách hàng bấm nút "Thêm vào giỏ hàng"
+    async function addToCart(maSanPham, soLuong = 1) {
+        // 1. Kiểm tra xem khách đã đăng nhập chưa
+        console.log("Nút đã được bấm! Đang thêm SP:", maSanPham);
+        const token = localStorage.getItem('token');
+        if (!token) {
+            alert('Vui lòng đăng nhập để thêm sản phẩm vào giỏ hàng!');
+            window.location.href = '/login'; // Đá về trang đăng nhập
+            return;
+        }
+
+        try {
+            // 2. Gửi yêu cầu sang Node.js
+            const response = await fetch(`${API_URL}/cart/add`, {
+                method: 'POST',
+                headers: {
+                    'Authorization': 'Bearer ' + token,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    ma_san_pham: maSanPham,
+                    so_luong: soLuong
+                })
+            });
+
+            const result = await response.json();
+
+            // 3. Xử lý kết quả trả về
+            if (result.success) {
+                alert('🎉 Đã thêm sản phẩm vào giỏ hàng thành công!');
+                // (Tùy chọn) Cập nhật con số trên icon giỏ hàng trên thanh menu
+            } else {
+                alert('Lỗi: ' + result.message);
+            }
+        } catch (error) {
+            console.error('Lỗi khi thêm vào giỏ hàng:', error);
+            alert('Không thể kết nối đến server Node.js!');
+        }
+    }
+</script>
 @endsection

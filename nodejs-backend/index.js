@@ -5,11 +5,14 @@ require('dotenv').config();
 
 const sequelize = require('./config/database');
 const authRoutes = require('./routes/auth');
+const cartRoutes = require('./routes/cart');
 
 const app = express();
 
 app.use(helmet());
-app.use(cors({ origin: 'http://localhost:8000' }));
+app.use(cors({ 
+    origin: ['http://localhost:8000', 'http://127.0.0.1:8000'] 
+}));
 app.use(express.json());
 
 // Routes
@@ -18,6 +21,7 @@ app.get('/', (req, res) => {
 });
 
 app.use('/api/auth', authRoutes);
+app.use('/api/cart/update', cartRoutes);
 
 // Kết nối database và khởi động server
 const PORT = process.env.PORT || 3000;
