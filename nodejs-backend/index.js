@@ -21,7 +21,7 @@ app.get('/', (req, res) => {
 });
 
 app.use('/api/auth', authRoutes);
-app.use('/api/cart/update', cartRoutes);
+app.use('/api/cart', cartRoutes);
 
 // Kết nối database và khởi động server
 const PORT = process.env.PORT || 3000;

@@ -1,10 +1,11 @@
 const express = require('express');
 const router = express.Router();
 const GioHang = require('../models/GioHang');
-const SanPham = require('../models/SanPham'); // Đã có file này
+const SanPham = require('../models/SanPham'); 
+const AnhSanPham = require('../models/AnhSanPham'); // Import model ảnh lên đầu file
 const jwt = require('jsonwebtoken');
 
-// API Thêm vào giỏ hàng
+// 1. API Thêm vào giỏ hàng
 router.post('/add', async (req, res) => {
     try {
         const token = req.headers.authorization.split(' ')[1];
@@ -31,16 +32,20 @@ router.post('/add', async (req, res) => {
     }
 });
 
-// API Lấy danh sách giỏ hàng
+// 2. API Lấy danh sách giỏ hàng
 router.get('/', async (req, res) => {
     try {
-        // PHẢI LẤY TOKEN Ở ĐÂY
         const token = req.headers.authorization.split(' ')[1];
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
         
+        // ĐÃ SỬA: Đưa câu lệnh truy vấn có Include ảnh vào ĐÚNG VỊ TRÍ này
         const items = await GioHang.findAll({ 
             where: { ma_nguoi_dung: decoded.ma_nguoi_dung },
-            include: [{ model: SanPham, as: 'san_pham' }]
+            include: [{ 
+                model: SanPham, 
+                as: 'san_pham',
+                include: [{ model: AnhSanPham, as: 'anh_san_pham' }] // Kết nối bảng ảnh
+            }]
         });
         
         res.json({ success: true, data: items }); 
@@ -49,12 +54,12 @@ router.get('/', async (req, res) => {
     }
 });
 
-
+// 3. API Cập nhật số lượng
 router.post('/update', async (req, res) => {
     try {
         const token = req.headers.authorization.split(' ')[1];
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
-        const { ma_san_pham, thay_doi } = req.body; // thay_doi là +1 hoặc -1
+        const { ma_san_pham, thay_doi } = req.body; 
 
         let item = await GioHang.findOne({ 
             where: { ma_nguoi_dung: decoded.ma_nguoi_dung, ma_san_pham } 
@@ -62,7 +67,7 @@ router.post('/update', async (req, res) => {
 
         if (item) {
             item.so_luong += thay_doi;
-            if (item.so_luong <= 0) await item.destroy(); // Xóa nếu <= 0
+            if (item.so_luong <= 0) await item.destroy(); 
             else await item.save();
             res.json({ success: true });
         }
@@ -70,14 +75,6 @@ router.post('/update', async (req, res) => {
         res.status(500).json({ success: false });
     }
 });
-const AnhSanPham = require('../models/AnhSanPham'); // Bạn cần tạo model này
 
-const items = await GioHang.findAll({ 
-    where: { ma_nguoi_dung: decoded.ma_nguoi_dung },
-    include: [{ 
-        model: SanPham, 
-        as: 'san_pham',
-        include: [{ model: AnhSanPham, as: 'anh_san_pham' }] // Lấy thêm bảng ảnh
-    }]
-});
+// Dòng này LUÔN LUÔN nằm cuối cùng
 module.exports = router;

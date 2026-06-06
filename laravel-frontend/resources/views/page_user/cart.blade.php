@@ -63,29 +63,35 @@
                 cartContainer.innerHTML = ''; 
 
                 result.data.forEach(item => {
-                    const sanPham = item.san_pham;
-                    const gia = sanPham.gia_khuyen_mai || sanPham.gia;
-                    total += gia * item.so_luong;
+    const sanPham = item.san_pham;
+    const gia = sanPham.gia_khuyen_mai || sanPham.gia;
+    
+    // Lấy mảng ảnh từ include
+    const mangAnh = sanPham.anh_san_pham;
+    // Kiểm tra nếu có ảnh thì lấy ảnh đầu tiên, nếu không thì dùng ảnh mặc định
+    const linkAnh = (mangAnh && mangAnh.length > 0) ? mangAnh[0].duong_dan_anh : '/images/logo.jpg';
 
-                    cartContainer.innerHTML += `
-                    <div class="bg-gray-200 p-4 rounded-2xl flex items-center justify-between shadow-sm">
-                        <div class="flex items-center space-x-4 w-1/2">
-                            <img src="${sanPham.duong_dan_anh}" 
-                                alt="Ảnh sản phẩm" 
-                                style="width: 60px; height: 60px; object-fit: cover;" 
-                                class="rounded-lg flex-shrink-0">
-                                
-                            <div class="bg-white px-4 py-2 rounded-lg text-gray-700 font-bold flex-1">${sanPham.ten_san_pham}</div>
-                        </div>
-                        <div class="bg-white px-4 py-2 rounded-lg text-gray-700 font-bold">${gia.toLocaleString()} đ</div>
-                        <div class="bg-white px-4 py-2 rounded-lg text-gray-700 font-bold">${item.so_luong}</div>
-                        <div class="flex items-center space-x-2">
-                            <button onclick="updateQuantity(${item.ma_san_pham}, 1)" class="bg-white w-8 h-8 rounded-lg font-bold hover:bg-gray-100">+</button>
-                            <button onclick="updateQuantity(${item.ma_san_pham}, -1)" class="bg-white w-8 h-8 rounded-lg font-bold hover:bg-gray-100">-</button>
-                        </div>
-                    </div>
-                `;
-                });
+    total += gia * item.so_luong;
+
+    cartContainer.innerHTML += `
+        <div class="bg-gray-200 p-4 rounded-2xl flex items-center justify-between shadow-sm">
+            <div class="flex items-center space-x-4 w-1/2">
+                <img src="${linkAnh}" 
+                     alt="${sanPham.ten_san_pham}" 
+                     style="width: 60px; height: 60px; object-fit: cover;" 
+                     class="rounded-lg flex-shrink-0">
+                     
+                <div class="bg-white px-4 py-2 rounded-lg text-gray-700 font-bold flex-1 truncate">${sanPham.ten_san_pham}</div>
+            </div>
+            <div class="bg-white px-4 py-2 rounded-lg text-gray-700 font-bold">${gia.toLocaleString()} đ</div>
+            <div class="bg-white px-4 py-2 rounded-lg text-gray-700 font-bold">${item.so_luong}</div>
+            <div class="flex items-center space-x-2">
+                <button onclick="updateQuantity(${item.ma_san_pham}, 1)" class="bg-white w-8 h-8 rounded-lg font-bold hover:bg-gray-100">+</button>
+                <button onclick="updateQuantity(${item.ma_san_pham}, -1)" class="bg-white w-8 h-8 rounded-lg font-bold hover:bg-gray-100">-</button>
+            </div>
+        </div>
+    `;
+});
                 totalPriceEl.textContent = total.toLocaleString() + ' đ';
             }
         } catch (err) {
