@@ -81,14 +81,14 @@
 
             <div id="tab-history" class="tab-content hidden">
                 <h2 class="text-2xl font-black text-gray-800 mb-6 border-b-2 border-gray-300 pb-4 uppercase tracking-wider">Lịch sử mua hàng</h2>
-                <div class="bg-white p-8 rounded-2xl shadow-sm text-center text-gray-500 font-medium">
+                <div id="history-container" class="bg-white p-8 rounded-2xl shadow-sm text-center text-gray-500 font-medium">
                     Chưa có dữ liệu lịch sử mua hàng.
                 </div>
             </div>
 
             <div id="tab-orders" class="tab-content hidden">
                 <h2 class="text-2xl font-black text-gray-800 mb-6 border-b-2 border-gray-300 pb-4 uppercase tracking-wider">Quản lý đơn hàng</h2>
-                <div class="bg-white p-8 rounded-2xl shadow-sm text-center text-gray-500 font-medium">
+                <div id="orders-container" class="bg-white p-8 rounded-2xl...">
                     Bạn chưa có đơn hàng nào đang được xử lý.
                 </div>
             </div>
@@ -151,6 +151,7 @@
                 document.getElementById('input-phone').value = user.so_dien_thoai || '';
                 document.getElementById('input-address').value = user.dia_chi || '';
                 document.getElementById('input-skin-type').value = user.loai_da || '';
+                loadMyOrders();
             } else {
                 logout();
             }
@@ -211,6 +212,102 @@
         localStorage.removeItem('token');
         localStorage.removeItem('user');
         window.location.href = '/login';
+    }
+async function loadMyOrders() {
+        const token = localStorage.getItem('token');
+        const ordersContainer = document.getElementById('orders-container');
+        const historyContainer = document.getElementById('history-container'); // Container mới
+
+        try {
+            const response = await fetch(`${API_URL}/orders/my-orders`, {
+                headers: { 'Authorization': 'Bearer ' + token }
+            });
+            const result = await response.json();
+
+            if (result.success && result.data.length > 0) {
+                let htmlOrders = '<div class="space-y-4 text-left">';
+                let htmlHistory = '<div class="space-y-4 text-left">';
+                let hasOrders = false;
+                let hasHistory = false;
+                
+                result.data.forEach(order => {
+                    const date = new Date(order.ngay_dat).toLocaleDateString('vi-VN');
+                    const total = parseInt(order.tong_thanh_toan).toLocaleString() + ' đ';
+                    
+                    // Xây dựng danh sách sản phẩm (Hiển thị tên và giá)
+                    let productsHtml = '<div class="mt-4 pt-4 border-t border-gray-100 space-y-3">';
+                    if (order.chi_tiet && order.chi_tiet.length > 0) {
+                        order.chi_tiet.forEach(item => {
+                            const itemPrice = parseInt(item.don_gia).toLocaleString() + ' đ';
+                            productsHtml += `
+                                <div class="flex justify-between text-sm text-gray-600">
+                                    <span><span class="font-bold text-gray-800">${item.so_luong}x</span> ${item.ten_san_pham}</span>
+                                    <span class="font-bold text-gray-800">${itemPrice}</span>
+                                </div>
+                            `;
+                        });
+                    }
+                    productsHtml += '</div>';
+
+                    // KIỂM TRA TRẠNG THÁI ĐỂ PHÂN LOẠI VÀO TAB
+                    if(order.trang_thai_don === 'giao_thanh_cong' || order.trang_thai_don === 'da_huy') {
+                        // ---> NẰM Ở TAB LỊCH SỬ MUA HÀNG
+                        hasHistory = true;
+                        let statusColor = order.trang_thai_don === 'giao_thanh_cong' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700';
+                        let statusText = order.trang_thai_don === 'giao_thanh_cong' ? 'Giao thành công' : 'Đã hủy';
+
+                        htmlHistory += `
+                            <div class="border border-gray-200 p-6 rounded-2xl flex flex-col hover:shadow-lg transition bg-white">
+                                <div class="flex justify-between items-start mb-2">
+                                    <div>
+                                        <p class="font-black text-gray-800 text-lg">Đơn hàng #${order.ma_don_hang}</p>
+                                        <p class="text-sm text-gray-500">Ngày đặt: ${date}</p>
+                                    </div>
+                                    <span class="inline-block px-4 py-1 text-sm font-bold rounded-full ${statusColor}">${statusText}</span>
+                                </div>
+                                ${productsHtml}
+                                <div class="mt-4 pt-4 border-t border-gray-100 flex justify-between items-center">
+                                    <span class="font-bold text-gray-700">Tổng thanh toán:</span>
+                                    <span class="font-black text-pink-600 text-xl">${total}</span>
+                                </div>
+                            </div>
+                        `;
+                    } else {
+                        // ---> NẰM Ở TAB QUẢN LÝ ĐƠN HÀNG (Đang chờ xử lý)
+                        hasOrders = true;
+                        htmlOrders += `
+                            <div class="border border-gray-200 p-6 rounded-2xl flex flex-col hover:shadow-lg transition bg-white">
+                                <div class="flex justify-between items-center mb-4">
+                                    <p class="font-black text-gray-800 text-lg">Đơn hàng #${order.ma_don_hang}</p>
+                                    <span class="inline-block px-4 py-1 text-sm font-bold rounded-full bg-yellow-100 text-yellow-700">Đang xử lý</span>
+                                </div>
+                                <p class="text-sm text-gray-500 mb-1"><span class="font-bold">Ngày đặt:</span> ${date}</p>
+                                <p class="text-sm text-gray-500"><span class="font-bold">Địa chỉ:</span> ${order.dia_chi_giao}</p>
+                                ${productsHtml}
+                                <div class="mt-4 pt-4 border-t border-gray-100 text-right">
+                                    <p class="font-black text-pink-600 text-xl">${total}</p>
+                                </div>
+                            </div>
+                        `;
+                    }
+                });
+                
+                htmlOrders += '</div>';
+                htmlHistory += '</div>';
+                
+                // Đổ dữ liệu ra màn hình nếu có
+                if (hasOrders) {
+                    ordersContainer.innerHTML = htmlOrders;
+                    ordersContainer.classList.remove('text-center', 'text-gray-500', 'font-medium', 'p-8');
+                }
+                if (hasHistory) {
+                    historyContainer.innerHTML = htmlHistory;
+                    historyContainer.classList.remove('text-center', 'text-gray-500', 'font-medium', 'p-8');
+                }
+            }
+        } catch (error) {
+            console.error('Lỗi tải đơn hàng:', error);
+        }
     }
 </script>
 @endsection

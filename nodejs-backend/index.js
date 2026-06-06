@@ -6,6 +6,7 @@ require('dotenv').config();
 const sequelize = require('./config/database');
 const authRoutes = require('./routes/auth');
 const cartRoutes = require('./routes/cart');
+const orderRoutes = require('./routes/order');
 
 const app = express();
 
@@ -22,6 +23,7 @@ app.get('/', (req, res) => {
 
 app.use('/api/auth', authRoutes);
 app.use('/api/cart', cartRoutes);
+app.use('/api/orders', orderRoutes);
 
 // Kết nối database và khởi động server
 const PORT = process.env.PORT || 3000;
