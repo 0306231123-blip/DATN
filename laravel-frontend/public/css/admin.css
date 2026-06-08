@@ -424,7 +424,7 @@ body {
 #stat-revenue::after { background: var(--color-primary); }
 #stat-orders::after { background: var(--color-secondary); }
 #stat-new-customers::after { background: var(--color-green); }
-#stat-returns::after { background: var(--color-orange); }
+#stat-products::after { background: var(--color-orange); }
 #stat-rating::after { background: var(--color-yellow); }
 
 .stat-card-header {
@@ -743,6 +743,11 @@ body {
 .order-badge--cancelled {
     background: var(--color-red-light);
     color: var(--color-red);
+}
+
+.order-badge--confirmed {
+    background: var(--color-primary-light);
+    color: var(--color-primary);
 }
 
 /* ---------- Animations ---------- */
