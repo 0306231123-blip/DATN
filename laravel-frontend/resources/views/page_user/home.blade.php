@@ -2,24 +2,36 @@
 @section('title', 'Trang chủ')
 @section('content')
 
-<section class="bg-gray-300 py-12 px-8">
-    <div class="max-w-7xl mx-auto">
+<section class="bg-[#fcfdf2] pt-12 pb-4 px-8">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-4 mb-8">
         
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div class="bg-gray-400 h-48 rounded-2xl flex items-center justify-center shadow-sm hover:shadow-md transition cursor-pointer">
-                <span class="text-gray-700 font-bold text-lg">Quảng cáo 1</span>
+        <div class="swiper mySwiper group relative px-2 pb-12">
+            <div class="swiper-wrapper">
+                
+                <div class="swiper-slide">
+                    <img src="{{ asset('images/qc1.jpg') }}" alt="QC 1" class="w-full h-[220px] md:h-[320px] object-cover rounded-2xl shadow hover:shadow-md transition">
+                </div>
+                
+                <div class="swiper-slide">
+                    <img src="{{ asset('images/qc2.jpg') }}" alt="QC 2" class="w-full h-[220px] md:h-[320px] object-cover rounded-2xl shadow hover:shadow-md transition">
+                </div>
+                
+                <div class="swiper-slide">
+                    <img src="{{ asset('images/qc3.jpg') }}" alt="QC 3" class="w-full h-[220px] md:h-[320px] object-cover rounded-2xl shadow hover:shadow-md transition">
+                </div>
+                
+                <div class="swiper-slide">
+                    <img src="{{ asset('images/qc4.jpg') }}" alt="QC 4" class="w-full h-[220px] md:h-[320px] object-cover rounded-2xl shadow hover:shadow-md transition">
+                </div>
+                
             </div>
-            <div class="bg-gray-400 h-48 rounded-2xl flex items-center justify-center shadow-sm hover:shadow-md transition cursor-pointer">
-                <span class="text-gray-700 font-bold text-lg">Quảng cáo 2</span>
-            </div>
-            <div class="bg-gray-400 h-48 rounded-2xl flex items-center justify-center shadow-sm hover:shadow-md transition cursor-pointer">
-                <span class="text-gray-700 font-bold text-lg">Quảng cáo 3</span>
-            </div>
-        </div>
+            <div class="swiper-pagination"></div>
+        </div>  
+        
     </div>
 </section>
 
-<section class="bg-[#fcfdf2] py-16 px-8">
+<section class="bg-[#fcfdf2] py-8 px-8">
     <div class="max-w-7xl mx-auto">
         
         <h2 class="text-center font-black text-2xl text-gray-800 mb-8 uppercase tracking-widest">Sản phẩm nổi bật</h2>
@@ -70,5 +82,44 @@
 
     </div>
 </section>
+
+<script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        var swiper = new Swiper(".mySwiper", {
+            loop: true,
+            autoplay: {
+                delay: 3500, // 3.5 giây tự chuyển ảnh
+                disableOnInteraction: false,
+            },
+            // CẤU HÌNH HIỂN THỊ SỐ LƯỢNG ẢNH
+            breakpoints: {
+                // Điện thoại: 1 ảnh
+                320: {
+                    slidesPerView: 1,
+                    spaceBetween: 10,
+                },
+                // Ipad: 2 ảnh
+                768: {
+                    slidesPerView: 2,
+                    spaceBetween: 20,
+                },
+                // Desktop: 3 ảnh
+                1024: {
+                    slidesPerView: 3,
+                    spaceBetween: 24,
+                },
+            },
+            navigation: {
+                nextEl: ".swiper-button-next",
+                prevEl: ".swiper-button-prev",
+            },
+            pagination: {
+                el: ".swiper-pagination",
+                clickable: true,
+            },
+        });
+    });
+</script>
 
 @endsection
