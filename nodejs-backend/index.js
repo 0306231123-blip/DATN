@@ -4,8 +4,10 @@ const helmet = require('helmet');
 require('dotenv').config();
 
 const sequelize = require('./config/database');
+require('./models/associations'); // Setup model relationships
 const authRoutes = require('./routes/auth');
 const dashboardRoutes = require('./routes/dashboard');
+const userRoutes = require('./routes/users');
 
 const app = express();
 
@@ -20,6 +22,7 @@ app.get('/', (req, res) => {
 
 app.use('/api/auth', authRoutes);
 app.use('/api/dashboard', dashboardRoutes);
+app.use('/api/users', userRoutes);
 
 // Kết nối database và khởi động server
 const PORT = process.env.PORT || 3000;
