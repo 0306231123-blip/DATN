@@ -40,7 +40,7 @@ router.post('/create', async (req, res) => {
             tong_thanh_toan: tong_tien,
             phuong_thuc_thanh_toan: 'chuyen_khoan', 
             trang_thai_thanh_toan: 'da_thanh_toan', // Giả sử quét QR là đã thanh toán
-            trang_thai_don: 'giao_thanh_cong' 
+            trang_thai_don: 'dang_giao' 
         });
 
         // 4. Lưu từng sản phẩm vào bảng chi_tiet_don_hang

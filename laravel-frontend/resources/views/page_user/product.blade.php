@@ -39,6 +39,31 @@
             <div class="p-4 flex flex-col items-center justify-between flex-1">
                 <span class="text-gray-800 font-bold text-sm mb-2 text-center line-clamp-2 h-10">
                     {{ $sp->ten_san_pham }}
+                    @php
+                        // Đếm tổng số đánh giá và tính điểm trung bình
+                        $tongLuot = \Illuminate\Support\Facades\DB::table('danh_gia')->where('ma_san_pham', $sp->ma_san_pham)->count();
+                        $diemTB = $tongLuot > 0 ? \Illuminate\Support\Facades\DB::table('danh_gia')->where('ma_san_pham', $sp->ma_san_pham)->avg('diem_so') : 0;
+                        $diemTron = round($diemTB); // Làm tròn để in màu sao
+                    @endphp
+
+                    <div class="flex items-center justify-center mt-1 mb-2">
+                        <div class="flex text-yellow-400">
+                            @for($i = 1; $i <= 5; $i++)
+                                @if($i <= $diemTron)
+                                    <svg class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>
+                                @else
+                                    <svg class="w-4 h-4 text-gray-300" viewBox="0 0 24 24" fill="currentColor"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>
+                                @endif
+                            @endfor
+                        </div>
+                        <span class="text-xs text-gray-400 ml-1">
+                            @if($tongLuot > 0)
+                                ({{ $tongLuot }})
+                            @else
+                                (Chưa có)
+                            @endif
+                        </span>
+                    </div>
                 </span>
                 
                 <div class="flex flex-col items-center justify-end w-full mt-auto">

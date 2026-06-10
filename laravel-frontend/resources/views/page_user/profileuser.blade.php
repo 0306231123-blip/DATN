@@ -216,7 +216,7 @@
 async function loadMyOrders() {
         const token = localStorage.getItem('token');
         const ordersContainer = document.getElementById('orders-container');
-        const historyContainer = document.getElementById('history-container'); // Container mới
+        const historyContainer = document.getElementById('history-container'); 
 
         try {
             const response = await fetch(`${API_URL}/orders/my-orders`, {
@@ -234,7 +234,7 @@ async function loadMyOrders() {
                     const date = new Date(order.ngay_dat).toLocaleDateString('vi-VN');
                     const total = parseInt(order.tong_thanh_toan).toLocaleString() + ' đ';
                     
-                    // Xây dựng danh sách sản phẩm (Hiển thị tên và giá)
+                    // Danh sách sản phẩm
                     let productsHtml = '<div class="mt-4 pt-4 border-t border-gray-100 space-y-3">';
                     if (order.chi_tiet && order.chi_tiet.length > 0) {
                         order.chi_tiet.forEach(item => {
@@ -249,7 +249,7 @@ async function loadMyOrders() {
                     }
                     productsHtml += '</div>';
 
-                    // KIỂM TRA TRẠNG THÁI ĐỂ PHÂN LOẠI VÀO TAB
+                    // KIỂM TRA TRẠNG THÁI
                     if(order.trang_thai_don === 'giao_thanh_cong' || order.trang_thai_don === 'da_huy') {
                         // ---> NẰM Ở TAB LỊCH SỬ MUA HÀNG
                         hasHistory = true;
@@ -273,13 +273,26 @@ async function loadMyOrders() {
                             </div>
                         `;
                     } else {
-                        // ---> NẰM Ở TAB QUẢN LÝ ĐƠN HÀNG (Đang chờ xử lý)
+                        // ---> NẰM Ở TAB QUẢN LÝ ĐƠN HÀNG (Đang chạy)
                         hasOrders = true;
+                        
+                        // Xét chi tiết các trạng thái đang chạy
+                        let activeStatusText = 'Đang xử lý';
+                        let activeStatusColor = 'bg-yellow-100 text-yellow-700';
+
+                        if (order.trang_thai_don === 'dang_giao') {
+                            activeStatusText = 'Đang giao hàng';
+                            activeStatusColor = 'bg-blue-100 text-blue-700'; // Đổi màu xanh dương cho đẹp
+                        } else if (order.trang_thai_don === 'cho_xac_nhan') {
+                            activeStatusText = 'Chờ xác nhận';
+                            activeStatusColor = 'bg-orange-100 text-orange-700';
+                        }
+
                         htmlOrders += `
                             <div class="border border-gray-200 p-6 rounded-2xl flex flex-col hover:shadow-lg transition bg-white">
                                 <div class="flex justify-between items-center mb-4">
                                     <p class="font-black text-gray-800 text-lg">Đơn hàng #${order.ma_don_hang}</p>
-                                    <span class="inline-block px-4 py-1 text-sm font-bold rounded-full bg-yellow-100 text-yellow-700">Đang xử lý</span>
+                                    <span class="inline-block px-4 py-1 text-sm font-bold rounded-full ${activeStatusColor}">${activeStatusText}</span>
                                 </div>
                                 <p class="text-sm text-gray-500 mb-1"><span class="font-bold">Ngày đặt:</span> ${date}</p>
                                 <p class="text-sm text-gray-500"><span class="font-bold">Địa chỉ:</span> ${order.dia_chi_giao}</p>
@@ -295,7 +308,6 @@ async function loadMyOrders() {
                 htmlOrders += '</div>';
                 htmlHistory += '</div>';
                 
-                // Đổ dữ liệu ra màn hình nếu có
                 if (hasOrders) {
                     ordersContainer.innerHTML = htmlOrders;
                     ordersContainer.classList.remove('text-center', 'text-gray-500', 'font-medium', 'p-8');
