@@ -8,6 +8,7 @@ require('./models/associations'); // Setup model relationships
 const authRoutes = require('./routes/auth');
 const dashboardRoutes = require('./routes/dashboard');
 const userRoutes = require('./routes/users');
+const categoryRoutes = require('./routes/categories');
 
 const app = express();
 
@@ -23,6 +24,7 @@ app.get('/', (req, res) => {
 app.use('/api/auth', authRoutes);
 app.use('/api/dashboard', dashboardRoutes);
 app.use('/api/users', userRoutes);
+app.use('/api/categories', categoryRoutes);
 
 // Kết nối database và khởi động server
 const PORT = process.env.PORT || 3000;
