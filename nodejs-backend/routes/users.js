@@ -14,6 +14,9 @@ const router = express.Router();
  */
 
 // Specific routes first (static segments)
+// GET /api/users/stats - User statistics (alias)
+router.get('/stats', UserController.getStatistics);
+
 // GET /api/users/statistics/overview - User statistics
 router.get('/statistics/overview', UserController.getStatistics);
 

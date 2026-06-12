@@ -379,6 +379,7 @@ exports.exportUsers = async (req, res) => {
  */
 exports.getStatistics = async (req, res) => {
   try {
+    console.log('DEBUG: getStatistics called');
     const totalUsers = await NguoiDung.count();
 
     const customersCount = await NguoiDung.count({
@@ -389,30 +390,18 @@ exports.getStatistics = async (req, res) => {
       where: { vai_tro: 'quan_tri_vien' },
     });
 
-    const currentMonth = new Date().getMonth() + 1;
-    const currentYear = new Date().getFullYear();
-
-    const newThisMonth = await NguoiDung.count({
-      where: sequelize.where(
-        sequelize.fn('MONTH', sequelize.col('ngay_tao')),
-        Op.eq,
-        currentMonth
-      ),
-    });
-
     res.status(200).json({
-      success: true,
+      status: 'success',
       data: {
-        tong_nguoi_dung: totalUsers,
-        khach_hang: customersCount,
-        quan_tri_vien: adminsCount,
-        nguoi_dung_thang_nay: newThisMonth,
+        total: totalUsers,
+        customers: customersCount,
+        admins: adminsCount,
       },
     });
   } catch (error) {
     console.error('Get statistics error:', error);
     res.status(500).json({
-      success: false,
+      status: 'error',
       message: 'Lỗi khi lấy thống kê.',
       error: error.message,
     });
