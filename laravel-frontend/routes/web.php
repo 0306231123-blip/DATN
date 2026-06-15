@@ -41,6 +41,7 @@ Route::prefix('user')->group(function () {
         return view('page_user.checkout');
     });
 
+    
 });
 
 // Admin Routes
@@ -67,3 +68,6 @@ Route::prefix('admin')->group(function () {
         return view('admin.statistics');
     })->name('admin.statistics');
 });
+
+
+Route::get('/search-live', [\App\Http\Controllers\ProductController::class, 'searchAjax']);

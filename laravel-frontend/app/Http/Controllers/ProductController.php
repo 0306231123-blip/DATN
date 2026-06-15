@@ -62,4 +62,31 @@ class ProductController extends Controller
                                 
         return view('page_user.home', compact('sanPhamNoiBat'));
     }
+    public function searchAjax(\Illuminate\Http\Request $request)
+    {
+        $keyword = $request->get('q');
+        if (!$keyword) return response()->json([]);
+
+        // Tìm 5 sản phẩm có tên chứa từ khóa
+        $products = \App\Models\SanPham::where('ten_san_pham', 'LIKE', '%' . $keyword . '%')
+                    ->where('trang_thai', 'dang_ban')
+                    ->limit(5)
+                    ->get();
+
+        $results = $products->map(function($sp) {
+            // Lấy ảnh thủ công cho an toàn, không sợ lỗi Model
+            $anh = \App\Models\AnhSanPham::where('ma_san_pham', $sp->ma_san_pham)
+                                         ->where('la_anh_chinh', 1)
+                                         ->first();
+            return [
+                'ma_san_pham' => $sp->ma_san_pham,
+                'ten_san_pham' => $sp->ten_san_pham,
+                'gia' => $sp->gia_khuyen_mai ? $sp->gia_khuyen_mai : $sp->gia,
+                // Sửa lại asset() để lấy đúng link ảnh gốc của web
+                'anh' => $anh ? asset($anh->duong_dan_anh) : asset('images/logo.jpg') 
+            ];
+        });
+
+        return response()->json($results);
+    }
 }
