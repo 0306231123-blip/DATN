@@ -79,7 +79,7 @@
                     </button>
                     <div class="header-title-section">
                         <h1 class="header-title">@yield('page-title', 'Dashboard tổng quan')</h1>
-                        <p class="header-subtitle">@yield('page-subtitle', 'Cập nhật lúc ' . now()->format('H:i') . ' — ' . now()->format('d/m/Y'))</p>
+                        <p class="header-subtitle" id="page-subtitle">@yield('page-subtitle', 'Cập nhật lúc ' . now()->format('H:i') . ' — ' . now()->format('d/m/Y'))</p>
                     </div>
                 </div>
                 <div class="header-right">

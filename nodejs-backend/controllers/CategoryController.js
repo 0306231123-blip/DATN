@@ -66,7 +66,7 @@ class CategoryController {
         ten_danh_muc,
         mo_ta: mo_ta || null,
         ma_danh_muc_cha: ma_danh_muc_cha || null,
-        thu_tu_hien_thi: thu_tu_hien_thi || null,
+        thu_tu_hien_thi: thu_tu_hien_thi || 0,
       });
 
       res.status(201).json({ status: 'success', data: category, message: 'Tạo danh mục thành công' });

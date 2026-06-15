@@ -1,6 +1,5 @@
 const { DataTypes } = require('sequelize');
 const sequelize = require('../config/database');
-const NguoiDung = require('./NguoiDung');
 
 const DonHang = sequelize.define('don_hang', {
   ma_don_hang: {
@@ -11,27 +10,46 @@ const DonHang = sequelize.define('don_hang', {
   ma_nguoi_dung: {
     type: DataTypes.INTEGER,
     allowNull: false,
-    references: {
-      model: NguoiDung,
-      key: 'ma_nguoi_dung',
-    },
   },
-  so_don_hang: {
-    type: DataTypes.STRING(50),
-    allowNull: false,
-    unique: true,
+  ho_ten_nguoi_nhan: {
+    type: DataTypes.STRING(100),
+    allowNull: true,
+  },
+  so_dien_thoai_nhan: {
+    type: DataTypes.STRING(15),
+    allowNull: true,
+  },
+  dia_chi_giao: {
+    type: DataTypes.STRING(300),
+    allowNull: true,
+  },
+  tong_tien_hang: {
+    type: DataTypes.DECIMAL(15, 0),
+    allowNull: true,
+  },
+  phi_van_chuyen: {
+    type: DataTypes.DECIMAL(15, 0),
+    allowNull: true,
   },
   tong_thanh_toan: {
-    type: DataTypes.DECIMAL(10, 2),
+    type: DataTypes.DECIMAL(15, 0),
     allowNull: false,
-  },
-  trang_thai_don: {
-    type: DataTypes.ENUM('cho_xu_ly', 'dang_van_chuyen', 'giao_thanh_cong', 'huy'),
-    defaultValue: 'cho_xu_ly',
   },
   ghi_chu: {
     type: DataTypes.TEXT,
     allowNull: true,
+  },
+  phuong_thuc_thanh_toan: {
+    type: DataTypes.ENUM('tien_mat', 'chuyen_khoan', 'vi_dien_tu', 'the_tin_dung'),
+    defaultValue: 'tien_mat',
+  },
+  trang_thai_thanh_toan: {
+    type: DataTypes.ENUM('chua_thanh_toan', 'da_thanh_toan'),
+    defaultValue: 'chua_thanh_toan',
+  },
+  trang_thai_don: {
+    type: DataTypes.ENUM('cho_xac_nhan', 'da_xac_nhan', 'dang_giao', 'giao_thanh_cong', 'da_huy'),
+    defaultValue: 'cho_xac_nhan',
   },
   ngay_dat: {
     type: DataTypes.DATE,
@@ -45,8 +63,5 @@ const DonHang = sequelize.define('don_hang', {
   timestamps: false,
   freezeTableName: true,
 });
-
-// Relationship
-DonHang.belongsTo(NguoiDung, { foreignKey: 'ma_nguoi_dung' });
 
 module.exports = DonHang;

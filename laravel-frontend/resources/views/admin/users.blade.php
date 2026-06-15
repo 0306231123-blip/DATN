@@ -2,7 +2,7 @@
 
 @section('title', 'Quản lý người dùng')
 @section('page-title', 'Quản lý người dùng')
-@section('page-subtitle', '<span id="users-summary">Đang tải...</span>')
+@section('page-subtitle', 'Đang tải...')
 
 @section('content')
 <!-- Action Bar -->
@@ -227,7 +227,7 @@ async function loadStats() {
             document.getElementById('total-users').textContent = result.data.total;
             document.getElementById('total-customers').textContent = result.data.customers;
             document.getElementById('total-admins').textContent = result.data.admins;
-            document.getElementById('users-summary').textContent =
+            document.getElementById('page-subtitle').textContent =
                 `${result.data.total} tài khoản · ${result.data.customers} khách hàng`;
         }
     } catch (error) {
