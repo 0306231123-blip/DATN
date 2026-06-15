@@ -12,6 +12,7 @@ const dashboardRoutes = require('./routes/dashboard');
 const userRoutes = require('./routes/users');
 const reviewRoutes = require('./routes/review');
 const categoryRoutes = require('./routes/categories');
+const productRoutes = require('./routes/products');
 
 const app = express();
 
@@ -34,6 +35,7 @@ app.use('/api/users', userRoutes);
 app.use('/api/reviews', reviewRoutes);
 
 app.use('/api/categories', categoryRoutes);
+app.use('/api/products', productRoutes);
 
 // Kết nối database và khởi động server
 const PORT = process.env.PORT || 3000;
