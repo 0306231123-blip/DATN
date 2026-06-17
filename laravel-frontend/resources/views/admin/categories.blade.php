@@ -2,7 +2,7 @@
 
 @section('title', 'Quản lý danh mục')
 @section('page-title', 'Quản lý danh mục')
-@section('page-subtitle', '<span id="categories-summary">Đang tải...</span>')
+@section('page-subtitle', 'Đang tải...')
 
 @section('content')
 <div class="categories-layout" id="categories-layout">
@@ -176,7 +176,7 @@ async function loadStats() {
 
         if (result.status === 'success') {
             document.getElementById('total-categories').textContent = result.data.total;
-            document.getElementById('categories-summary').textContent =
+            document.getElementById('page-subtitle').textContent =
                 `${result.data.total} danh mục`;
         }
     } catch (error) {

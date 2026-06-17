@@ -2,7 +2,7 @@
 
 @section('title', 'Quản lý đơn hàng')
 @section('page-title', 'Quản lý đơn hàng')
-@section('page-subtitle', '213 đơn · tháng 5/2026')
+@section('page-subtitle', 'Đang tải...')
 
 @section('content')
 <!-- Action Bar -->
@@ -12,35 +12,35 @@
         <div class="status-tabs" id="order-status-tabs">
             <button class="status-tab active" data-status="all" id="tab-all">
                 <span>Tất cả</span>
-                <span class="tab-count">213</span>
+                <span class="tab-count" id="count-all">0</span>
             </button>
-            <button class="status-tab" data-status="pending" id="tab-pending">
+            <button class="status-tab" data-status="cho_xac_nhan" id="tab-pending">
                 <span>Chờ xác nhận</span>
-                <span class="tab-count">18</span>
+                <span class="tab-count" id="count-cho_xac_nhan">0</span>
             </button>
-            <button class="status-tab" data-status="shipping" id="tab-shipping">
+            <button class="status-tab" data-status="da_xac_nhan" id="tab-confirmed">
+                <span>Đã xác nhận</span>
+                <span class="tab-count" id="count-da_xac_nhan">0</span>
+            </button>
+            <button class="status-tab" data-status="dang_giao" id="tab-shipping">
                 <span>Đang giao</span>
-                <span class="tab-count">42</span>
+                <span class="tab-count" id="count-dang_giao">0</span>
             </button>
-            <button class="status-tab" data-status="completed" id="tab-completed">
+            <button class="status-tab" data-status="giao_thanh_cong" id="tab-completed">
                 <span>Hoàn thành</span>
-                <span class="tab-count">144</span>
+                <span class="tab-count" id="count-giao_thanh_cong">0</span>
             </button>
-            <button class="status-tab" data-status="cancelled" id="tab-cancelled">
+            <button class="status-tab" data-status="da_huy" id="tab-cancelled">
                 <span>Đã hủy</span>
-                <span class="tab-count">9</span>
+                <span class="tab-count" id="count-da_huy">0</span>
             </button>
         </div>
     </div>
     <div class="action-bar-right">
         <div class="search-box" id="search-orders">
             <i data-lucide="search" class="icon-xs search-icon"></i>
-            <input type="text" placeholder="Mã đơn..." class="search-input search-input--sm" id="order-search-input">
+            <input type="text" placeholder="Mã đơn, tên khách..." class="search-input search-input--sm" id="order-search-input">
         </div>
-        <button class="btn btn-outline" id="btn-export-orders">
-            <i data-lucide="download" class="icon-xs"></i>
-            <span>Xuất Excel</span>
-        </button>
     </div>
 </div>
 
@@ -55,78 +55,612 @@
                     <th>Sản phẩm</th>
                     <th>Tổng tiền</th>
                     <th>Trạng thái</th>
+                    <th>Ngày đặt</th>
                     <th>Thao tác</th>
                 </tr>
             </thead>
-            <tbody>
-                <tr>
-                    <td><span class="order-id-link">#DH0091</span></td>
-                    <td><span class="text-bold">Nguyễn Lan Anh</span></td>
-                    <td><span class="text-secondary">3 sản phẩm</span></td>
-                    <td><span class="text-bold">855.000đ</span></td>
-                    <td><span class="status-badge status-badge--warning">Chờ xác nhận</span></td>
-                    <td>
-                        <div class="action-btns">
-                            <button class="icon-action-btn" title="Xem chi tiết" aria-label="Xem đơn hàng"><i data-lucide="eye" class="icon-xs"></i></button>
-                            <button class="icon-action-btn icon-action-btn--success" title="Duyệt" aria-label="Duyệt đơn hàng"><i data-lucide="check" class="icon-xs"></i></button>
-                        </div>
-                    </td>
-                </tr>
-                <tr>
-                    <td><span class="order-id-link">#DH0090</span></td>
-                    <td><span class="text-bold">Trần Minh Châu</span></td>
-                    <td><span class="text-secondary">1 sản phẩm</span></td>
-                    <td><span class="text-bold">320.000đ</span></td>
-                    <td><span class="status-badge status-badge--info">Đang giao</span></td>
-                    <td>
-                        <div class="action-btns">
-                            <button class="icon-action-btn" title="Xem chi tiết" aria-label="Xem đơn hàng"><i data-lucide="eye" class="icon-xs"></i></button>
-                        </div>
-                    </td>
-                </tr>
-                <tr>
-                    <td><span class="order-id-link">#DH0089</span></td>
-                    <td><span class="text-bold">Lê Thùy Dung</span></td>
-                    <td><span class="text-secondary">2 sản phẩm</span></td>
-                    <td><span class="text-bold">635.000đ</span></td>
-                    <td><span class="status-badge status-badge--success">Hoàn thành</span></td>
-                    <td>
-                        <div class="action-btns">
-                            <button class="icon-action-btn" title="Xem chi tiết" aria-label="Xem đơn hàng"><i data-lucide="eye" class="icon-xs"></i></button>
-                        </div>
-                    </td>
-                </tr>
-                <tr>
-                    <td><span class="order-id-link">#DH0088</span></td>
-                    <td><span class="text-bold">Phạm Hải Yến</span></td>
-                    <td><span class="text-secondary">5 sản phẩm</span></td>
-                    <td><span class="text-bold">1.420.000đ</span></td>
-                    <td><span class="status-badge status-badge--danger">Đã hủy</span></td>
-                    <td>
-                        <div class="action-btns">
-                            <button class="icon-action-btn" title="Xem chi tiết" aria-label="Xem đơn hàng"><i data-lucide="eye" class="icon-xs"></i></button>
-                        </div>
+            <tbody id="orders-tbody">
+                <tr class="loading-row">
+                    <td colspan="7" style="text-align: center; padding: 20px;">
+                        <span>Đang tải dữ liệu...</span>
                     </td>
                 </tr>
             </tbody>
         </table>
     </div>
+
+    <!-- Pagination -->
+    <div class="pagination-wrapper" id="orders-pagination"></div>
 </div>
+
+<!-- Modal Chi Tiết Đơn Hàng -->
+<div class="modal" id="modal-order-detail" style="display: none;">
+    <div class="modal-content modal-content--lg">
+        <div class="modal-header">
+            <h2 id="modal-order-title">Chi tiết đơn hàng</h2>
+            <button class="modal-close" id="btn-close-detail">&times;</button>
+        </div>
+        <div class="order-detail-body" id="order-detail-body">
+            <p>Đang tải...</p>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Overlay -->
+<div class="modal-overlay" id="modal-overlay" style="display: none;"></div>
+
 @endsection
 
 @section('scripts')
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    lucide.createIcons();
+const API_BASE_URL = 'http://localhost:3000/api';
+let allOrders = [];
+let currentStatus = 'all';
+let currentPage = 1;
+let totalPages = 1;
+let searchTimeout = null;
 
-    // Tab switching
-    const tabs = document.querySelectorAll('.status-tab');
-    tabs.forEach(tab => {
-        tab.addEventListener('click', function() {
-            tabs.forEach(t => t.classList.remove('active'));
-            this.classList.add('active');
+// ========== Load Orders ==========
+async function loadOrders(search = '', status = 'all', page = 1) {
+    try {
+        let url = `${API_BASE_URL}/orders?per_page=15&page=${page}`;
+        if (search) url += `&search=${encodeURIComponent(search)}`;
+        if (status !== 'all') url += `&trang_thai=${status}`;
+
+        const response = await fetch(url);
+        const result = await response.json();
+
+        if (result.status === 'success') {
+            allOrders = result.data;
+            currentPage = result.pagination.current_page;
+            totalPages = result.pagination.last_page;
+            renderTable(allOrders);
+            renderPagination(result.pagination);
+        } else {
+            showError('Lỗi khi tải đơn hàng');
+        }
+    } catch (error) {
+        console.error('Error loading orders:', error);
+        showError('Không thể kết nối đến server');
+    }
+}
+
+// ========== Load Stats ==========
+async function loadStats() {
+    try {
+        const response = await fetch(`${API_BASE_URL}/orders/stats`);
+        const result = await response.json();
+
+        if (result.status === 'success') {
+            const s = result.data;
+            document.getElementById('count-all').textContent = s.total;
+            document.getElementById('count-cho_xac_nhan').textContent = s.cho_xac_nhan;
+            document.getElementById('count-da_xac_nhan').textContent = s.da_xac_nhan;
+            document.getElementById('count-dang_giao').textContent = s.dang_giao;
+            document.getElementById('count-giao_thanh_cong').textContent = s.giao_thanh_cong;
+            document.getElementById('count-da_huy').textContent = s.da_huy;
+
+            const summaryText = `${s.total} đơn · tháng ${new Date().getMonth() + 1}/${new Date().getFullYear()}`;
+            document.getElementById('orders-summary').textContent = summaryText;
+        }
+    } catch (error) {
+        console.error('Error loading stats:', error);
+    }
+}
+
+// ========== Render Table ==========
+function renderTable(orders) {
+    const tbody = document.getElementById('orders-tbody');
+
+    if (orders.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; padding: 30px; color: #9ca3af;">Không có đơn hàng nào</td></tr>';
+        return;
+    }
+
+    tbody.innerHTML = orders.map(order => {
+        const statusInfo = getStatusInfo(order.trang_thai_don);
+        const customerName = order.ho_ten_nguoi_nhan || (order.nguoi_dung ? order.nguoi_dung.ho_ten : 'N/A');
+        const totalFormatted = formatCurrency(order.tong_thanh_toan);
+        const dateFormatted = formatDate(order.ngay_dat);
+        const soSanPham = order.so_san_pham || 0;
+        const actionButtons = getActionButtons(order);
+
+        return `
+            <tr>
+                <td><span class="order-id-link" onclick="viewOrderDetail(${order.ma_don_hang})">#DH${String(order.ma_don_hang).padStart(4, '0')}</span></td>
+                <td><span class="text-bold">${escapeHtml(customerName)}</span></td>
+                <td><span class="text-secondary">${soSanPham} sản phẩm</span></td>
+                <td><span class="text-bold">${totalFormatted}</span></td>
+                <td><span class="status-badge ${statusInfo.class}">${statusInfo.label}</span></td>
+                <td><span class="text-secondary">${dateFormatted}</span></td>
+                <td>
+                    <div class="action-btns">
+                        <button class="icon-action-btn" title="Xem chi tiết" onclick="viewOrderDetail(${order.ma_don_hang})">
+                            <i data-lucide="eye" class="icon-xs"></i>
+                        </button>
+                        ${actionButtons}
+                    </div>
+                </td>
+            </tr>
+        `;
+    }).join('');
+
+    lucide.createIcons();
+}
+
+// ========== Get Action Buttons ==========
+function getActionButtons(order) {
+    const status = order.trang_thai_don;
+    let buttons = '';
+
+    if (status === 'cho_xac_nhan') {
+        buttons += `<button class="icon-action-btn icon-action-btn--success" title="Xác nhận" onclick="updateStatus(${order.ma_don_hang}, 'da_xac_nhan')"><i data-lucide="check" class="icon-xs"></i></button>`;
+        buttons += `<button class="icon-action-btn icon-action-btn--danger" title="Hủy đơn" onclick="updateStatus(${order.ma_don_hang}, 'da_huy')"><i data-lucide="x" class="icon-xs"></i></button>`;
+    } else if (status === 'da_xac_nhan') {
+        buttons += `<button class="icon-action-btn icon-action-btn--info" title="Giao hàng" onclick="updateStatus(${order.ma_don_hang}, 'dang_giao')"><i data-lucide="truck" class="icon-xs"></i></button>`;
+        buttons += `<button class="icon-action-btn icon-action-btn--danger" title="Hủy đơn" onclick="updateStatus(${order.ma_don_hang}, 'da_huy')"><i data-lucide="x" class="icon-xs"></i></button>`;
+    } else if (status === 'dang_giao') {
+        buttons += `<button class="icon-action-btn icon-action-btn--success" title="Hoàn thành" onclick="updateStatus(${order.ma_don_hang}, 'giao_thanh_cong')"><i data-lucide="check-circle" class="icon-xs"></i></button>`;
+        buttons += `<button class="icon-action-btn icon-action-btn--danger" title="Hủy đơn" onclick="updateStatus(${order.ma_don_hang}, 'da_huy')"><i data-lucide="x" class="icon-xs"></i></button>`;
+    }
+
+    return buttons;
+}
+
+// ========== Update Order Status ==========
+async function updateStatus(orderId, newStatus) {
+    const statusLabels = {
+        'da_xac_nhan': 'xác nhận',
+        'dang_giao': 'chuyển sang giao hàng',
+        'giao_thanh_cong': 'đánh dấu hoàn thành',
+        'da_huy': 'hủy'
+    };
+
+    const label = statusLabels[newStatus] || newStatus;
+    if (!confirm(`Bạn chắc chắn muốn ${label} đơn hàng này?`)) return;
+
+    try {
+        const response = await fetch(`${API_BASE_URL}/orders/${orderId}/status`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ trang_thai_don: newStatus }),
         });
+        const result = await response.json();
+
+        if (result.status === 'success') {
+            alert(result.message || 'Cập nhật thành công');
+            loadOrders(document.getElementById('order-search-input').value, currentStatus, currentPage);
+            loadStats();
+        } else {
+            alert(result.message || 'Lỗi khi cập nhật');
+        }
+    } catch (error) {
+        console.error('Error updating status:', error);
+        alert('Lỗi khi kết nối đến server');
+    }
+}
+
+// ========== View Order Detail ==========
+async function viewOrderDetail(orderId) {
+    try {
+        document.getElementById('modal-order-detail').style.display = 'block';
+        document.getElementById('modal-overlay').style.display = 'block';
+        document.getElementById('order-detail-body').innerHTML = '<p style="text-align: center; padding: 20px;">Đang tải...</p>';
+
+        const response = await fetch(`${API_BASE_URL}/orders/${orderId}`);
+        const result = await response.json();
+
+        if (result.status === 'success') {
+            const order = result.data;
+            const statusInfo = getStatusInfo(order.trang_thai_don);
+            const customerName = order.ho_ten_nguoi_nhan || (order.nguoi_dung ? order.nguoi_dung.ho_ten : 'N/A');
+            const customerEmail = order.nguoi_dung ? order.nguoi_dung.email : '';
+            const customerPhone = order.so_dien_thoai_nhan || (order.nguoi_dung ? order.nguoi_dung.so_dien_thoai : '');
+
+            document.getElementById('modal-order-title').textContent =
+                `Đơn hàng #DH${String(order.ma_don_hang).padStart(4, '0')}`;
+
+            let detailsHTML = `
+                <div class="order-info-grid">
+                    <div class="order-info-section">
+                        <h4>Thông tin khách hàng</h4>
+                        <p><strong>Tên:</strong> ${escapeHtml(customerName)}</p>
+                        ${customerEmail ? `<p><strong>Email:</strong> ${escapeHtml(customerEmail)}</p>` : ''}
+                        ${customerPhone ? `<p><strong>SĐT:</strong> ${escapeHtml(customerPhone)}</p>` : ''}
+                        ${order.dia_chi_giao ? `<p><strong>Địa chỉ:</strong> ${escapeHtml(order.dia_chi_giao)}</p>` : ''}
+                    </div>
+                    <div class="order-info-section">
+                        <h4>Thông tin đơn hàng</h4>
+                        <p><strong>Trạng thái:</strong> <span class="status-badge ${statusInfo.class}">${statusInfo.label}</span></p>
+                        <p><strong>Ngày đặt:</strong> ${formatDate(order.ngay_dat)}</p>
+                        <p><strong>Tổng tiền:</strong> <span class="text-bold" style="color: #7c5cfc;">${formatCurrency(order.tong_thanh_toan)}</span></p>
+                        ${order.ghi_chu ? `<p><strong>Ghi chú:</strong> ${escapeHtml(order.ghi_chu)}</p>` : ''}
+                    </div>
+                </div>
+            `;
+
+            if (order.chi_tiet && order.chi_tiet.length > 0) {
+                detailsHTML += `
+                    <h4 style="margin-top: 20px; margin-bottom: 10px;">Sản phẩm (${order.chi_tiet.length})</h4>
+                    <table class="admin-table detail-table">
+                        <thead>
+                            <tr>
+                                <th>Sản phẩm</th>
+                                <th>Đơn giá</th>
+                                <th>SL</th>
+                                <th>Thành tiền</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${order.chi_tiet.map(item => `
+                                <tr>
+                                    <td>${escapeHtml(item.ten_san_pham)}</td>
+                                    <td>${formatCurrency(item.don_gia)}</td>
+                                    <td>${item.so_luong}</td>
+                                    <td class="text-bold">${formatCurrency(item.thanh_tien)}</td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                        <tfoot>
+                            <tr>
+                                <td colspan="3" style="text-align: right; font-weight: 600;">Tổng cộng:</td>
+                                <td class="text-bold" style="color: #7c5cfc;">${formatCurrency(order.tong_thanh_toan)}</td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                `;
+            }
+
+            document.getElementById('order-detail-body').innerHTML = detailsHTML;
+        } else {
+            document.getElementById('order-detail-body').innerHTML = '<p style="color: red;">Lỗi khi tải chi tiết đơn hàng</p>';
+        }
+    } catch (error) {
+        console.error('Error loading order detail:', error);
+        document.getElementById('order-detail-body').innerHTML = '<p style="color: red;">Không thể kết nối đến server</p>';
+    }
+}
+
+// ========== Pagination ==========
+function renderPagination(pagination) {
+    const wrapper = document.getElementById('orders-pagination');
+    if (pagination.last_page <= 1) {
+        wrapper.innerHTML = '';
+        return;
+    }
+
+    let html = '<div class="pagination">';
+    html += `<button class="page-btn" ${pagination.current_page <= 1 ? 'disabled' : ''} onclick="goToPage(${pagination.current_page - 1})">‹</button>`;
+
+    for (let i = 1; i <= pagination.last_page; i++) {
+        if (i === pagination.current_page) {
+            html += `<button class="page-btn page-btn--active">${i}</button>`;
+        } else if (i <= 3 || i > pagination.last_page - 2 || Math.abs(i - pagination.current_page) <= 1) {
+            html += `<button class="page-btn" onclick="goToPage(${i})">${i}</button>`;
+        } else if (i === 4 || i === pagination.last_page - 2) {
+            html += '<span class="page-dots">...</span>';
+        }
+    }
+
+    html += `<button class="page-btn" ${pagination.current_page >= pagination.last_page ? 'disabled' : ''} onclick="goToPage(${pagination.current_page + 1})">›</button>`;
+    html += '</div>';
+
+    wrapper.innerHTML = html;
+}
+
+function goToPage(page) {
+    if (page < 1 || page > totalPages) return;
+    currentPage = page;
+    loadOrders(document.getElementById('order-search-input').value, currentStatus, page);
+}
+
+// ========== Helpers ==========
+function getStatusInfo(status) {
+    const map = {
+        'cho_xac_nhan': { label: 'Chờ xác nhận', class: 'status-badge--warning' },
+        'da_xac_nhan': { label: 'Đã xác nhận', class: 'status-badge--info' },
+        'dang_giao': { label: 'Đang giao', class: 'status-badge--info' },
+        'giao_thanh_cong': { label: 'Hoàn thành', class: 'status-badge--success' },
+        'da_huy': { label: 'Đã hủy', class: 'status-badge--danger' },
+    };
+    return map[status] || { label: status, class: '' };
+}
+
+function formatCurrency(amount) {
+    return new Intl.NumberFormat('vi-VN').format(amount) + 'đ';
+}
+
+function formatDate(dateStr) {
+    if (!dateStr) return '';
+    const d = new Date(dateStr);
+    return d.toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric' });
+}
+
+function escapeHtml(text) {
+    if (!text) return '';
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
+function showError(msg) {
+    const tbody = document.getElementById('orders-tbody');
+    tbody.innerHTML = `<tr><td colspan="7" style="text-align: center; padding: 30px; color: #ef4444;">${msg}</td></tr>`;
+}
+
+function closeModal() {
+    document.getElementById('modal-order-detail').style.display = 'none';
+    document.getElementById('modal-overlay').style.display = 'none';
+}
+
+// ========== Event Listeners ==========
+
+// Status tabs
+document.querySelectorAll('.status-tab').forEach(tab => {
+    tab.addEventListener('click', function() {
+        document.querySelectorAll('.status-tab').forEach(t => t.classList.remove('active'));
+        this.classList.add('active');
+        currentStatus = this.getAttribute('data-status');
+        currentPage = 1;
+        loadOrders(document.getElementById('order-search-input').value, currentStatus, 1);
     });
 });
+
+// Search with debounce
+document.getElementById('order-search-input').addEventListener('input', (e) => {
+    clearTimeout(searchTimeout);
+    searchTimeout = setTimeout(() => {
+        currentPage = 1;
+        loadOrders(e.target.value, currentStatus, 1);
+    }, 300);
+});
+
+// Modal close
+document.getElementById('btn-close-detail').addEventListener('click', closeModal);
+document.getElementById('modal-overlay').addEventListener('click', closeModal);
+
+// Initial load
+document.addEventListener('DOMContentLoaded', function() {
+    lucide.createIcons();
+    loadOrders();
+    loadStats();
+});
 </script>
+
+<style>
+/* Orders page styles */
+.order-id-link {
+    color: #7c5cfc;
+    font-weight: 600;
+    cursor: pointer;
+    font-size: 13px;
+}
+.order-id-link:hover {
+    text-decoration: underline;
+}
+
+/* Status badges */
+.status-badge--warning {
+    background: #fef3c7;
+    color: #d97706;
+}
+.status-badge--info {
+    background: #dbeafe;
+    color: #2563eb;
+}
+.status-badge--success {
+    background: #d1fae5;
+    color: #059669;
+}
+.status-badge--danger {
+    background: #fee2e2;
+    color: #dc2626;
+}
+
+/* Status tabs */
+.status-tabs {
+    display: flex;
+    gap: 4px;
+    flex-wrap: wrap;
+}
+.status-tab {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    border: 1px solid #e5e7eb;
+    background: white;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 500;
+    color: #6b7280;
+    transition: all 0.2s;
+}
+.status-tab:hover {
+    background: #f9fafb;
+    border-color: #d1d5db;
+}
+.status-tab.active {
+    background: #7c5cfc;
+    color: white;
+    border-color: #7c5cfc;
+}
+.tab-count {
+    background: rgba(0,0,0,0.08);
+    padding: 1px 6px;
+    border-radius: 10px;
+    font-size: 11px;
+    font-weight: 600;
+}
+.status-tab.active .tab-count {
+    background: rgba(255,255,255,0.25);
+}
+
+/* Action buttons */
+.icon-action-btn--success { color: #059669; }
+.icon-action-btn--success:hover { color: #047857; }
+.icon-action-btn--info { color: #2563eb; }
+.icon-action-btn--info:hover { color: #1d4ed8; }
+.icon-action-btn--danger { color: #dc2626; }
+.icon-action-btn--danger:hover { color: #b91c1c; }
+
+/* Modal */
+.modal {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.15);
+    z-index: 1000;
+    max-height: 85vh;
+    overflow-y: auto;
+}
+.modal-overlay {
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0,0,0,0.4);
+    backdrop-filter: blur(4px);
+    z-index: 999;
+}
+.modal-content {
+    padding: 24px;
+}
+.modal-content--lg {
+    min-width: 600px;
+    max-width: 750px;
+}
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid #f3f4f6;
+}
+.modal-header h2 {
+    margin: 0;
+    font-size: 18px;
+    font-weight: 600;
+    color: #1e1b4b;
+}
+.modal-close {
+    background: none;
+    border: none;
+    font-size: 24px;
+    cursor: pointer;
+    color: #9ca3af;
+    padding: 0 4px;
+    line-height: 1;
+}
+.modal-close:hover { color: #374151; }
+
+/* Order detail */
+.order-info-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+}
+.order-info-section h4 {
+    font-size: 14px;
+    font-weight: 600;
+    color: #7c5cfc;
+    margin: 0 0 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+.order-info-section p {
+    margin: 6px 0;
+    font-size: 14px;
+    color: #374151;
+}
+
+.detail-table {
+    font-size: 13px;
+}
+.detail-table th {
+    font-size: 12px;
+    text-transform: uppercase;
+    color: #9ca3af;
+}
+.detail-table tfoot td {
+    border-top: 2px solid #e5e7eb;
+    padding-top: 10px;
+    font-size: 14px;
+}
+
+/* Pagination */
+.pagination-wrapper {
+    padding: 15px 20px;
+    display: flex;
+    justify-content: center;
+}
+.pagination {
+    display: flex;
+    gap: 4px;
+    align-items: center;
+}
+.page-btn {
+    min-width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid #e5e7eb;
+    background: white;
+    border-radius: 6px;
+    font-size: 13px;
+    cursor: pointer;
+    color: #374151;
+    transition: all 0.15s;
+}
+.page-btn:hover:not(:disabled):not(.page-btn--active) {
+    background: #f9fafb;
+    border-color: #d1d5db;
+}
+.page-btn--active {
+    background: #7c5cfc;
+    color: white;
+    border-color: #7c5cfc;
+}
+.page-btn:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+.page-dots {
+    padding: 0 4px;
+    color: #9ca3af;
+}
+
+/* Action bar */
+.action-btns {
+    display: flex;
+    gap: 4px;
+}
+.icon-action-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 5px;
+    display: flex;
+    align-items: center;
+    border-radius: 4px;
+    transition: all 0.15s;
+}
+.icon-action-btn:hover {
+    background: #f3f4f6;
+}
+
+.text-bold { font-weight: 600; }
+.text-secondary { color: #6b7280; }
+.status-badge {
+    display: inline-block;
+    padding: 3px 8px;
+    border-radius: 4px;
+    font-size: 12px;
+    font-weight: 500;
+}
+</style>
 @endsection
