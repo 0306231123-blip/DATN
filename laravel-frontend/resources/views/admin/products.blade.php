@@ -111,6 +111,28 @@
             </div>
 
             <div class="form-row">
+                <div class="form-group form-group--flex">
+                    <label for="hinh_anh">Hình ảnh</label>
+                    <input type="text" id="hinh_anh" name="hinh_anh" class="form-control" list="product-image-options" placeholder="/images/rouge.jpg">
+                    <datalist id="product-image-options">
+                        <option value="/images/rouge.jpg">
+                        <option value="/images/paula.jpg">
+                        <option value="/images/neutrogena.jpg">
+                        <option value="/images/ceuticals.jpg">
+                        <option value="/images/cerave.jpg">
+                        <option value="/images/anessa.jpg">
+                    </datalist>
+                    <span class="form-hint">Nhập URL hoặc đường dẫn ảnh trong public, ví dụ /images/cerave.jpg</span>
+                </div>
+                <div class="form-group product-image-preview-group">
+                    <label>Xem trước</label>
+                    <div class="product-image-preview" id="product-image-preview">
+                        <i data-lucide="image" class="icon-sm"></i>
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-row">
                 <div class="form-group">
                     <label for="gia">Giá (VNĐ) *</label>
                     <input type="number" id="gia" name="gia" required class="form-control" min="0" step="1000">
@@ -271,12 +293,16 @@ function renderTable() {
         const price = formatPrice(product.gia);
         const salePrice = product.gia_khuyen_mai ? formatPrice(product.gia_khuyen_mai) : '';
         const stockClass = product.so_luong_ton === 0 ? 'text-danger' : (product.so_luong_ton <= 30 ? 'text-warning' : '');
+        const imageUrl = getProductImageUrl(product.hinh_anh);
+        const fallbackStyle = `background: linear-gradient(135deg, ${getProductColor(product.ma_san_pham)});`;
 
         return `
             <tr>
                 <td>
                     <div class="product-name-cell">
-                        <div class="product-thumb" style="background: linear-gradient(135deg, ${getProductColor(product.ma_san_pham)});"></div>
+                        ${imageUrl
+                            ? `<img class="product-thumb product-thumb-img" src="${escapeAttribute(imageUrl)}" alt="${escapeAttribute(product.ten_san_pham)}" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';"><div class="product-thumb product-thumb-fallback" style="display: none; ${fallbackStyle}"></div>`
+                            : `<div class="product-thumb product-thumb-fallback" style="${fallbackStyle}"></div>`}
                         <div class="product-info">
                             <span class="product-name">${escapeHtml(product.ten_san_pham)}</span>
                             ${product.thuong_hieu ? `<span class="product-brand">${escapeHtml(product.thuong_hieu)}</span>` : ''}
@@ -377,11 +403,23 @@ function getProductColor(id) {
     return colors[id % colors.length];
 }
 
+function getProductImageUrl(imagePath) {
+    const value = (imagePath || '').trim();
+    if (!value) return '';
+    if (/^(https?:)?\/\//i.test(value) || value.startsWith('data:')) return value;
+    if (value.startsWith('/')) return value;
+    return value.includes('/') ? `/${value.replace(/^\/+/, '')}` : `/images/${value}`;
+}
+
 function escapeHtml(text) {
     if (!text) return '';
     const div = document.createElement('div');
     div.textContent = text;
     return div.innerHTML;
+}
+
+function escapeAttribute(text) {
+    return escapeHtml(text).replace(/"/g, '&quot;');
 }
 
 function updateCategorySelect() {
@@ -415,6 +453,7 @@ function showModal(title, productId = null) {
             document.getElementById('thuong_hieu').value = product.thuong_hieu || '';
             document.getElementById('xuat_xu').value = product.xuat_xu || '';
             document.getElementById('loai_da_phu_hop').value = product.loai_da_phu_hop || '';
+            document.getElementById('hinh_anh').value = product.hinh_anh || '';
             document.getElementById('mo_ta').value = product.mo_ta || '';
             document.getElementById('thanh_phan').value = product.thanh_phan || '';
             document.getElementById('huong_dan_su_dung').value = product.huong_dan_su_dung || '';
@@ -424,6 +463,7 @@ function showModal(title, productId = null) {
         document.getElementById('form-product').reset();
     }
 
+    updateImagePreview();
     document.getElementById('modal-product').style.display = 'block';
     document.getElementById('modal-overlay').style.display = 'block';
 }
@@ -434,10 +474,25 @@ function closeModal() {
     document.getElementById('form-product').reset();
     currentEditId = null;
     clearErrors();
+    updateImagePreview();
 }
 
 function clearErrors() {
     document.querySelectorAll('.error-message').forEach(el => el.textContent = '');
+}
+
+function updateImagePreview() {
+    const preview = document.getElementById('product-image-preview');
+    const imageUrl = getProductImageUrl(document.getElementById('hinh_anh').value);
+
+    if (!imageUrl) {
+        preview.innerHTML = '<i data-lucide="image" class="icon-sm"></i>';
+        lucide.createIcons();
+        return;
+    }
+
+    preview.innerHTML = `<img src="${escapeAttribute(imageUrl)}" alt="Xem trước hình ảnh" onerror="this.parentElement.classList.add('product-image-preview--error'); this.parentElement.innerHTML='Không tải được ảnh';">`;
+    preview.classList.remove('product-image-preview--error');
 }
 
 // ========== CRUD ==========
@@ -481,6 +536,7 @@ document.getElementById('form-product').addEventListener('submit', async (e) => 
         thuong_hieu: document.getElementById('thuong_hieu').value.trim() || null,
         xuat_xu: document.getElementById('xuat_xu').value.trim() || null,
         loai_da_phu_hop: document.getElementById('loai_da_phu_hop').value.trim() || null,
+        hinh_anh: document.getElementById('hinh_anh').value.trim() || null,
         mo_ta: document.getElementById('mo_ta').value.trim() || null,
         thanh_phan: document.getElementById('thanh_phan').value.trim() || null,
         huong_dan_su_dung: document.getElementById('huong_dan_su_dung').value.trim() || null,
@@ -539,6 +595,7 @@ document.getElementById('btn-add-product').addEventListener('click', () => {
 document.getElementById('btn-close-modal').addEventListener('click', closeModal);
 document.getElementById('btn-cancel-modal').addEventListener('click', closeModal);
 document.getElementById('modal-overlay').addEventListener('click', closeModal);
+document.getElementById('hinh_anh').addEventListener('input', updateImagePreview);
 
 // Status filter tabs
 document.querySelectorAll('#product-status-tabs .role-tab').forEach(tab => {
@@ -661,6 +718,13 @@ document.addEventListener('DOMContentLoaded', function() {
     box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.25);
 }
 
+.form-hint {
+    display: block;
+    margin-top: 4px;
+    color: #888;
+    font-size: 12px;
+}
+
 .form-row {
     display: flex;
     gap: 15px;
@@ -722,9 +786,46 @@ document.addEventListener('DOMContentLoaded', function() {
     flex-shrink: 0;
 }
 
+.product-thumb-img {
+    object-fit: cover;
+    border: 1px solid #eee;
+}
+
 .product-info {
     display: flex;
     flex-direction: column;
+}
+
+.product-image-preview-group {
+    max-width: 160px;
+}
+
+.product-image-preview {
+    width: 120px;
+    height: 84px;
+    border: 1px dashed #cbd5e1;
+    border-radius: 6px;
+    background: #f8fafc;
+    color: #94a3b8;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    font-size: 12px;
+    text-align: center;
+}
+
+.product-image-preview img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.product-image-preview--error {
+    border-color: #fca5a5;
+    background: #fef2f2;
+    color: #dc2626;
+    padding: 8px;
 }
 
 .product-name {

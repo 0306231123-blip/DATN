@@ -52,6 +52,10 @@ const SanPham = sequelize.define('SAN_PHAM', {
     type: DataTypes.STRING(255),
     allowNull: true,
   },
+  hinh_anh: {
+    type: DataTypes.STRING(500),
+    allowNull: true,
+  },
   diem_danh_gia: {
     type: DataTypes.DECIMAL(3, 1),
     allowNull: true,
