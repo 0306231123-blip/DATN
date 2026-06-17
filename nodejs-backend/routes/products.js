@@ -17,6 +17,9 @@ router.get('/stats', ProductController.getStats);
 // GET /api/products/brands - List unique brands (for filter dropdown)
 router.get('/brands', ProductController.getBrands);
 
+
+router.get('/ai-suggest', ProductController.getAIRecommendation);
+
 // Generic routes
 // GET /api/products - List products with search, filter, pagination
 router.get('/', ProductController.getAllProducts);
