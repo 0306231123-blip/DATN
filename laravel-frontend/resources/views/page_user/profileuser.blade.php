@@ -219,7 +219,7 @@ async function loadMyOrders() {
         const historyContainer = document.getElementById('history-container'); 
 
         try {
-            const response = await fetch(`${API_URL}/orders/my-orders`, {
+            const response = await fetch(`${API_URL}/order/my-orders`, {
                 headers: { 'Authorization': 'Bearer ' + token }
             });
             const result = await response.json();

@@ -68,7 +68,6 @@ router.post('/create', async (req, res) => {
         res.status(500).json({ success: false, message: 'Lỗi server' });
     }
 });
-DonHang.hasMany(ChiTietDonHang, { foreignKey: 'ma_don_hang', as: 'chi_tiet' });
 router.get('/my-orders', async (req, res) => {
     try {
         const token = req.headers.authorization.split(' ')[1];

@@ -7,7 +7,7 @@ const sequelize = require('./config/database');
 require('./models/associations'); // Setup model relationships
 const authRoutes = require('./routes/auth');
 const cartRoutes = require('./routes/cart');
-const orderRoutes = require('./routes/order');
+const myOrderRoutes = require('./routes/order');
 const dashboardRoutes = require('./routes/dashboard');
 const userRoutes = require('./routes/users');
 const reviewRoutes = require('./routes/review');
@@ -31,7 +31,7 @@ app.get('/', (req, res) => {
 
 app.use('/api/auth', authRoutes);
 app.use('/api/cart', cartRoutes);
-app.use('/api/orders', orderRoutes);
+app.use('/api/order', myOrderRoutes);
 app.use('/api/dashboard', dashboardRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/reviews', reviewRoutes);

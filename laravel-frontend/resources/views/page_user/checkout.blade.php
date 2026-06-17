@@ -119,7 +119,7 @@
 
             try {
                 // Gọi API tạo đơn hàng bên Backend Node.js
-                const response = await fetch('http://localhost:3000/api/orders/create', {
+                const response = await fetch('http://localhost:3000/api/order/create', {
                     method: 'POST',
                     headers: { 
                         'Content-Type': 'application/json',

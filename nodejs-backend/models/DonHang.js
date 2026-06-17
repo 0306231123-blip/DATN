@@ -69,7 +69,4 @@ const DonHang = sequelize.define('don_hang', {
   freezeTableName: true,
 });
 
-// Thiết lập Relationship để dễ dàng gọi dữ liệu join bảng sau này
-DonHang.belongsTo(NguoiDung, { foreignKey: 'ma_nguoi_dung' });
-
 module.exports = DonHang;
