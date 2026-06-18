@@ -1034,3 +1034,304 @@ document.addEventListener('DOMContentLoaded', function() {
 }
 </style>
 @endsection
+
+@section('scripts')
+<script>
+const API_BASE_URL = 'http://localhost:3000/api';
+
+let products = [];
+let categories = [];
+let currentEditId = null;
+
+// Load categories for select
+async function loadCategories() {
+    try {
+        const response = await fetch(`${API_BASE_URL}/categories?limit=100`);
+        const result = await response.json();
+        if (result.status === 'success' || result.success) {
+            categories = result.data;
+            updateCategorySelects();
+        }
+    } catch (error) {
+        console.error('Error loading categories:', error);
+    }
+}
+
+function updateCategorySelects() {
+    const select = document.getElementById('ma_danh_muc');
+    if (!select) return;
+    
+    const options = '<option value="">-- Chọn danh mục --</option>' +
+        categories.map(cat =>
+            `<option value="${cat.ma_danh_muc}">${escapeHtml(cat.ten_danh_muc)}</option>`
+        ).join('');
+    select.innerHTML = options;
+}
+
+// Load products
+async function loadProducts(search = '', status = 'all') {
+    try {
+        let url = `${API_BASE_URL}/products?limit=100`;
+        if (search) url += `&search=${encodeURIComponent(search)}`;
+        if (status && status !== 'all') url += `&trang_thai=${status}`;
+
+        const response = await fetch(url);
+        const result = await response.json();
+
+        if (result.status === 'success' || result.success) {
+            products = result.data;
+            renderTable();
+            loadStats();
+        }
+    } catch (error) {
+        console.error('Error loading products:', error);
+        showAlert('Lỗi khi tải sản phẩm', 'error');
+    }
+}
+
+// Render table
+function renderTable() {
+    const tbody = document.getElementById('products-tbody');
+    if (!tbody) return;
+
+    if (products.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="6" style="text-align: center;">Không có sản phẩm nào</td></tr>';
+        return;
+    }
+
+    tbody.innerHTML = products.map(product => {
+        const catName = categories.find(c => c.ma_danh_muc === product.ma_danh_muc)?.ten_danh_muc || '--';
+        const imgPath = product.hinh_anh ? (product.hinh_anh.startsWith('http') ? product.hinh_anh : product.hinh_anh) : '/images/logo.jpg';
+        
+        let statusBadge = '';
+        if (product.trang_thai === 'dang_ban') statusBadge = '<span class="status-badge status-badge--active">Đang bán</span>';
+        else if (product.trang_thai === 'ngung_ban') statusBadge = '<span class="status-badge status-badge--inactive">Ngừng bán</span>';
+        else statusBadge = '<span class="status-badge status-badge--danger">Hết hàng</span>';
+
+        return `
+        <tr>
+            <td>
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <img src="${escapeHtml(imgPath)}" style="width: 40px; height: 40px; object-fit: cover; border-radius: 4px;" onerror="this.src='/images/logo.jpg'">
+                    <div>
+                        <div class="product-name">${escapeHtml(product.ten_san_pham)}</div>
+                        <div class="product-brand">${escapeHtml(product.thuong_hieu || '--')}</div>
+                    </div>
+                </div>
+            </td>
+            <td><span class="text-secondary">${escapeHtml(catName)}</span></td>
+            <td>
+                <div class="price-cell">
+                    ${product.gia_khuyen_mai ? `<span class="price-original">${Number(product.gia).toLocaleString('vi-VN')}đ</span><span class="price-sale">${Number(product.gia_khuyen_mai).toLocaleString('vi-VN')}đ</span>` : `<span>${Number(product.gia).toLocaleString('vi-VN')}đ</span>`}
+                </div>
+            </td>
+            <td>${product.so_luong_ton}</td>
+            <td>${statusBadge}</td>
+            <td>
+                <div class="action-btns">
+                    <button class="icon-action-btn" title="Sửa" onclick="editProduct(${product.ma_san_pham})">
+                        <i data-lucide="pencil" class="icon-xs"></i>
+                    </button>
+                    <button class="icon-action-btn icon-action-btn--danger" title="Xóa" onclick="deleteProduct(${product.ma_san_pham})">
+                        <i data-lucide="trash-2" class="icon-xs"></i>
+                    </button>
+                </div>
+            </td>
+        </tr>
+    `}).join('');
+
+    if (window.lucide) lucide.createIcons();
+}
+
+// Load stats
+async function loadStats() {
+    try {
+        const response = await fetch(`${API_BASE_URL}/products/stats`);
+        const result = await response.json();
+        if (result.status === 'success' || result.success) {
+            if(document.getElementById('stat-total')) document.getElementById('stat-total').textContent = result.data.total;
+            if(document.getElementById('stat-dang-ban')) document.getElementById('stat-dang-ban').textContent = result.data.dang_ban;
+            if(document.getElementById('stat-sap-het')) document.getElementById('stat-sap-het').textContent = result.data.sap_het;
+            if(document.getElementById('stat-het-hang')) document.getElementById('stat-het-hang').textContent = result.data.het_hang;
+            if(document.getElementById('stat-khuyen-mai')) document.getElementById('stat-khuyen-mai').textContent = result.data.khuyen_mai;
+            if(document.getElementById('page-subtitle')) document.getElementById('page-subtitle').textContent = result.data.total + ' sản phẩm';
+        }
+    } catch (error) {
+        console.error('Error loading stats:', error);
+    }
+}
+
+// Escape HTML
+function escapeHtml(text) {
+    if (!text && text !== 0) return '';
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
+// Show modal
+function showModal(title, productId = null) {
+    currentEditId = productId;
+    if(document.getElementById('modal-title')) document.getElementById('modal-title').textContent = title;
+    if(document.getElementById('product-id')) document.getElementById('product-id').value = productId || '';
+
+    if (productId) {
+        const product = products.find(p => p.ma_san_pham === productId);
+        if (product) {
+            document.getElementById('ten_san_pham').value = product.ten_san_pham;
+            document.getElementById('ma_danh_muc').value = product.ma_danh_muc || '';
+            document.getElementById('hinh_anh').value = product.hinh_anh || '';
+            document.getElementById('gia').value = product.gia || '';
+            document.getElementById('gia_khuyen_mai').value = product.gia_khuyen_mai || '';
+            document.getElementById('so_luong_ton').value = product.so_luong_ton || 0;
+            if(document.getElementById('thuong_hieu')) document.getElementById('thuong_hieu').value = product.thuong_hieu || '';
+            if(document.getElementById('mo_ta')) document.getElementById('mo_ta').value = product.mo_ta || '';
+            if(document.getElementById('trang_thai')) document.getElementById('trang_thai').value = product.trang_thai || 'dang_ban';
+            updateImagePreview();
+        }
+    } else {
+        document.getElementById('form-product').reset();
+        if(document.getElementById('trang_thai')) document.getElementById('trang_thai').value = 'dang_ban';
+        updateImagePreview();
+    }
+
+    document.getElementById('modal-product').style.display = 'block';
+    if(document.getElementById('modal-overlay')) document.getElementById('modal-overlay').style.display = 'block';
+}
+
+function updateImagePreview() {
+    const preview = document.getElementById('product-image-preview');
+    if (!preview) return;
+    const url = document.getElementById('hinh_anh')?.value;
+    if (url) {
+        preview.innerHTML = `<img src="${url}" onerror="this.parentElement.innerHTML='Ảnh lỗi'">`;
+    } else {
+        preview.innerHTML = `<i data-lucide="image" class="icon-sm"></i>`;
+        if (window.lucide) lucide.createIcons();
+    }
+}
+
+if(document.getElementById('hinh_anh')) {
+    document.getElementById('hinh_anh').addEventListener('input', updateImagePreview);
+}
+
+// Close modal
+function closeModal() {
+    document.getElementById('modal-product').style.display = 'none';
+    if(document.getElementById('modal-overlay')) document.getElementById('modal-overlay').style.display = 'none';
+    document.getElementById('form-product').reset();
+    currentEditId = null;
+    clearErrors();
+}
+
+function clearErrors() {
+    document.querySelectorAll('.error-message').forEach(el => el.textContent = '');
+}
+
+function editProduct(id) {
+    showModal('Sửa sản phẩm', id);
+}
+
+async function deleteProduct(id) {
+    if (!confirm('Bạn chắc chắn muốn xóa sản phẩm này?')) return;
+    try {
+        const response = await fetch(`${API_BASE_URL}/products/${id}`, { method: 'DELETE' });
+        const result = await response.json();
+        if (result.status === 'success' || result.success) {
+            showAlert('Xóa sản phẩm thành công', 'success');
+            loadProducts();
+        } else {
+            showAlert(result.message, 'error');
+        }
+    } catch (error) {
+        console.error('Error deleting product:', error);
+        showAlert('Lỗi khi xóa sản phẩm', 'error');
+    }
+}
+
+function showAlert(message, type = 'info') {
+    alert(message);
+}
+
+// Form submit
+const formProduct = document.getElementById('form-product');
+if (formProduct) {
+    formProduct.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        clearErrors();
+
+        const formData = {
+            ten_san_pham: document.getElementById('ten_san_pham').value.trim(),
+            ma_danh_muc: document.getElementById('ma_danh_muc').value || null,
+            hinh_anh: document.getElementById('hinh_anh').value.trim() || null,
+            gia: document.getElementById('gia').value,
+            gia_khuyen_mai: document.getElementById('gia_khuyen_mai').value || null,
+            so_luong_ton: document.getElementById('so_luong_ton').value || 0,
+            thuong_hieu: document.getElementById('thuong_hieu') ? document.getElementById('thuong_hieu').value.trim() : null,
+            mo_ta: document.getElementById('mo_ta') ? document.getElementById('mo_ta').value.trim() : null,
+            trang_thai: document.getElementById('trang_thai') ? document.getElementById('trang_thai').value : 'dang_ban'
+        };
+
+        if (!formData.ten_san_pham) {
+            document.getElementById('error-ten_san_pham').textContent = 'Tên sản phẩm không được để trống';
+            return;
+        }
+
+        const productId = document.getElementById('product-id').value;
+        const url = productId ? `${API_BASE_URL}/products/${productId}` : `${API_BASE_URL}/products`;
+        const method = productId ? 'PUT' : 'POST';
+
+        try {
+            const response = await fetch(url, {
+                method: method,
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(formData)
+            });
+            const result = await response.json();
+
+            if (result.status === 'success' || result.success) {
+                showAlert(result.message || 'Lưu thành công', 'success');
+                closeModal();
+                loadProducts();
+            } else {
+                showAlert(result.message || 'Lỗi lưu sản phẩm', 'error');
+            }
+        } catch (error) {
+            console.error('Error saving product:', error);
+            showAlert('Lỗi khi lưu sản phẩm', 'error');
+        }
+    });
+}
+
+// Event listeners
+if(document.getElementById('btn-add-product')) document.getElementById('btn-add-product').addEventListener('click', () => showModal('Thêm sản phẩm'));
+if(document.getElementById('btn-close-modal')) document.getElementById('btn-close-modal').addEventListener('click', closeModal);
+if(document.getElementById('btn-cancel-modal')) document.getElementById('btn-cancel-modal').addEventListener('click', closeModal);
+if(document.getElementById('modal-overlay')) document.getElementById('modal-overlay').addEventListener('click', closeModal);
+
+const searchInput = document.getElementById('product-search-input');
+if(searchInput) {
+    searchInput.addEventListener('input', (e) => {
+        const status = document.querySelector('.role-tab.active')?.dataset.status || 'all';
+        loadProducts(e.target.value, status);
+    });
+}
+
+const statusTabs = document.querySelectorAll('.role-tab');
+statusTabs.forEach(tab => {
+    tab.addEventListener('click', (e) => {
+        statusTabs.forEach(t => t.classList.remove('active'));
+        e.target.classList.add('active');
+        const search = document.getElementById('product-search-input')?.value || '';
+        loadProducts(search, e.target.dataset.status);
+    });
+});
+
+// Initial load
+document.addEventListener('DOMContentLoaded', async function() {
+    if (window.lucide) lucide.createIcons();
+    await loadCategories();
+    await loadProducts();
+});
+</script>
+@endsection

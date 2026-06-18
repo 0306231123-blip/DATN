@@ -52,7 +52,7 @@ const SanPham = sequelize.define('SAN_PHAM', {
     type: DataTypes.STRING(255),
     allowNull: true,
   },
-  hinh_anh: {
+  anh_san_pham: {
     type: DataTypes.STRING(500),
     allowNull: true,
   },
