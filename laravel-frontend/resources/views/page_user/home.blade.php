@@ -44,7 +44,7 @@
             <div class="flex items-center justify-between mb-8 relative z-10">
                 <h2 class="text-2xl font-black text-gray-800 uppercase tracking-wider flex items-center">
                     <span class="text-3xl mr-3">✨</span>
-                    AI Thiết kế cho <span id="ai-skin-type" class="text-pink-600 ml-2 border-b-2 border-pink-300 pb-1">làn da của bạn</span>
+                    ĐỀ XUẤT CHO BẠN
                 </h2>
             </div>
 
@@ -154,7 +154,6 @@
         const aiSection = document.getElementById('ai-recommendation-section');
         const guestSection = document.getElementById('ai-guest-section');
         const productsContainer = document.getElementById('ai-products-container');
-        const skinTypeText = document.getElementById('ai-skin-type');
 
         if (token) {
             guestSection.classList.add('hidden');
@@ -175,7 +174,7 @@
                         'da_dau': 'Da Dầu', 'da_kho': 'Da Khô',
                         'da_hon_hop': 'Da Hỗn Hợp', 'da_nhay_cam': 'Da Nhạy Cảm', 'da_thuong': 'Da Thường'
                     };
-                    skinTypeText.textContent = `làn ${skinMap[result.loai_da_text] || 'da của bạn'}`;
+                    
 
                     let html = '';
                     result.data.forEach(sp => {
@@ -211,7 +210,7 @@
                             <span class="text-4xl mb-3 block">📝</span>
                             <p class="text-gray-700 font-bold text-lg mb-2">Chưa đủ dữ liệu để AI phân tích!</p>
                             <p class="text-gray-500 mb-4">Bạn hãy vào Trang Cá Nhân cập nhật "Loại da" để AI hoạt động chính xác nhất nhé.</p>
-                            <a href="/profile" class="inline-block bg-pink-100 text-pink-700 font-bold py-2 px-6 rounded-xl hover:bg-pink-200 transition">Cập nhật ngay</a>
+                            <a href="/profileuser" class="inline-block bg-pink-100 text-pink-700 font-bold py-2 px-6 rounded-xl hover:bg-pink-200 transition">Cập nhật ngay</a>
                         </div>
                     `;
                 }
