@@ -4,7 +4,8 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="description" content="BeautyAdmin - Trang quản trị cửa hàng mỹ phẩm">
-    <title>BeautyAdmin - @yield('title', 'Dashboard')</title>
+    <title>@yield('title', 'Dashboard')</title>
+    <link rel="icon" type="image/jpeg" href="{{ asset('images/logo.jpg') }}">
 
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -25,7 +26,7 @@
         <aside class="sidebar" id="sidebar">
             <div class="sidebar-header">
                 <div class="sidebar-logo">
-                    <span class="logo-icon">💄</span>
+                    <img src="{{ asset('images/logo.jpg') }}" alt="BeautyAdmin" class="logo-image">
                     <span class="logo-text">BeautyAdmin</span>
                 </div>
             </div>

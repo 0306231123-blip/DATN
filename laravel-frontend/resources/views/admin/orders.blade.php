@@ -141,7 +141,10 @@ async function loadStats() {
             document.getElementById('count-da_huy').textContent = s.da_huy;
 
             const summaryText = `${s.total} đơn · tháng ${new Date().getMonth() + 1}/${new Date().getFullYear()}`;
-            document.getElementById('orders-summary').textContent = summaryText;
+            const pageSubtitle = document.getElementById('page-subtitle');
+            if (pageSubtitle) {
+                pageSubtitle.textContent = summaryText;
+            }
         }
     } catch (error) {
         console.error('Error loading stats:', error);

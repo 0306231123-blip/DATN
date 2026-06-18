@@ -136,6 +136,14 @@ body {
     justify-content: center;
 }
 
+.logo-image {
+    flex-shrink: 0;
+    width: 32px;
+    height: 32px;
+    border-radius: var(--radius-sm);
+    object-fit: cover;
+}
+
 .logo-text {
     font-size: 1.15rem;
     font-weight: 700;

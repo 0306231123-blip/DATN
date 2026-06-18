@@ -162,7 +162,7 @@ exports.createProduct = async (req, res) => {
     const {
       ten_san_pham, mo_ta, thanh_phan, huong_dan_su_dung,
       gia, gia_khuyen_mai, so_luong_ton, thuong_hieu,
-      xuat_xu, ma_danh_muc, loai_da_phu_hop, trang_thai,
+      xuat_xu, ma_danh_muc, loai_da_phu_hop, hinh_anh, trang_thai,
     } = req.body;
 
     // Validate required fields
@@ -222,6 +222,7 @@ exports.createProduct = async (req, res) => {
       xuat_xu: xuat_xu || null,
       ma_danh_muc: ma_danh_muc ? parseInt(ma_danh_muc) : null,
       loai_da_phu_hop: loai_da_phu_hop || null,
+      hinh_anh: hinh_anh || null,
       trang_thai: trang_thai || 'dang_ban',
       ngay_tao: new Date(),
     });
@@ -268,7 +269,7 @@ exports.updateProduct = async (req, res) => {
     const {
       ten_san_pham, mo_ta, thanh_phan, huong_dan_su_dung,
       gia, gia_khuyen_mai, so_luong_ton, thuong_hieu,
-      xuat_xu, ma_danh_muc, loai_da_phu_hop, trang_thai,
+      xuat_xu, ma_danh_muc, loai_da_phu_hop, hinh_anh, trang_thai,
     } = req.body;
 
     // Check unique name (exclude current product)
@@ -320,6 +321,7 @@ exports.updateProduct = async (req, res) => {
     if (xuat_xu !== undefined) updateData.xuat_xu = xuat_xu;
     if (ma_danh_muc !== undefined) updateData.ma_danh_muc = ma_danh_muc ? parseInt(ma_danh_muc) : null;
     if (loai_da_phu_hop !== undefined) updateData.loai_da_phu_hop = loai_da_phu_hop;
+    if (hinh_anh !== undefined) updateData.hinh_anh = hinh_anh || null;
     if (trang_thai !== undefined && ['dang_ban', 'ngung_ban', 'het_hang'].includes(trang_thai)) {
       updateData.trang_thai = trang_thai;
     }
