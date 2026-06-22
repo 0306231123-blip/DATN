@@ -1,6 +1,9 @@
 /**
  * Model Associations
  * Setup relationships between models
+ * 
+ * IMPORTANT: Tất cả associations được khai báo TẬP TRUNG tại đây.
+ * KHÔNG khai báo associations trong các file model riêng lẻ để tránh circular dependency.
  */
 
 const NguoiDung = require('./NguoiDung');
@@ -8,7 +11,10 @@ const DonHang = require('./DonHang');
 const SanPham = require('./SanPham');
 const DanhMuc = require('./DanhMuc');
 const ChiTietDonHang = require('./ChiTietDonHang');
+const AnhSanPham = require('./AnhSanPham');
+const GioHang = require('./GioHang');
 
+// ========== User ↔ Order ==========
 // User has many Orders
 NguoiDung.hasMany(DonHang, {
   foreignKey: 'ma_nguoi_dung',
@@ -21,6 +27,7 @@ DonHang.belongsTo(NguoiDung, {
   as: 'nguoi_dung',
 });
 
+// ========== Order ↔ OrderDetail ==========
 // Order has many OrderDetails
 DonHang.hasMany(ChiTietDonHang, {
   foreignKey: 'ma_don_hang',
@@ -32,6 +39,7 @@ ChiTietDonHang.belongsTo(DonHang, {
   foreignKey: 'ma_don_hang',
 });
 
+// ========== OrderDetail ↔ Product ==========
 // OrderDetail belongs to Product
 ChiTietDonHang.belongsTo(SanPham, {
   foreignKey: 'ma_san_pham',
@@ -44,6 +52,7 @@ SanPham.hasMany(ChiTietDonHang, {
   as: 'chi_tiet_don_hang',
 });
 
+// ========== Product ↔ Category ==========
 // Product belongs to Category
 SanPham.belongsTo(DanhMuc, {
   foreignKey: 'ma_danh_muc',
@@ -56,10 +65,39 @@ DanhMuc.hasMany(SanPham, {
   as: 'san_pham',
 });
 
+// ========== Product ↔ ProductImage ==========
+// Product has many Images
+SanPham.hasMany(AnhSanPham, {
+  foreignKey: 'ma_san_pham',
+  as: 'danh_sach_anh',
+});
+
+// Image belongs to Product
+AnhSanPham.belongsTo(SanPham, {
+  foreignKey: 'ma_san_pham',
+  as: 'san_pham',
+});
+
+// ========== Cart ↔ Product ==========
+// Cart item belongs to Product
+GioHang.belongsTo(SanPham, {
+  foreignKey: 'ma_san_pham',
+  as: 'san_pham',
+});
+
+// Product has many Cart items
+SanPham.hasMany(GioHang, {
+  foreignKey: 'ma_san_pham',
+  as: 'gio_hang',
+});
+
 module.exports = {
   NguoiDung,
   DonHang,
   SanPham,
   DanhMuc,
   ChiTietDonHang,
+  AnhSanPham,
+  GioHang,
 };
+

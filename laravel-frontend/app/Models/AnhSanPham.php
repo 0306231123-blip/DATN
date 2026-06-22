@@ -15,9 +15,12 @@ class AnhSanPham extends Model
     protected $fillable = [
         'ma_san_pham', 'duong_dan_anh', 'la_anh_chinh', 'thu_tu'
     ];
-    public function anhChinh()
+
+    /**
+     * Ảnh thuộc về sản phẩm nào
+     */
+    public function sanPham()
     {
-        return $this->hasOne(AnhSanPham::class, 'ma_san_pham', 'ma_san_pham')
-                    ->where('la_anh_chinh', 1);
+        return $this->belongsTo(SanPham::class, 'ma_san_pham', 'ma_san_pham');
     }
 }

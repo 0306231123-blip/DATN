@@ -19,9 +19,9 @@ class SanPham extends Model
     // 4. Cho phép Laravel thêm dữ liệu vào các cột này
     protected $fillable = [
         'ten_san_pham', 'mo_ta', 'thanh_phan', 'huong_dan_su_dung',
-        'gia', 'so_luong_ton', 'thuong_hieu', 'xuat_xu', 
+        'gia', 'gia_khuyen_mai', 'so_luong_ton', 'thuong_hieu', 'xuat_xu', 
         'ma_danh_muc', 'loai_da_phu_hop', 'diem_danh_gia', 
-        'so_luot_danh_gia', 'trang_thai'
+        'so_luot_danh_gia', 'anh_san_pham', 'trang_thai'
     ];
     public function anhChinh()
     {

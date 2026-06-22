@@ -37,11 +37,18 @@ class ProductController extends Controller
     // Hàm hiển thị trang Bán Chạy
     public function bestseller()
     {
-        // Ra lệnh: Nối bảng SAN_PHAM với cái View SQL 'v_san_pham_ban_chay' của bạn 
-        // để lấy ra danh sách sắp xếp theo số lượng bán giảm dần
-        $danhSachBanChay = SanPham::join('v_san_pham_ban_chay', 'SAN_PHAM.ma_san_pham', '=', 'v_san_pham_ban_chay.ma_san_pham')
-                                  ->where('SAN_PHAM.trang_thai', 'dang_ban')
-                                  ->orderBy('v_san_pham_ban_chay.tong_so_luong_ban', 'desc')
+        // Query trực tiếp thay vì dùng SQL View
+        $danhSachBanChay = SanPham::select('san_pham.*')
+                                  ->join(
+                                      \DB::raw('(SELECT ctdh.ma_san_pham, SUM(ctdh.so_luong) AS tong_so_luong_ban
+                                                FROM chi_tiet_don_hang ctdh
+                                                JOIN don_hang dh ON ctdh.ma_don_hang = dh.ma_don_hang
+                                                WHERE dh.trang_thai_don = \'giao_thanh_cong\'
+                                                GROUP BY ctdh.ma_san_pham) AS ban_chay'),
+                                      'san_pham.ma_san_pham', '=', 'ban_chay.ma_san_pham'
+                                  )
+                                  ->where('san_pham.trang_thai', 'dang_ban')
+                                  ->orderBy('ban_chay.tong_so_luong_ban', 'desc')
                                   ->get();
 
         return view('page_user.bestseller', compact('danhSachBanChay'));
@@ -56,5 +63,29 @@ class ProductController extends Controller
                                 ->get();
                                 
         return view('page_user.home', compact('sanPhamNoiBat'));
+    }
+
+    /**
+     * Tìm kiếm sản phẩm realtime (AJAX)
+     * Trả về JSON cho chức năng search-live
+     */
+    public function searchAjax(Request $request)
+    {
+        $query = $request->input('q', '');
+
+        if (strlen($query) < 2) {
+            return response()->json(['data' => []]);
+        }
+
+        $results = SanPham::where('trang_thai', 'dang_ban')
+                          ->where(function ($q) use ($query) {
+                              $q->where('ten_san_pham', 'LIKE', "%{$query}%")
+                                ->orWhere('thuong_hieu', 'LIKE', "%{$query}%");
+                          })
+                          ->select('ma_san_pham', 'ten_san_pham', 'gia', 'gia_khuyen_mai', 'anh_san_pham', 'thuong_hieu')
+                          ->take(10)
+                          ->get();
+
+        return response()->json(['data' => $results]);
     }
 }

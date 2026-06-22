@@ -16,10 +16,11 @@ class DashboardController extends Controller
             if ($response->successful()) {
                 $data = $response->json('data');
             } else {
+                \Log::error('Dashboard API Error (Response): ' . $response->body());
                 $data = $this->getEmptyData();
             }
         } catch (\Exception $e) {
-            // Nếu backend không hoạt động, trả về dữ liệu rỗng
+            \Log::error('Dashboard API Error (Exception): ' . $e->getMessage());
             $data = $this->getEmptyData();
         }
 

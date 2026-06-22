@@ -67,3 +67,6 @@ Route::prefix('admin')->group(function () {
         return view('admin.statistics');
     })->name('admin.statistics');
 });
+
+
+Route::get('/search-live', [\App\Http\Controllers\ProductController::class, 'searchAjax']);

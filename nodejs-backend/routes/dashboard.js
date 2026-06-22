@@ -101,11 +101,16 @@ router.get('/stats', async (req, res) => {
     // ========== 4. Sản phẩm bán chạy (top 5) ==========
     const sanPhamBanChay = await sequelize.query(
       `SELECT 
-         ten_san_pham, 
-         thuong_hieu,
-         tong_so_luong_ban, 
-         tong_doanh_thu
-       FROM v_san_pham_ban_chay
+         sp.ten_san_pham, 
+         sp.thuong_hieu,
+         COALESCE(SUM(ctdh.so_luong), 0) AS tong_so_luong_ban,
+         COALESCE(SUM(ctdh.thanh_tien), 0) AS tong_doanh_thu
+       FROM san_pham sp
+       JOIN chi_tiet_don_hang ctdh ON sp.ma_san_pham = ctdh.ma_san_pham
+       JOIN don_hang dh ON ctdh.ma_don_hang = dh.ma_don_hang
+       WHERE dh.trang_thai_don = 'giao_thanh_cong'
+       GROUP BY sp.ma_san_pham, sp.ten_san_pham, sp.thuong_hieu
+       ORDER BY tong_so_luong_ban DESC
        LIMIT 5`,
       { type: QueryTypes.SELECT }
     );

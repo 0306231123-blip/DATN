@@ -19,6 +19,7 @@
     <script src="https://unpkg.com/lucide@latest"></script>
 
     <link rel="stylesheet" href="{{ asset('css/admin.css') }}">
+    @yield('styles')
 
     <!-- Kiểm tra quyền truy cập Admin -->
     <script>
@@ -86,6 +87,13 @@
                         <span>Thống kê</span>
                     </a>
                 </div>
+
+                <div class="nav-group" style="margin-top: 30px; border-top: 1px solid #e2e8f0; padding-top: 20px;">
+                    <a href="#" class="nav-item text-danger" id="btn-logout" style="color: #ef4444;">
+                        <i data-lucide="log-out" class="nav-icon"></i>
+                        <span>Đăng xuất</span>
+                    </a>
+                </div>
             </nav>
         </aside>
 
@@ -138,6 +146,19 @@
             menuToggle.addEventListener('click', () => {
                 sidebar.classList.toggle('collapsed');
                 mainContent.classList.toggle('expanded');
+            });
+        }
+
+        // Logout
+        const btnLogout = document.getElementById('btn-logout');
+        if (btnLogout) {
+            btnLogout.addEventListener('click', (e) => {
+                e.preventDefault();
+                if (confirm('Bạn có chắc chắn muốn đăng xuất?')) {
+                    localStorage.removeItem('token');
+                    localStorage.removeItem('user');
+                    window.location.href = '/login';
+                }
             });
         }
     </script>
