@@ -19,6 +19,7 @@
     <script src="https://unpkg.com/lucide@latest"></script>
 
     <link rel="stylesheet" href="{{ asset('css/admin.css') }}">
+    <link rel="stylesheet" href="{{ asset('css/admin-components.css') }}">
     @yield('styles')
 
     <!-- Kiểm tra quyền truy cập Admin -->

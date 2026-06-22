@@ -1,0 +1,425 @@
+/* ===================================================
+   Shared Admin Components
+   =================================================== */
+
+/* ---------- Modals ---------- */
+.modal {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: var(--bg-card);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-lg);
+    z-index: 1000;
+    min-width: 400px;
+    max-height: 90vh;
+    overflow-y: auto;
+}
+
+.modal-content--wide {
+    width: 700px;
+    max-width: 90vw;
+}
+
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.4);
+    backdrop-filter: blur(4px);
+    z-index: 999;
+}
+
+.modal-content {
+    padding: 24px;
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--border-light);
+}
+
+.modal-header h2 {
+    margin: 0;
+    font-size: 1.15rem;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.modal-close {
+    background: none;
+    border: none;
+    font-size: 24px;
+    cursor: pointer;
+    color: var(--text-muted);
+    padding: 0 4px;
+    line-height: 1;
+    transition: color var(--transition-fast);
+}
+
+.modal-close:hover {
+    color: var(--text-primary);
+}
+
+.modal-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    margin-top: 20px;
+    padding-top: 15px;
+    border-bottom: none;
+    border-top: 1px solid var(--border-light);
+}
+
+/* ---------- Forms ---------- */
+.form-group {
+    margin-bottom: 16px;
+    flex: 1;
+}
+
+.form-group--flex {
+    flex: 2;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 6px;
+    font-weight: 500;
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+}
+
+.form-control {
+    width: 100%;
+    padding: 10px 14px;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    font-size: 0.9rem;
+    color: var(--text-primary);
+    box-sizing: border-box;
+    transition: all var(--transition-fast);
+}
+
+.form-control:focus {
+    outline: none;
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 3px var(--color-primary-light);
+}
+
+.form-hint {
+    display: block;
+    margin-top: 4px;
+    color: var(--text-muted);
+    font-size: 0.75rem;
+}
+
+.form-row {
+    display: flex;
+    gap: 16px;
+}
+
+.error-message {
+    color: var(--color-red);
+    font-size: 0.75rem;
+    margin-top: 4px;
+    display: block;
+    font-weight: 500;
+}
+
+/* ---------- Buttons ---------- */
+.btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 8px 16px;
+    border-radius: var(--radius-md);
+    border: none;
+    cursor: pointer;
+    font-size: 0.85rem;
+    font-weight: 500;
+    transition: all var(--transition-fast);
+}
+
+.btn-sm {
+    padding: 6px 14px;
+    font-size: 0.8rem;
+}
+
+.btn-primary {
+    background: var(--color-primary);
+    color: var(--text-white);
+}
+
+.btn-primary:hover {
+    background: var(--color-primary-dark);
+}
+
+.btn-secondary {
+    background: var(--bg-hover);
+    color: var(--text-secondary);
+}
+
+.btn-secondary:hover {
+    background: var(--border-color);
+    color: var(--text-primary);
+}
+
+/* ---------- Action Buttons ---------- */
+.action-btns {
+    display: flex;
+    gap: 4px;
+}
+
+.icon-action-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 6px;
+    display: flex;
+    align-items: center;
+    border-radius: var(--radius-sm);
+    color: var(--color-primary);
+    transition: all var(--transition-fast);
+}
+
+.icon-action-btn:hover {
+    background: var(--color-primary-light);
+    color: var(--color-primary-dark);
+}
+
+.icon-action-btn--danger {
+    color: var(--color-red);
+}
+
+.icon-action-btn--danger:hover {
+    background: var(--color-red-light);
+    color: #b91c1c;
+}
+
+.icon-action-btn--success {
+    color: var(--color-green);
+}
+
+.icon-action-btn--success:hover {
+    background: var(--color-green-light);
+    color: #047857;
+}
+
+.icon-action-btn--info {
+    color: #2563eb;
+}
+
+.icon-action-btn--info:hover {
+    background: #dbeafe;
+    color: #1d4ed8;
+}
+
+/* ---------- Badges & Status ---------- */
+.status-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 4px 10px;
+    border-radius: var(--radius-full);
+    font-size: 0.75rem;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.status-badge--active,
+.status-badge--success {
+    background: var(--color-green-light);
+    color: #16a34a;
+}
+
+.status-badge--inactive {
+    background: var(--bg-hover);
+    color: var(--text-secondary);
+}
+
+.status-badge--warning {
+    background: var(--color-yellow-light);
+    color: #d97706;
+}
+
+.status-badge--danger {
+    background: var(--color-red-light);
+    color: var(--color-red);
+}
+
+.status-badge--info {
+    background: var(--color-primary-light);
+    color: var(--color-primary);
+}
+
+/* ---------- Tabs ---------- */
+.role-tabs,
+.status-tabs {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+}
+
+.role-tab,
+.status-tab {
+    padding: 8px 14px;
+    border: 1px solid var(--border-color);
+    background: var(--bg-card);
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    font-size: 0.85rem;
+    font-weight: 500;
+    color: var(--text-secondary);
+    transition: all var(--transition-fast);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.role-tab:hover,
+.status-tab:hover {
+    background: var(--bg-body);
+    border-color: #d1d5db;
+}
+
+.role-tab.active,
+.status-tab.active {
+    background: var(--color-primary);
+    color: var(--text-white);
+    border-color: var(--color-primary);
+}
+
+.tab-count {
+    background: rgba(0,0,0,0.08);
+    padding: 2px 6px;
+    border-radius: 10px;
+    font-size: 0.7rem;
+    font-weight: 600;
+}
+
+.active .tab-count {
+    background: rgba(255,255,255,0.25);
+}
+
+/* ---------- Pagination ---------- */
+.pagination-wrapper {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px 0;
+    border-top: 1px solid var(--border-light);
+    margin-top: 16px;
+}
+
+.pagination-wrapper.center {
+    justify-content: center;
+}
+
+.pagination-info {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+}
+
+.pagination,
+.pagination-btns {
+    display: flex;
+    gap: 4px;
+    align-items: center;
+}
+
+.page-btn {
+    min-width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid var(--border-color);
+    background: var(--bg-card);
+    border-radius: var(--radius-md);
+    font-size: 0.85rem;
+    font-weight: 500;
+    cursor: pointer;
+    color: var(--text-secondary);
+    transition: all var(--transition-fast);
+}
+
+.page-btn:hover:not(:disabled):not(.active):not(.page-btn--active) {
+    background: var(--bg-body);
+    color: var(--text-primary);
+}
+
+.page-btn.active,
+.page-btn--active {
+    background: var(--color-primary);
+    color: var(--text-white);
+    border-color: var(--color-primary);
+}
+
+.page-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.page-ellipsis,
+.page-dots {
+    padding: 0 4px;
+    color: var(--text-muted);
+}
+
+/* ---------- Stats Grid (Legacy) ---------- */
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 16px;
+    margin-bottom: 20px;
+}
+
+.stat-box {
+    background: var(--bg-card);
+    padding: 16px;
+    border-radius: var(--radius-lg);
+    border-left: 4px solid var(--color-primary);
+    box-shadow: var(--shadow-sm);
+    border-top: 1px solid var(--border-light);
+    border-right: 1px solid var(--border-light);
+    border-bottom: 1px solid var(--border-light);
+}
+
+.stat-box--warning { border-left-color: var(--color-yellow); }
+.stat-box--danger { border-left-color: var(--color-red); }
+.stat-box--success { border-left-color: var(--color-green); }
+
+.stat-label {
+    display: block;
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+    margin-bottom: 6px;
+    font-weight: 500;
+}
+
+.stat-value {
+    display: block;
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--text-primary);
+}
+
+/* ---------- Typography Utils ---------- */
+.text-truncate {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: 200px;
+}
+
+.text-danger { color: var(--color-red) !important; }
+.text-warning { color: var(--color-yellow) !important; }
+.text-success { color: var(--color-green) !important; }
+.text-bold { font-weight: 600 !important; }
+.text-secondary { color: var(--text-secondary) !important; }
