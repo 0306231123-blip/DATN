@@ -19,6 +19,25 @@
     <script src="https://unpkg.com/lucide@latest"></script>
 
     <link rel="stylesheet" href="{{ asset('css/admin.css') }}">
+
+    <!-- Kiểm tra quyền truy cập Admin -->
+    <script>
+        const token = localStorage.getItem('token');
+        const userStr = localStorage.getItem('user');
+
+        if (!token || !userStr) {
+            window.location.href = '/login';
+        } else {
+            try {
+                const user = JSON.parse(userStr);
+                if (user.vai_tro !== 'quan_tri_vien') {
+                    window.location.href = '/user/home';
+                }
+            } catch (e) {
+                window.location.href = '/login';
+            }
+        }
+    </script>
 </head>
 <body>
     <div class="admin-wrapper">

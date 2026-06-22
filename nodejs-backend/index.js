@@ -48,6 +48,12 @@ sequelize
   .authenticate()
   .then(() => {
     console.log('Database connected successfully.');
+    
+    // Tự động cập nhật schema (thêm cột nếu thiếu) để sửa lỗi Unknown column
+    sequelize.sync({ alter: true })
+      .then(() => console.log('Database schema synchronized.'))
+      .catch((err) => console.error('Sync schema error:', err));
+    
     app.listen(PORT, () => console.log(`API running on port ${PORT}`));
   })
   .catch((err) => {
