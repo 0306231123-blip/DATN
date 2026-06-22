@@ -529,7 +529,7 @@ exports.getAIRecommendation = async (req, res) => {
           where: { ma_san_pham: productIds },
           include: [{ 
               model: AnhSanPham, 
-              as: 'anh_san_pham' 
+              as: 'danh_sach_anh' 
           }]
       });
 

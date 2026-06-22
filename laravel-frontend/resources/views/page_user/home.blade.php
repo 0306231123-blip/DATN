@@ -179,7 +179,7 @@
                     let html = '';
                     result.data.forEach(sp => {
                         const price = new Intl.NumberFormat('vi-VN').format(sp.gia_khuyen_mai || sp.gia) + ' đ';
-                        const img = (sp.anh_san_pham && sp.anh_san_pham.length > 0) ? sp.anh_san_pham[0].duong_dan_anh : 'https://via.placeholder.com/300x300?text=No+Image';
+                        const img = (sp.danh_sach_anh && sp.danh_sach_anh.length > 0) ? sp.danh_sach_anh[0].duong_dan_anh : 'https://via.placeholder.com/300x300?text=No+Image';
 
                         // Định dạng thẻ sản phẩm giống hệt sản phẩm nổi bật bên dưới
                         html += `

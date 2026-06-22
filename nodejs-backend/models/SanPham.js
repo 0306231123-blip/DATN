@@ -86,6 +86,6 @@ const SanPham = sequelize.define('san_pham', {
 });
 
 // KHAI BÁO LIÊN KẾT: 1 Sản phẩm có nhiều Ảnh
-SanPham.hasMany(AnhSanPham, { foreignKey: 'ma_san_pham', as: 'anh_san_pham' });
+SanPham.hasMany(AnhSanPham, { foreignKey: 'ma_san_pham', as: 'danh_sach_anh' });
 
 module.exports = SanPham;

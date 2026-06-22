@@ -44,7 +44,7 @@ router.get('/', async (req, res) => {
             include: [{ 
                 model: SanPham, 
                 as: 'san_pham',
-                include: [{ model: AnhSanPham, as: 'anh_san_pham' }] // Kết nối bảng ảnh
+                include: [{ model: AnhSanPham, as: 'danh_sach_anh' }] // Kết nối bảng ảnh
             }]
         });
         
