@@ -1,5 +1,6 @@
 const { DataTypes } = require('sequelize');
 const sequelize = require('../config/database');
+const NguoiDung = require('./NguoiDung'); // Nhúng model NguoiDung để làm khóa ngoại
 
 const DonHang = sequelize.define('don_hang', {
   ma_don_hang: {
@@ -10,6 +11,10 @@ const DonHang = sequelize.define('don_hang', {
   ma_nguoi_dung: {
     type: DataTypes.INTEGER,
     allowNull: false,
+    references: { // Giữ lại ràng buộc khóa ngoại từ đoạn 1
+      model: NguoiDung,
+      key: 'ma_nguoi_dung',
+    }
   },
   ho_ten_nguoi_nhan: {
     type: DataTypes.STRING(100),

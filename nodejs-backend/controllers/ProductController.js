@@ -1,3 +1,12 @@
+// ==========================================
+// THƯ VIỆN THÊM VÀO CHO AI (Thêm mới)
+// ==========================================
+const axios = require('axios');
+const jwt = require('jsonwebtoken');
+const AnhSanPham = require('../models/AnhSanPham');
+const NguoiDung = require('../models/NguoiDung');
+// ==========================================
+
 const SanPham = require('../models/SanPham');
 const DanhMuc = require('../models/DanhMuc');
 const { Op } = require('sequelize');
@@ -481,3 +490,58 @@ exports.getBrands = async (req, res) => {
     });
   }
 };
+
+// ==========================================
+// ĐOẠN CODE CỦA MÌNH THÊM VÀO NẰM Ở ĐÂY
+// ==========================================
+// API: GỌI PYTHON ĐỂ LẤY GỢI Ý AI CHO USER
+exports.getAIRecommendation = async (req, res) => {
+  try {
+      const authHeader = req.headers.authorization;
+      if (!authHeader) {
+          return res.status(401).json({ success: false, message: 'Bạn chưa đăng nhập' });
+      }
+
+      const token = authHeader.split(' ')[1];
+      const decoded = jwt.verify(token, process.env.JWT_SECRET);
+      
+      // =============== ĐOẠN CODE SỬA MỚI NẰM Ở ĐÂY ===============
+      // Bỏ cách lấy cũ: const loaiDaUser = decoded.loai_da || 'da_thuong';
+      
+      // Cách mới: Dùng ID trong token để chui vào Database lấy loại da mới nhất
+      const user = await NguoiDung.findByPk(decoded.ma_nguoi_dung);
+      const loaiDaUser = (user && user.loai_da) ? user.loai_da : 'da_thuong'; 
+      // ==========================================================
+
+      // Gọi sang cổng 5000 của Python
+      const pythonResponse = await axios.post('http://localhost:5000/api/recommend', {
+          loai_da: loaiDaUser
+      });
+
+      // ... (Phần code bên dưới giữ nguyên y hệt như cũ) ...
+      const productIds = pythonResponse.data.data;
+
+      if (!productIds || productIds.length === 0) {
+          return res.json({ success: true, data: [] });
+      }
+
+      const products = await SanPham.findAll({
+          where: { ma_san_pham: productIds },
+          include: [{ 
+              model: AnhSanPham, 
+              as: 'danh_sach_anh' 
+          }]
+      });
+
+      res.json({
+          success: true,
+          loai_da_text: loaiDaUser, // Chữ gửi về giao diện sẽ cập nhật chuẩn 100%
+          data: products
+      });
+
+  } catch (error) {
+      console.error('Lỗi khi Node.js gọi Python AI:', error);
+      res.status(500).json({ success: false, message: 'Hệ thống AI đang bảo trì' });
+  }
+};
+// ==========================================

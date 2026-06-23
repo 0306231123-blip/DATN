@@ -1,7 +1,8 @@
 const { DataTypes } = require('sequelize');
 const sequelize = require('../config/database');
+const AnhSanPham = require('./AnhSanPham'); // Import model ảnh
 
-const SanPham = sequelize.define('SAN_PHAM', {
+const SanPham = sequelize.define('san_pham', {
   ma_san_pham: {
     type: DataTypes.INTEGER,
     primaryKey: true,
@@ -52,6 +53,7 @@ const SanPham = sequelize.define('SAN_PHAM', {
     type: DataTypes.STRING(255),
     allowNull: true,
   },
+  
   anh_san_pham: {
     type: DataTypes.STRING(500),
     allowNull: true,
@@ -82,5 +84,8 @@ const SanPham = sequelize.define('SAN_PHAM', {
   timestamps: false,
   freezeTableName: true,
 });
+
+// KHAI BÁO LIÊN KẾT: 1 Sản phẩm có nhiều Ảnh
+SanPham.hasMany(AnhSanPham, { foreignKey: 'ma_san_pham', as: 'danh_sach_anh' });
 
 module.exports = SanPham;

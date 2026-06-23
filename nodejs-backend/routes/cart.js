@@ -36,7 +36,6 @@ router.post('/add', async (req, res) => {
 // 2. API Lấy danh sách giỏ hàng
 router.get('/', async (req, res) => {
     try {
-        // ĐÃ SỬA: Đưa câu lệnh truy vấn có Include ảnh vào ĐÚNG VỊ TRÍ này
         const items = await GioHang.findAll({ 
             where: { ma_nguoi_dung: req.user.ma_nguoi_dung },
             include: [{ 

@@ -6,7 +6,7 @@ const jwt = require('jsonwebtoken');
  * Nếu hợp lệ, gán thông tin user vào req.user
  */
 const verifyToken = (req, res, next) => {
-  const authHeader = req.headers.authorization;
+  const authHeader = req.headers.authorization || req.headers['authorization'];
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
     return res.status(401).json({
       success: false,
@@ -16,7 +16,8 @@ const verifyToken = (req, res, next) => {
 
   try {
     const token = authHeader.split(' ')[1];
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    // Thay đổi key secret nếu cần thiết
+    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'chuoi_khoa_bi_mat_jwt_cua_do_an');
     req.user = decoded;
     next();
   } catch (error) {

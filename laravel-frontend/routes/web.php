@@ -41,6 +41,7 @@ Route::prefix('user')->group(function () {
         return view('page_user.checkout');
     });
 
+    
 });
 
 // Admin Routes

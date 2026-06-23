@@ -37,4 +37,8 @@ const ChiTietDonHang = sequelize.define('chi_tiet_don_hang', {
   freezeTableName: true,
 });
 
+// 💡 Gợi ý thêm: Sau này nếu ông muốn Join bảng Chi tiết đơn hàng với bảng Sản phẩm hoặc Đơn hàng
+// thì ông có thể require Model đó vào và nhét lệnh belongsTo ở đây nhé. Ví dụ:
+// ChiTietDonHang.belongsTo(DonHang, { foreignKey: 'ma_don_hang' });
+
 module.exports = ChiTietDonHang;

@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>@yield('title', 'Trang chủ - Hệ thống Mỹ Phẩm')</title>
-    
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css" />
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="bg-white flex flex-col min-h-screen">
@@ -25,12 +25,15 @@
 
             <div class="flex items-center space-x-6">
                 <div class="relative hidden sm:block">
-                    <input type="text" placeholder="Tìm kiếm..." class="pl-4 pr-10 py-1.5 rounded-full border-none focus:outline-none focus:ring-2 focus:ring-pink-400 w-64 shadow-inner">
+                    <input type="text" id="search-input" autocomplete="off" placeholder="Tìm kiếm..." class="pl-4 pr-10 py-1.5 rounded-full border-none focus:outline-none focus:ring-2 focus:ring-pink-400 w-64 shadow-inner text-gray-700">
                     <button class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-pink-500">
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-5 h-5">
                           <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
                         </svg>
                     </button>
+
+                    <div id="search-dropdown" class="absolute left-0 top-full mt-2 w-full bg-white rounded-2xl shadow-2xl border border-gray-100 hidden overflow-hidden z-50 max-h-[400px] overflow-y-auto">
+                        </div>
                 </div>
 
                 <div class="flex items-center space-x-4 text-gray-700">
@@ -83,5 +86,70 @@
         </div>
     </footer>
 
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const searchInput = document.getElementById('search-input');
+            const searchDropdown = document.getElementById('search-dropdown');
+            let debounceTimer; // Dùng để tránh gọi API liên tục khi gõ nhanh
+
+            if (searchInput) {
+                searchInput.addEventListener('input', function() {
+                    const keyword = this.value.trim();
+
+                    // Nếu gõ ít hơn 2 chữ cái thì ẩn bảng đi
+                    if (keyword.length < 2) {
+                        searchDropdown.classList.add('hidden');
+                        return;
+                    }
+
+                    // Clear timer cũ, đợi 300ms sau khi người dùng ngừng gõ mới gọi API
+                    clearTimeout(debounceTimer);
+                    debounceTimer = setTimeout(async () => {
+                        try {
+                            const response = await fetch(`/search-live?q=${encodeURIComponent(keyword)}`);
+                            const data = await response.json();
+
+                            if (data.length > 0) {
+                                let html = '';
+                                data.forEach(item => {
+                                    const formattedPrice = new Intl.NumberFormat('vi-VN').format(item.gia) + ' đ';
+                                    html += `
+                                        <a href="/user/detail/${item.ma_san_pham}" class="flex items-center p-3 hover:bg-gray-50 border-b border-gray-50 transition duration-200">
+                                            <img src="${item.anh}" class="w-12 h-12 object-cover rounded-md border border-gray-200 shadow-sm">
+                                            <div class="ml-3 flex-1 overflow-hidden">
+                                                <p class="text-sm font-bold text-gray-800 truncate hover:text-pink-600">${item.ten_san_pham}</p>
+                                                <p class="text-sm text-pink-600 font-black mt-0.5">${formattedPrice}</p>
+                                            </div>
+                                        </a>
+                                    `;
+                                });
+                                searchDropdown.innerHTML = html;
+                                searchDropdown.classList.remove('hidden');
+                            } else {
+                                searchDropdown.innerHTML = '<div class="p-4 text-center text-sm font-medium text-gray-500">Không tìm thấy sản phẩm nào!</div>';
+                                searchDropdown.classList.remove('hidden');
+                            }
+                        } catch (error) {
+                            console.error('Lỗi tìm kiếm:', error);
+                        }
+                    }, 300); // Độ trễ 300ms
+                });
+
+                // Tự động ẩn bảng tìm kiếm khi bấm chuột ra ngoài
+                document.addEventListener('click', function(e) {
+                    if (!searchInput.contains(e.target) && !searchDropdown.contains(e.target)) {
+                        searchDropdown.classList.add('hidden');
+                    }
+                });
+                
+                // Hiện lại bảng nếu click lại vào ô input mà đã có chữ
+                searchInput.addEventListener('focus', function() {
+                    if (this.value.trim().length >= 2 && searchDropdown.innerHTML !== '') {
+                        searchDropdown.classList.remove('hidden');
+                    }
+                });
+            }
+        });
+    </script>
 </body>
 </html>

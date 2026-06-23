@@ -6,8 +6,11 @@ require('dotenv').config();
 const sequelize = require('./config/database');
 require('./models/associations'); // Setup model relationships
 const authRoutes = require('./routes/auth');
+const cartRoutes = require('./routes/cart');
+const myOrderRoutes = require('./routes/order');
 const dashboardRoutes = require('./routes/dashboard');
 const userRoutes = require('./routes/users');
+const reviewRoutes = require('./routes/review');
 const categoryRoutes = require('./routes/categories');
 const productRoutes = require('./routes/products');
 const orderRoutes = require('./routes/orders');
@@ -18,7 +21,9 @@ const cartRoutes = require('./routes/cart');
 const app = express();
 
 app.use(helmet());
-app.use(cors({ origin: 'http://localhost:8000' }));
+app.use(cors({ 
+    origin: ['http://localhost:8000', 'http://127.0.0.1:8000'] 
+}));
 app.use(express.json());
 
 // Routes
@@ -27,8 +32,12 @@ app.get('/', (req, res) => {
 });
 
 app.use('/api/auth', authRoutes);
+app.use('/api/cart', cartRoutes);
+app.use('/api/order', myOrderRoutes);
 app.use('/api/dashboard', dashboardRoutes);
 app.use('/api/users', userRoutes);
+app.use('/api/reviews', reviewRoutes);
+
 app.use('/api/categories', categoryRoutes);
 app.use('/api/products', productRoutes);
 app.use('/api/orders', orderRoutes);
