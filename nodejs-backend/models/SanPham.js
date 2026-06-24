@@ -85,7 +85,6 @@ const SanPham = sequelize.define('san_pham', {
   freezeTableName: true,
 });
 
-// KHAI BÁO LIÊN KẾT: 1 Sản phẩm có nhiều Ảnh
-SanPham.hasMany(AnhSanPham, { foreignKey: 'ma_san_pham', as: 'danh_sach_anh' });
+
 
 module.exports = SanPham;

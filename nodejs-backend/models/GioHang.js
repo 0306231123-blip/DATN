@@ -10,6 +10,6 @@ const GioHang = sequelize.define('gio_hang', {
   ngay_them: { type: DataTypes.DATE, defaultValue: DataTypes.NOW }
 }, { timestamps: false });
 
-GioHang.belongsTo(SanPham, { foreignKey: 'ma_san_pham', as: 'san_pham' });
+
 
 module.exports = GioHang;
