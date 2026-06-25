@@ -39,6 +39,25 @@
                 window.location.href = '/login';
             }
         }
+
+        if (token) {
+            document.cookie = 'token=' + encodeURIComponent(token) + '; path=/; max-age=604800; SameSite=Lax';
+        }
+
+        window.ADMIN_API_BASE_URL = 'http://localhost:3000/api';
+        const adminFetch = window.fetch.bind(window);
+        window.fetch = (resource, options = {}) => {
+            const requestUrl = typeof resource === 'string' ? resource : resource?.url;
+            if (requestUrl && requestUrl.startsWith(window.ADMIN_API_BASE_URL)) {
+                const authToken = localStorage.getItem('token');
+                const headers = new Headers(options.headers || (resource instanceof Request ? resource.headers : undefined));
+                if (authToken && !headers.has('Authorization')) {
+                    headers.set('Authorization', `Bearer ${authToken}`);
+                }
+                options = { ...options, headers };
+            }
+            return adminFetch(resource, options);
+        };
     </script>
 </head>
 <body>
@@ -158,10 +177,12 @@
                 if (confirm('Bạn có chắc chắn muốn đăng xuất?')) {
                     localStorage.removeItem('token');
                     localStorage.removeItem('user');
+                    document.cookie = 'token=; path=/; max-age=0; SameSite=Lax';
                     window.location.href = '/login';
                 }
             });
         }
+
     </script>
 
     @yield('scripts')

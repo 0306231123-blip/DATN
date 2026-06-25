@@ -8,6 +8,7 @@ const NguoiDung = require('../models/NguoiDung');
 // ==========================================
 
 const SanPham = require('../models/SanPham');
+const BienTheSanPham = require('../models/BienTheSanPham');
 const DanhMuc = require('../models/DanhMuc');
 const { Op } = require('sequelize');
 const sequelize = require('../config/database');
@@ -53,8 +54,12 @@ exports.getAllProducts = async (req, res) => {
     }
 
     // Filter by status
-    if (trang_thai && trang_thai !== 'all' && ['dang_ban', 'ngung_ban', 'het_hang'].includes(trang_thai)) {
-      where.trang_thai = trang_thai;
+    if (trang_thai && trang_thai !== 'all') {
+      if (trang_thai === 'sap_het_hang') {
+        where.so_luong_ton = { [Op.gt]: 0, [Op.lt]: 20 };
+      } else if (['dang_ban', 'ngung_ban', 'het_hang'].includes(trang_thai)) {
+        where.trang_thai = trang_thai;
+      }
     }
 
     // Filter by brand
@@ -83,6 +88,10 @@ exports.getAllProducts = async (req, res) => {
         model: DanhMuc,
         as: 'danh_muc',
         attributes: ['ma_danh_muc', 'ten_danh_muc'],
+        required: false,
+      }, {
+        model: BienTheSanPham,
+        as: 'bien_the',
         required: false,
       }],
     });
@@ -129,6 +138,10 @@ exports.getProductById = async (req, res) => {
         as: 'danh_muc',
         attributes: ['ma_danh_muc', 'ten_danh_muc'],
         required: false,
+      }, {
+        model: BienTheSanPham,
+        as: 'bien_the',
+        required: false,
       }],
     });
 
@@ -158,66 +171,65 @@ exports.getProductById = async (req, res) => {
  * Tạo sản phẩm mới
  */
 exports.createProduct = async (req, res) => {
+  const t = await sequelize.transaction();
   try {
     const {
       ten_san_pham, mo_ta, thanh_phan, huong_dan_su_dung,
       gia, gia_khuyen_mai, so_luong_ton, thuong_hieu,
       xuat_xu, ma_danh_muc, loai_da_phu_hop, anh_san_pham, trang_thai,
+      sku, variants
     } = req.body;
 
-    // Validate required fields
     if (!ten_san_pham || !ten_san_pham.trim()) {
-      return res.status(400).json({
-        status: 'error',
-        message: 'Tên sản phẩm không được để trống.',
-      });
+      await t.rollback();
+      return res.status(400).json({ status: 'error', message: 'Tên sản phẩm không được để trống.' });
     }
 
-    if (!gia || parseFloat(gia) <= 0) {
-      return res.status(400).json({
-        status: 'error',
-        message: 'Giá sản phẩm phải lớn hơn 0.',
-      });
-    }
-
-    // Validate sale price
-    if (gia_khuyen_mai && parseFloat(gia_khuyen_mai) >= parseFloat(gia)) {
-      return res.status(400).json({
-        status: 'error',
-        message: 'Giá khuyến mãi phải nhỏ hơn giá gốc.',
-      });
-    }
-
-    // Validate category exists (if provided)
     if (ma_danh_muc) {
       const category = await DanhMuc.findByPk(parseInt(ma_danh_muc));
       if (!category) {
-        return res.status(400).json({
-          status: 'error',
-          message: 'Danh mục không tồn tại.',
-        });
+        await t.rollback();
+        return res.status(400).json({ status: 'error', message: 'Danh mục không tồn tại.' });
       }
     }
 
-    // Check duplicate product name
-    const existing = await SanPham.findOne({
-      where: { ten_san_pham: ten_san_pham.trim() },
-    });
+    const existing = await SanPham.findOne({ where: { ten_san_pham: ten_san_pham.trim() } });
     if (existing) {
-      return res.status(409).json({
-        status: 'error',
-        message: 'Tên sản phẩm này đã tồn tại.',
-      });
+      await t.rollback();
+      return res.status(409).json({ status: 'error', message: 'Tên sản phẩm này đã tồn tại.' });
+    }
+
+    let finalGia = parseFloat(gia) || 0;
+    let finalGiaMax = finalGia;
+    let finalSoLuongTon = parseInt(so_luong_ton) || 0;
+    let finalCoBienThe = false;
+
+    if (variants && Array.isArray(variants) && variants.length > 0) {
+      finalCoBienThe = true;
+      const validGia = variants.map(v => parseFloat(v.gia)).filter(g => !isNaN(g) && g > 0);
+      if (validGia.length > 0) {
+        finalGia = Math.min(...validGia);
+        finalGiaMax = Math.max(...validGia);
+      }
+      finalSoLuongTon = variants.reduce((sum, v) => sum + (parseInt(v.so_luong_ton) || 0), 0);
+    }
+
+    if (!finalCoBienThe && finalGia <= 0) {
+      await t.rollback();
+      return res.status(400).json({ status: 'error', message: 'Giá sản phẩm phải lớn hơn 0.' });
     }
 
     const product = await SanPham.create({
       ten_san_pham: ten_san_pham.trim(),
+      sku: sku || null,
+      co_bien_the: finalCoBienThe,
       mo_ta: mo_ta || null,
       thanh_phan: thanh_phan || null,
       huong_dan_su_dung: huong_dan_su_dung || null,
-      gia: parseFloat(gia),
+      gia: finalGia,
+      gia_max: finalGiaMax,
       gia_khuyen_mai: gia_khuyen_mai ? parseFloat(gia_khuyen_mai) : null,
-      so_luong_ton: parseInt(so_luong_ton) || 0,
+      so_luong_ton: finalSoLuongTon,
       thuong_hieu: thuong_hieu || null,
       xuat_xu: xuat_xu || null,
       ma_danh_muc: ma_danh_muc ? parseInt(ma_danh_muc) : null,
@@ -225,14 +237,38 @@ exports.createProduct = async (req, res) => {
       anh_san_pham: anh_san_pham || null,
       trang_thai: trang_thai || 'dang_ban',
       ngay_tao: new Date(),
+    }, { transaction: t });
+
+    if (finalCoBienThe) {
+      const variantRecords = variants.map(v => ({
+        ma_san_pham: product.ma_san_pham,
+        sku: v.sku,
+        ten_bien_the: v.ten_bien_the,
+        thuoc_tinh: v.thuoc_tinh,
+        gia: parseFloat(v.gia),
+        gia_khuyen_mai: v.gia_khuyen_mai ? parseFloat(v.gia_khuyen_mai) : null,
+        so_luong_ton: parseInt(v.so_luong_ton) || 0,
+        hinh_anh: v.hinh_anh || null
+      }));
+      await BienTheSanPham.bulkCreate(variantRecords, { transaction: t });
+    }
+
+    await t.commit();
+
+    const createdProduct = await SanPham.findByPk(product.ma_san_pham, {
+      include: [
+        { model: DanhMuc, as: 'danh_muc', attributes: ['ma_danh_muc', 'ten_danh_muc'] },
+        { model: BienTheSanPham, as: 'bien_the' }
+      ]
     });
 
     res.status(201).json({
       status: 'success',
       message: 'Tạo sản phẩm thành công.',
-      data: product,
+      data: createdProduct,
     });
   } catch (error) {
+    if (t) await t.rollback();
     console.error('Create product error:', error);
     res.status(500).json({
       status: 'error',
@@ -247,76 +283,69 @@ exports.createProduct = async (req, res) => {
  * Cập nhật sản phẩm
  */
 exports.updateProduct = async (req, res) => {
+  const t = await sequelize.transaction();
   try {
     const { id } = req.params;
 
     const productId = parseInt(id);
     if (isNaN(productId) || productId <= 0) {
-      return res.status(400).json({
-        status: 'error',
-        message: 'ID sản phẩm không hợp lệ.',
-      });
+      await t.rollback();
+      return res.status(400).json({ status: 'error', message: 'ID sản phẩm không hợp lệ.' });
     }
 
     const product = await SanPham.findByPk(productId);
     if (!product) {
-      return res.status(404).json({
-        status: 'error',
-        message: 'Sản phẩm không tồn tại.',
-      });
+      await t.rollback();
+      return res.status(404).json({ status: 'error', message: 'Sản phẩm không tồn tại.' });
     }
 
     const {
       ten_san_pham, mo_ta, thanh_phan, huong_dan_su_dung,
       gia, gia_khuyen_mai, so_luong_ton, thuong_hieu,
       xuat_xu, ma_danh_muc, loai_da_phu_hop, anh_san_pham, trang_thai,
+      sku, variants
     } = req.body;
 
-    // Check unique name (exclude current product)
     if (ten_san_pham && ten_san_pham.trim() !== product.ten_san_pham) {
       const existing = await SanPham.findOne({
-        where: {
-          ten_san_pham: ten_san_pham.trim(),
-          ma_san_pham: { [Op.ne]: productId },
-        },
+        where: { ten_san_pham: ten_san_pham.trim(), ma_san_pham: { [Op.ne]: productId } }
       });
       if (existing) {
-        return res.status(409).json({
-          status: 'error',
-          message: 'Tên sản phẩm này đã tồn tại.',
-        });
+        await t.rollback();
+        return res.status(409).json({ status: 'error', message: 'Tên sản phẩm này đã tồn tại.' });
       }
     }
 
-    // Validate sale price vs original price
-    const newGia = gia !== undefined ? parseFloat(gia) : parseFloat(product.gia);
-    if (gia_khuyen_mai !== undefined && gia_khuyen_mai !== null && parseFloat(gia_khuyen_mai) >= newGia) {
-      return res.status(400).json({
-        status: 'error',
-        message: 'Giá khuyến mãi phải nhỏ hơn giá gốc.',
-      });
-    }
+    let finalGia = gia !== undefined ? parseFloat(gia) : parseFloat(product.gia);
+    let finalGiaMax = product.gia_max !== undefined ? parseFloat(product.gia_max) : finalGia;
+    let finalSoLuongTon = so_luong_ton !== undefined ? parseInt(so_luong_ton) : parseInt(product.so_luong_ton);
+    let finalCoBienThe = product.co_bien_the;
 
-    // Validate category if provided
-    if (ma_danh_muc !== undefined && ma_danh_muc !== null) {
-      const category = await DanhMuc.findByPk(parseInt(ma_danh_muc));
-      if (!category) {
-        return res.status(400).json({
-          status: 'error',
-          message: 'Danh mục không tồn tại.',
-        });
+    if (variants && Array.isArray(variants)) {
+      if (variants.length > 0) {
+        finalCoBienThe = true;
+        const validGia = variants.map(v => parseFloat(v.gia)).filter(g => !isNaN(g) && g > 0);
+        if (validGia.length > 0) {
+          finalGia = Math.min(...validGia);
+          finalGiaMax = Math.max(...validGia);
+        }
+        finalSoLuongTon = variants.reduce((sum, v) => sum + (parseInt(v.so_luong_ton) || 0), 0);
+      } else {
+        finalCoBienThe = false;
       }
     }
 
-    // Prepare update data - only update provided fields
     const updateData = {};
     if (ten_san_pham !== undefined) updateData.ten_san_pham = ten_san_pham.trim();
+    if (sku !== undefined) updateData.sku = sku || null;
+    updateData.co_bien_the = finalCoBienThe;
     if (mo_ta !== undefined) updateData.mo_ta = mo_ta;
     if (thanh_phan !== undefined) updateData.thanh_phan = thanh_phan;
     if (huong_dan_su_dung !== undefined) updateData.huong_dan_su_dung = huong_dan_su_dung;
-    if (gia !== undefined) updateData.gia = parseFloat(gia);
+    updateData.gia = finalGia;
+    updateData.gia_max = finalGiaMax;
     if (gia_khuyen_mai !== undefined) updateData.gia_khuyen_mai = gia_khuyen_mai ? parseFloat(gia_khuyen_mai) : null;
-    if (so_luong_ton !== undefined) updateData.so_luong_ton = parseInt(so_luong_ton);
+    updateData.so_luong_ton = finalSoLuongTon;
     if (thuong_hieu !== undefined) updateData.thuong_hieu = thuong_hieu;
     if (xuat_xu !== undefined) updateData.xuat_xu = xuat_xu;
     if (ma_danh_muc !== undefined) updateData.ma_danh_muc = ma_danh_muc ? parseInt(ma_danh_muc) : null;
@@ -328,30 +357,65 @@ exports.updateProduct = async (req, res) => {
 
     updateData.ngay_cap_nhat = new Date();
 
-    await product.update(updateData);
+    await product.update(updateData, { transaction: t });
 
-    // Reload with category association
+    if (variants && Array.isArray(variants)) {
+      const existingVariants = await BienTheSanPham.findAll({ where: { ma_san_pham: productId } });
+      const incomingIds = variants.filter(v => v.ma_bien_the).map(v => parseInt(v.ma_bien_the));
+      
+      for (let ev of existingVariants) {
+        if (!incomingIds.includes(ev.ma_bien_the)) {
+          try {
+            await ev.destroy({ transaction: t });
+          } catch (err) {
+            // Ignoring constraint error during deletion, leaving it alone
+          }
+        }
+      }
+
+      for (let v of variants) {
+        if (v.ma_bien_the) {
+          const ev = existingVariants.find(e => e.ma_bien_the === parseInt(v.ma_bien_the));
+          if (ev) {
+            await ev.update({
+              sku: v.sku,
+              ten_bien_the: v.ten_bien_the,
+              thuoc_tinh: v.thuoc_tinh,
+              gia: parseFloat(v.gia),
+              gia_khuyen_mai: v.gia_khuyen_mai ? parseFloat(v.gia_khuyen_mai) : null,
+              so_luong_ton: parseInt(v.so_luong_ton) || 0,
+              hinh_anh: v.hinh_anh || null
+            }, { transaction: t });
+          }
+        } else {
+          await BienTheSanPham.create({
+            ma_san_pham: productId,
+            sku: v.sku,
+            ten_bien_the: v.ten_bien_the,
+            thuoc_tinh: v.thuoc_tinh,
+            gia: parseFloat(v.gia),
+            gia_khuyen_mai: v.gia_khuyen_mai ? parseFloat(v.gia_khuyen_mai) : null,
+            so_luong_ton: parseInt(v.so_luong_ton) || 0,
+            hinh_anh: v.hinh_anh || null
+          }, { transaction: t });
+        }
+      }
+    }
+
+    await t.commit();
+
     await product.reload({
-      include: [{
-        model: DanhMuc,
-        as: 'danh_muc',
-        attributes: ['ma_danh_muc', 'ten_danh_muc'],
-        required: false,
-      }],
+      include: [
+        { model: DanhMuc, as: 'danh_muc', attributes: ['ma_danh_muc', 'ten_danh_muc'] },
+        { model: BienTheSanPham, as: 'bien_the' }
+      ]
     });
 
-    res.status(200).json({
-      status: 'success',
-      message: 'Cập nhật sản phẩm thành công.',
-      data: product,
-    });
+    res.status(200).json({ status: 'success', message: 'Cập nhật sản phẩm thành công.', data: product });
   } catch (error) {
+    if (t) await t.rollback();
     console.error('Update product error:', error);
-    res.status(500).json({
-      status: 'error',
-      message: 'Lỗi khi cập nhật sản phẩm.',
-      error: error.message,
-    });
+    res.status(500).json({ status: 'error', message: 'Lỗi khi cập nhật sản phẩm.', error: error.message });
   }
 };
 
@@ -430,7 +494,7 @@ exports.getStats = async (req, res) => {
 
     const sapHetHang = await SanPham.count({
       where: {
-        so_luong_ton: { [Op.gt]: 0, [Op.lte]: 30 },
+        so_luong_ton: { [Op.gt]: 0, [Op.lt]: 20 },
       },
     });
 
@@ -448,7 +512,7 @@ exports.getStats = async (req, res) => {
         dang_ban: dangBan,
         ngung_ban: ngungBan,
         het_hang: hetHang,
-        sap_het_hang: sapHetHang,
+        sap_het: sapHetHang,
         khuyen_mai: khuyenMai,
       },
     });

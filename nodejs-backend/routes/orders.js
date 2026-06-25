@@ -1,7 +1,10 @@
 const express = require('express');
 const OrderController = require('../controllers/OrderController');
+const { verifyToken, requireAdmin } = require('../middleware/verifyToken');
 
 const router = express.Router();
+
+router.use(verifyToken, requireAdmin);
 
 /**
  * Order Management Routes

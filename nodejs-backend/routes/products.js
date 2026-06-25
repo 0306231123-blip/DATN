@@ -1,5 +1,6 @@
 const express = require('express');
 const ProductController = require('../controllers/ProductController');
+const { verifyToken, requireAdmin } = require('../middleware/verifyToken');
 
 const router = express.Router();
 
@@ -12,7 +13,7 @@ const router = express.Router();
 
 // Specific routes first
 // GET /api/products/stats - Product statistics
-router.get('/stats', ProductController.getStats);
+router.get('/stats', verifyToken, requireAdmin, ProductController.getStats);
 
 // GET /api/products/brands - List unique brands (for filter dropdown)
 router.get('/brands', ProductController.getBrands);
@@ -28,12 +29,12 @@ router.get('/', ProductController.getAllProducts);
 router.get('/:id', ProductController.getProductById);
 
 // POST /api/products - Create new product
-router.post('/', ProductController.createProduct);
+router.post('/', verifyToken, requireAdmin, ProductController.createProduct);
 
 // PUT /api/products/:id - Update product
-router.put('/:id', ProductController.updateProduct);
+router.put('/:id', verifyToken, requireAdmin, ProductController.updateProduct);
 
 // DELETE /api/products/:id - Delete product
-router.delete('/:id', ProductController.deleteProduct);
+router.delete('/:id', verifyToken, requireAdmin, ProductController.deleteProduct);
 
 module.exports = router;

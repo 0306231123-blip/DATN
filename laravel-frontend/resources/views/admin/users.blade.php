@@ -147,7 +147,7 @@ let currentEditId = null;
 // Load users
 async function loadUsers(search = '', role = 'all') {
     try {
-        let url = `${API_BASE_URL}/users?limit=100`;
+        let url = `${API_BASE_URL}/users?per_page=100`;
         if (search) {
             url += `&search=${encodeURIComponent(search)}`;
         }

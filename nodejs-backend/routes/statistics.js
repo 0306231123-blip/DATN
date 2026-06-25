@@ -1,8 +1,11 @@
 const express = require('express');
 const sequelize = require('../config/database');
 const { QueryTypes } = require('sequelize');
+const { verifyToken, requireAdmin } = require('../middleware/verifyToken');
 
 const router = express.Router();
+
+router.use(verifyToken, requireAdmin);
 
 /**
  * GET /api/statistics/overview

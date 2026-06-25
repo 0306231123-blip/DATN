@@ -12,6 +12,15 @@ const SanPham = sequelize.define('san_pham', {
     type: DataTypes.STRING(255),
     allowNull: false,
   },
+  sku: {
+    type: DataTypes.STRING(100),
+    allowNull: true,
+    unique: true,
+  },
+  co_bien_the: {
+    type: DataTypes.BOOLEAN,
+    defaultValue: false,
+  },
   mo_ta: {
     type: DataTypes.TEXT,
     allowNull: true,
@@ -29,6 +38,10 @@ const SanPham = sequelize.define('san_pham', {
     allowNull: false,
   },
   gia_khuyen_mai: {
+    type: DataTypes.DECIMAL(12, 2),
+    allowNull: true,
+  },
+  gia_max: {
     type: DataTypes.DECIMAL(12, 2),
     allowNull: true,
   },
@@ -84,8 +97,5 @@ const SanPham = sequelize.define('san_pham', {
   timestamps: false,
   freezeTableName: true,
 });
-
-// KHAI BÁO LIÊN KẾT: 1 Sản phẩm có nhiều Ảnh
-SanPham.hasMany(AnhSanPham, { foreignKey: 'ma_san_pham', as: 'danh_sach_anh' });
 
 module.exports = SanPham;
