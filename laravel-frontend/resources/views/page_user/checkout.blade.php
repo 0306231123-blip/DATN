@@ -105,7 +105,7 @@
         const streetInput = document.getElementById('street');
 
         // ==========================================
-        // 1. TẢI DỮ LIỆU TỈNH THÀNH (API MỚI NHẤT)
+        // 1. TẢI DỮ LIỆU TỈNH THÀNH
         // ==========================================
         fetch('https://esgoo.net/api-tinhthanh/1/0.htm')
             .then(res => res.json())
@@ -125,7 +125,6 @@
         // Khi chọn Tỉnh -> Tải Quận Huyện
         provinceSelect.addEventListener('change', function() {
             const provinceId = this.value;
-            // Reset lại Quận và Phường
             districtSelect.innerHTML = '<option value="" disabled selected>2. Chọn Quận / Huyện</option>';
             wardSelect.innerHTML = '<option value="" disabled selected>3. Chọn Phường / Xã</option>';
             
@@ -141,14 +140,12 @@
                             districtSelect.appendChild(option);
                         });
                     }
-                })
-                .catch(err => console.error('Lỗi tải API Huyện:', err));
+                });
         });
 
         // Khi chọn Quận Huyện -> Tải Phường Xã
         districtSelect.addEventListener('change', function() {
             const districtId = this.value;
-            // Reset lại Phường
             wardSelect.innerHTML = '<option value="" disabled selected>3. Chọn Phường / Xã</option>';
             
             fetch(`https://esgoo.net/api-tinhthanh/3/${districtId}.htm`)
@@ -163,8 +160,7 @@
                             wardSelect.appendChild(option);
                         });
                     }
-                })
-                .catch(err => console.error('Lỗi tải API Phường:', err));
+                });
         });
 
         // ==========================================
@@ -207,30 +203,72 @@
             const wardName = (wardOption && wardOption.value !== "") ? wardOption.getAttribute('data-name') : null;
             const street = streetInput.value.trim();
 
-            // KIỂM TRA ĐIỀU KIỆN BẮT BUỘC (VALIDATION GẮT GAY)
+            // Reset viền đỏ trước khi kiểm tra lại
+            [provinceSelect, districtSelect, wardSelect, streetInput].forEach(el => {
+                el.classList.remove('border-red-500', 'ring-1', 'ring-red-500');
+            });
+
+            // KIỂM TRA ĐIỀU KIỆN BẮT BUỘC (SẼ CHỚP VIỀN ĐỎ NẾU THIẾU)
             if (!provinceName) {
                 alert('🛑 BẮT BUỘC: Vui lòng chọn Tỉnh / Thành phố!');
+                provinceSelect.classList.add('border-red-500', 'ring-1', 'ring-red-500');
                 provinceSelect.focus();
                 return;
             }
             if (!districtName) {
                 alert('🛑 BẮT BUỘC: Vui lòng chọn Quận / Huyện!');
+                districtSelect.classList.add('border-red-500', 'ring-1', 'ring-red-500');
                 districtSelect.focus();
                 return;
             }
             if (!wardName) {
                 alert('🛑 BẮT BUỘC: Vui lòng chọn Phường / Xã!');
+                wardSelect.classList.add('border-red-500', 'ring-1', 'ring-red-500');
                 wardSelect.focus();
                 return;
             }
+            
+            // ... code phía trên giữ nguyên ...
+            
+            // ==========================================
+            // CHỐT CHẶN KIỂM TRA SỐ NHÀ SIÊU CẤP
+            // ==========================================
             if (!street) {
                 alert('🛑 BẮT BUỘC: Vui lòng nhập Số nhà, tên đường!');
+                streetInput.classList.add('border-red-500', 'ring-1', 'ring-red-500');
+                streetInput.focus();
+                return;
+            }
+
+            // 1. Kiểm tra độ dài (Ít nhất 5 ký tự)
+            if (street.length < 5) {
+                alert('🛑 ĐỊA CHỈ QUÁ NGẮN: Vui lòng nhập rõ ràng và chi tiết hơn (ít nhất 5 ký tự)!');
+                streetInput.classList.add('border-red-500', 'ring-1', 'ring-red-500');
+                streetInput.focus();
+                return;
+            }
+
+            // 2. Chống spam ký tự (Chặn lặp 3 ký tự liên tiếp như aaa, 111, bbb...)
+            const isSpam = /(.)\1{2,}/.test(street);
+            if (isSpam) {
+                alert('🛑 ĐỊA CHỈ KHÔNG HỢP LỆ: Vui lòng nhập địa chỉ có ý nghĩa, không nhập ký tự linh tinh!');
+                streetInput.classList.add('border-red-500', 'ring-1', 'ring-red-500');
+                streetInput.focus();
+                return;
+            }
+
+            const hasLetters = /[a-zA-ZÀ-ỹ]/.test(street);
+            if (!hasLetters) {
+                alert('🛑 ĐỊA CHỈ THIẾU: Vui lòng nhập thêm tên đường, tổ, hoặc thôn/xóm (không được chỉ nhập mỗi số)!');
+                streetInput.classList.add('border-red-500', 'ring-1', 'ring-red-500');
                 streetInput.focus();
                 return;
             }
 
             // Gom địa chỉ chuẩn 3 cấp + chi tiết
             const fullAddress = `${street}, ${wardName}, ${districtName}, ${provinceName}`;
+            
+            // ... code khóa nút bấm phía dưới giữ nguyên ...
 
             // Khóa nút bấm để tránh spam click
             btnPay.disabled = true;

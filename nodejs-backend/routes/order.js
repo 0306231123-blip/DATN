@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const jwt = require('jsonwebtoken');
 
-// IMPORT ĐÚNG ĐƯỜNG DẪN (Kiểm tra lại tên file trong thư mục models của ông)
+// IMPORT ĐÚNG ĐƯỜNG DẪN 
 const sequelize = require('../config/database');
 const GioHang = require('../models/GioHang');
 const SanPham = require('../models/SanPham');
@@ -15,7 +15,17 @@ router.post('/create', async (req, res) => {
     try {
         const token = req.headers.authorization.split(' ')[1];
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
-        const { dia_chi, so_dien_thoai } = req.body; // Lấy thêm số điện thoại từ frontend nếu có
+        const { dia_chi, so_dien_thoai } = req.body; 
+        
+        // ==========================================
+        // CHỐT CHẶN BACKEND: BẮT BUỘC CÓ SỐ NHÀ
+        // ==========================================
+        if (!dia_chi || dia_chi.trim() === '' || dia_chi.trim().startsWith(',')) {
+            await t.rollback();
+            return res.status(400).json({ success: false, message: 'Bắt buộc phải nhập đầy đủ số nhà và tên đường!' });
+        }
+        // ==========================================
+
         const maNguoiDung = decoded.ma_nguoi_dung;
 
         const items = await GioHang.findAll({
@@ -37,11 +47,11 @@ router.post('/create', async (req, res) => {
             tong_tien += (item.san_pham.gia_khuyen_mai || item.san_pham.gia) * item.so_luong;
         }
 
-        // 2. Tạo đơn hàng (ĐẦY ĐỦ CÁC TRƯỜNG)
+        // 2. Tạo đơn hàng 
         const donHangMoi = await DonHang.create({
             ma_nguoi_dung: maNguoiDung,
-            ho_ten_nguoi_nhan: 'Khách hàng', // Nên lấy từ req.body nếu có
-            so_dien_thoai_nhan: so_dien_thoai || '0123456789', // Mặc định nếu không có
+            ho_ten_nguoi_nhan: 'Khách hàng', 
+            so_dien_thoai_nhan: so_dien_thoai || '0123456789', 
             dia_chi_giao: dia_chi,
             tong_tien_hang: tong_tien,
             tong_thanh_toan: tong_tien,
@@ -61,7 +71,7 @@ router.post('/create', async (req, res) => {
             await ChiTietDonHang.create({
                 ma_don_hang: donHangMoi.ma_don_hang,
                 ma_san_pham: item.ma_san_pham,
-                ten_san_pham: item.san_pham.ten_san_pham, // BẮT BUỘC CÓ DÒNG NÀY
+                ten_san_pham: item.san_pham.ten_san_pham, 
                 so_luong: item.so_luong,
                 don_gia: (item.san_pham.gia_khuyen_mai || item.san_pham.gia),
                 thanh_tien: (item.san_pham.gia_khuyen_mai || item.san_pham.gia) * item.so_luong
@@ -78,7 +88,7 @@ router.post('/create', async (req, res) => {
     }
 });
 
-// --- 2. HỦY ĐƠN HÀNG (CỘNG LẠI KHO) ---
+// --- 2. CẬP NHẬT TRẠNG THÁI ĐƠN (HỦY ĐƠN / TRẢ HÀNG HOÀN TIỀN) ---
 router.post('/update-status', async (req, res) => {
     const t = await sequelize.transaction();
     try {
@@ -94,11 +104,13 @@ router.post('/update-status', async (req, res) => {
             return res.status(404).json({ success: false, message: 'Không tìm thấy đơn' });
         }
 
-        // Logic hủy: Chỉ được hủy khi đang chờ xác nhận
+        // ==========================================
+        // CASE 1: KHÁCH HÀNG HỦY ĐƠN
+        // ==========================================
         if (trang_thai === 'da_huy') {
             if (donHang.trang_thai_don !== 'cho_xac_nhan') {
                 await t.rollback();
-                return res.status(400).json({ success: false, message: 'Đơn đã xác nhận, không hủy được!' });
+                return res.status(400).json({ success: false, message: 'Đơn đã xác nhận hoặc đang giao, không hủy được!' });
             }
 
             // CỘNG LẠI KHO
@@ -109,18 +121,40 @@ router.post('/update-status', async (req, res) => {
                     transaction: t
                 });
             }
+        } 
+        
+        // ==========================================
+        // CASE 2: KHÁCH HÀNG TRẢ HÀNG & HOÀN TIỀN
+        // ==========================================
+        else if (trang_thai === 'tra_hang_hoan_tien') {
+            if (donHang.trang_thai_don !== 'giao_thanh_cong') {
+                await t.rollback();
+                return res.status(400).json({ success: false, message: 'Chỉ đơn hàng đã giao thành công mới được yêu cầu trả hàng!' });
+            }
+
+            // CỘNG LẠI KHO (Vì khách trả lại hàng cho shop)
+            for (let item of donHang.chi_tiet) {
+                await SanPham.increment('so_luong_ton', {
+                    by: item.so_luong,
+                    where: { ma_san_pham: item.ma_san_pham },
+                    transaction: t
+                });
+            }
         }
 
+        // Cập nhật trạng thái mới cho đơn hàng
         donHang.trang_thai_don = trang_thai;
         await donHang.save({ transaction: t });
 
         await t.commit();
-        res.json({ success: true, message: 'Cập nhật thành công' });
+        res.json({ success: true, message: 'Cập nhật trạng thái thành công' });
     } catch (error) {
         await t.rollback();
         res.status(500).json({ success: false, message: error.message });
     }
 });
+
+// --- 3. LẤY LỊCH SỬ ĐƠN HÀNG ---
 router.get('/my-orders', async (req, res) => {
     try {
         const token = req.headers.authorization.split(' ')[1];
@@ -133,7 +167,7 @@ router.get('/my-orders', async (req, res) => {
             include: [{ 
                 model: ChiTietDonHang, 
                 as: 'chi_tiet',
-                include: [{ model: SanPham, as: 'san_pham' }] // Thêm cái này để lấy tên sp, ảnh sp
+                include: [{ model: SanPham, as: 'san_pham' }] 
             }]
         });
 
