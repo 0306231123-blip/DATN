@@ -210,7 +210,7 @@
         window.location.href = '/login';
     }
 
-    // 5. TẢI VÀ HIỂN THỊ ĐƠN HÀNG (ĐÃ CẬP NHẬT GIAO THÀNH CÔNG VÀ HOÀN THÀNH)
+    // 5. TẢI VÀ HIỂN THỊ ĐƠN HÀNG (CÓ IN LÝ DO HỦY ĐƠN)
     async function loadMyOrders() {
         const token = localStorage.getItem('token');
         const ordersContainer = document.getElementById('orders-container');
@@ -256,7 +256,6 @@
                         if (order.trang_thai_don === 'giao_thanh_cong') {
                             statusColor = 'bg-green-100 text-green-700';
                             statusText = 'Giao thành công (Chờ xác nhận)';
-                            // NẾU GIAO THÀNH CÔNG -> HIỆN 2 NÚT GIỐNG SHOPEE
                             actionBtnHtml = `
                                 <div class="flex space-x-3 mt-4 w-full">
                                     <button onclick="updateOrderStatus(${order.ma_don_hang}, 'hoan_thanh')" class="w-1/2 bg-gray-800 hover:bg-black text-white font-bold py-2 px-4 rounded-lg transition text-sm shadow">
@@ -268,13 +267,18 @@
                                 </div>
                                 <p class="text-xs text-gray-400 mt-2 text-center w-full">Đơn hàng sẽ tự động hoàn thành sau 7 ngày</p>
                             `;
-                        } else if (order.trang_thai_don === 'da_huy') {
+                        } 
+                        else if (order.trang_thai_don === 'da_huy') {
                             statusColor = 'bg-red-100 text-red-700';
                             statusText = 'Đã hủy';
-                        } else if (order.trang_thai_don === 'hoan_thanh') {
+                            // ĐOẠN NÀY HIỂN THỊ LÝ DO HỦY ĐƠN LÊN MÀN HÌNH
+                            if (order.ly_do_huy_don) {
+                                actionBtnHtml = `<div class="mt-4 text-sm text-left text-red-600 bg-red-50 p-3 rounded-lg w-full border border-red-100"><b>Lý do hủy:</b> ${order.ly_do_huy_don}</div>`;
+                            }
+                        } 
+                        else if (order.trang_thai_don === 'hoan_thanh') {
                             statusColor = 'bg-blue-100 text-blue-700 border border-blue-200';
                             statusText = 'Hoàn thành';
-                            // ĐÃ HOÀN THÀNH THÌ KHÓA TÍNH NĂNG TRẢ HÀNG
                             actionBtnHtml = `<div class="mt-4 text-center text-green-600 font-bold w-full bg-green-50 py-2 rounded-lg">Cảm ơn bạn đã mua sắm!</div>`;
                         }
 
@@ -320,10 +324,8 @@
                         } else if (order.trang_thai_don === 'tra_hang_hoan_tien') {
                             activeStatusText = 'Đang xử lý trả hàng';
                             activeStatusColor = 'bg-orange-100 text-orange-700 border border-orange-300'; 
-                            // Nếu có lý do thì in ra cho khách xem luôn
-                            if (order.ly_do_tra_hang) {
-                                actionBtnHtml = `<div class="mt-4 text-sm text-left text-orange-600 bg-orange-50 p-3 rounded-lg w-full"><b>Lý do:</b> ${order.ly_do_tra_hang}</div>`;
-                            }
+                            // In ra ghi chú chờ shop duyệt (nếu muốn)
+                            actionBtnHtml = `<div class="mt-4 text-sm text-left text-orange-600 bg-orange-50 p-3 rounded-lg w-full">Shop đang xử lý yêu cầu trả hàng của bạn.</div>`;
                         }
 
                         htmlOrders += `
@@ -333,12 +335,9 @@
                                     <span class="px-4 py-1 text-sm font-bold rounded-full ${activeStatusColor}">${activeStatusText}</span>
                                 </div>
                                 ${productsHtml}
-                                <div class="mt-4 pt-4 border-t border-gray-100 flex flex-col justify-end items-end space-y-2">
-                                    <div class="flex justify-between items-center w-full">
-                                        <span class="font-bold text-gray-700">Tổng thanh toán:</span>
-                                        <span class="font-black text-pink-600 text-xl">${total}</span>
-                                    </div>
-                                    <div class="w-full">${actionBtnHtml}</div>
+                                <div class="mt-4 pt-4 border-t border-gray-100 text-right">
+                                    <p class="font-black text-pink-600 text-xl">${total}</p>
+                                    ${actionBtnHtml}
                                 </div>
                             </div>`;
                     }
@@ -361,18 +360,23 @@
         }
     }
 
-    // 6. HÀM CHUNG ĐỂ CẬP NHẬT TRẠNG THÁI (CÓ THÊM NHẬP LÝ DO)
+    // 6. HÀM CHUNG ĐỂ CẬP NHẬT TRẠNG THÁI (GỬI KÈM LÝ DO HỦY / LÝ DO TRẢ HÀNG)
     async function updateOrderStatus(maDonHang, trangThaiMoi) {
         let lyDoTraHang = null;
+        let lyDoHuyDon = null;
 
+        // KIỂM TRA NẾU LÀ HỦY ĐƠN -> BẬT PROMPT NHẬP LÝ DO
         if (trangThaiMoi === 'da_huy') {
-            if (!confirm("Bạn có chắc chắn muốn hủy đơn hàng này không? Hành động này không thể hoàn tác.")) return;
+            lyDoHuyDon = prompt("Vui lòng nhập lý do hủy đơn hàng (Bắt buộc):");
+            if (!lyDoHuyDon || lyDoHuyDon.trim() === "") {
+                alert("Bạn phải nhập lý do thì hệ thống mới xử lý hủy đơn!");
+                return; // Dừng lại không gọi API nữa
+            }
         } 
         else if (trangThaiMoi === 'hoan_thanh') {
             if (!confirm("Xác nhận bạn đã nhận được hàng và sản phẩm không có vấn đề gì? (Sau khi xác nhận sẽ không thể trả hàng nữa)")) return;
         }
         else if (trangThaiMoi === 'tra_hang_hoan_tien') {
-            // HIỆN KHUNG NHẬP LÝ DO BẮT BUỘC
             lyDoTraHang = prompt("Vui lòng nhập chi tiết lý do bạn muốn trả hàng (Bắt buộc):");
             if (!lyDoTraHang || lyDoTraHang.trim() === "") {
                 alert("Bạn phải nhập lý do thì Shop mới xử lý được nhé!");
@@ -391,7 +395,8 @@
                 body: JSON.stringify({ 
                     ma_don_hang: maDonHang, 
                     trang_thai: trangThaiMoi,
-                    ly_do_tra_hang: lyDoTraHang // Gửi lý do lên Server
+                    ly_do_tra_hang: lyDoTraHang,
+                    ly_do_huy_don: lyDoHuyDon // Backend sẽ tự lấy cái này lưu vào Database
                 })
             });
 
