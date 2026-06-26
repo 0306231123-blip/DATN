@@ -153,6 +153,26 @@
         </div>
     </div>
 
+    <!-- Custom Message Box Global -->
+    <div class="modal" id="modal-confirm-global" style="display: none; max-width: 400px; z-index: 9999;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="confirm-title-global" style="font-size: 1.25rem;">Xác nhận</h2>
+            </div>
+            <div style="padding: 20px 0;">
+                <p id="confirm-message-global" style="margin-bottom: 15px; font-size: 15px; color: var(--text-color);"></p>
+                <div id="prompt-container-global" style="display: none;">
+                    <input type="text" id="prompt-input-global" class="form-control" style="width: 100%;">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" id="btn-confirm-cancel-global">Hủy</button>
+                <button type="button" class="btn btn-primary" id="btn-confirm-ok-global">Đồng ý</button>
+            </div>
+        </div>
+    </div>
+    <div class="modal-overlay" id="modal-overlay-global" style="display: none; z-index: 9998;"></div>
+
     <script>
         // Initialize Lucide icons
         lucide.createIcons();
@@ -169,12 +189,83 @@
             });
         }
 
+        // Custom Dialog Function Global
+        window.showCustomDialog = function(options) {
+            return new Promise((resolve) => {
+                const { title, message, isPrompt, defaultValue, isAlert } = options;
+                
+                document.getElementById('confirm-title-global').textContent = title;
+                document.getElementById('confirm-message-global').textContent = message;
+                
+                const promptContainer = document.getElementById('prompt-container-global');
+                const promptInput = document.getElementById('prompt-input-global');
+                
+                if (isPrompt) {
+                    promptContainer.style.display = 'block';
+                    promptInput.value = defaultValue || '';
+                    setTimeout(() => promptInput.focus(), 50);
+                } else {
+                    promptContainer.style.display = 'none';
+                }
+                
+                const btnCancel = document.getElementById('btn-confirm-cancel-global');
+                const btnOk = document.getElementById('btn-confirm-ok-global');
+
+                if (isAlert) {
+                    btnCancel.style.display = 'none';
+                    btnOk.textContent = 'OK';
+                } else {
+                    btnCancel.style.display = 'inline-block';
+                    btnOk.textContent = 'Đồng ý';
+                }
+                
+                document.getElementById('modal-confirm-global').style.display = 'block';
+                document.getElementById('modal-overlay-global').style.display = 'block';
+                
+                const cleanup = () => {
+                    document.getElementById('modal-confirm-global').style.display = 'none';
+                    document.getElementById('modal-overlay-global').style.display = 'none';
+                    
+                    // Remove listeners to prevent duplicates
+                    btnCancel.replaceWith(btnCancel.cloneNode(true));
+                    btnOk.replaceWith(btnOk.cloneNode(true));
+                };
+                
+                document.getElementById('btn-confirm-cancel-global').addEventListener('click', () => { 
+                    cleanup(); 
+                    resolve(null); 
+                });
+                
+                document.getElementById('btn-confirm-ok-global').addEventListener('click', () => {
+                    const val = isPrompt ? document.getElementById('prompt-input-global').value : true;
+                    cleanup();
+                    resolve(val);
+                });
+            });
+        };
+
+        // Show alert Global
+        window.showAlert = function(message, type = 'info') {
+            const title = type === 'error' ? 'Lỗi' : (type === 'success' ? 'Thành công' : 'Thông báo');
+            return window.showCustomDialog({
+                title: title,
+                message: message,
+                isPrompt: false,
+                isAlert: true
+            });
+        };
+
         // Logout
         const btnLogout = document.getElementById('btn-logout');
         if (btnLogout) {
-            btnLogout.addEventListener('click', (e) => {
+            btnLogout.addEventListener('click', async (e) => {
                 e.preventDefault();
-                if (confirm('Bạn có chắc chắn muốn đăng xuất?')) {
+                const confirmLogout = await showCustomDialog({
+                    title: 'Đăng xuất',
+                    message: 'Bạn có chắc chắn muốn đăng xuất?',
+                    isPrompt: false
+                });
+                if (confirmLogout) {
                     localStorage.removeItem('token');
                     localStorage.removeItem('user');
                     document.cookie = 'token=; path=/; max-age=0; SameSite=Lax';

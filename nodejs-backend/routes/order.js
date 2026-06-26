@@ -92,10 +92,31 @@ router.post('/update-status', async (req, res) => {
 
         // CASE 1: HỦY ĐƠN
         if (trang_thai === 'da_huy') {
-            if (donHang.trang_thai_don !== 'cho_xac_nhan') {
+            if (donHang.trang_thai_don !== 'cho_xac_nhan' && donHang.trang_thai_don !== 'cho_xu_ly') {
                 await t.rollback();
                 return res.status(400).json({ success: false, message: 'Đơn đã xác nhận hoặc đang giao, không hủy được!' });
             }
+            
+            // LƯU LOGIC ĐẾM SỐ ĐƠN HỦY & TỰ ĐỘNG KHÓA
+            const soDonHuyTruocDo = await DonHang.count({
+                where: {
+                    ma_nguoi_dung: maNguoiDung,
+                    trang_thai_don: 'da_huy'
+                },
+                transaction: t
+            });
+            
+            // Nếu đây là lần hủy thứ 5 (đã có 4 đơn hủy trước đó + đơn này là 5)
+            if (soDonHuyTruocDo >= 4) {
+                await NguoiDung.update({ 
+                    trang_thai: 'bi_khoa',
+                    ly_do_khoa: 'Tài khoản bị khóa do hủy quá nhiều đơn hàng (5 đơn)'
+                }, { 
+                    where: { ma_nguoi_dung: maNguoiDung }, 
+                    transaction: t 
+                });
+            }
+            
             // Lưu lý do hủy trực tiếp vào bảng don_hang
             donHang.ly_do_huy_don = ly_do_huy_don;
             

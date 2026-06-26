@@ -29,12 +29,23 @@ router.post('/register', async (req, res) => {
     }
 
     // Kiểm tra email đã tồn tại
-    const existing = await NguoiDung.findOne({ where: { email } });
-    if (existing) {
+    const existingEmail = await NguoiDung.findOne({ where: { email } });
+    if (existingEmail) {
       return res.status(409).json({
         success: false,
         message: 'Email này đã được đăng ký.',
       });
+    }
+
+    // Kiểm tra số điện thoại (nếu có nhập)
+    if (req.body.so_dien_thoai) {
+      const existingPhone = await NguoiDung.findOne({ where: { so_dien_thoai: req.body.so_dien_thoai } });
+      if (existingPhone) {
+        return res.status(409).json({
+          success: false,
+          message: 'Số điện thoại này đã được đăng ký.',
+        });
+      }
     }
 
     // Hash mật khẩu
@@ -46,6 +57,7 @@ router.post('/register', async (req, res) => {
       ho_ten,
       email,
       mat_khau: hashedPassword,
+      so_dien_thoai: req.body.so_dien_thoai || null,
       vai_tro: 'khach_hang',
       trang_thai: 'hoat_dong',
     });
@@ -110,9 +122,10 @@ router.post('/login', async (req, res) => {
 
     // Kiểm tra tài khoản bị khóa
     if (nguoiDung.trang_thai === 'bi_khoa') {
+      const reason = nguoiDung.ly_do_khoa ? ` (${nguoiDung.ly_do_khoa})` : '';
       return res.status(403).json({
         success: false,
-        message: 'Tài khoản của bạn đã bị khóa.',
+        message: `Tài khoản của bạn đã bị khóa${reason}.`,
       });
     }
 

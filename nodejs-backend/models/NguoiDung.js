@@ -40,6 +40,10 @@ const NguoiDung = sequelize.define('nguoi_dung', {
     type: DataTypes.ENUM('hoat_dong', 'bi_khoa'),
     defaultValue: 'hoat_dong',
   },
+  ly_do_khoa: {
+    type: DataTypes.STRING(255),
+    allowNull: true,
+  },
   ngay_tao: {
     type: DataTypes.DATE,
     defaultValue: DataTypes.NOW,

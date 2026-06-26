@@ -49,6 +49,7 @@ exports.getAllUsers = async (req, res) => {
       ...user.dataValues,
       tong_don: statsMap[user.ma_nguoi_dung]?.tong_don || 0,
       tong_chi: statsMap[user.ma_nguoi_dung]?.tong_chi || 0,
+      so_don_huy: statsMap[user.ma_nguoi_dung]?.so_don_huy || 0,
     }));
 
     res.status(200).json({
@@ -106,6 +107,7 @@ exports.getUserById = async (req, res) => {
       ...user.dataValues,
       tong_don: stats.tong_don,
       tong_chi: stats.tong_chi,
+      so_don_huy: stats.so_don_huy,
     };
 
     res.status(200).json({
@@ -145,6 +147,17 @@ exports.createUser = async (req, res) => {
         success: false,
         message: 'Email này đã tồn tại trong hệ thống.',
       });
+    }
+
+    // Check if phone number already exists
+    if (so_dien_thoai) {
+      const existingPhone = await NguoiDung.findOne({ where: { so_dien_thoai } });
+      if (existingPhone) {
+        return res.status(409).json({
+          success: false,
+          message: 'Số điện thoại này đã tồn tại trong hệ thống.',
+        });
+      }
     }
 
     // Hash password
@@ -216,6 +229,17 @@ exports.updateUser = async (req, res) => {
         return res.status(409).json({
           success: false,
           message: 'Email này đã tồn tại trong hệ thống.',
+        });
+      }
+    }
+
+    // Check if phone number is unique (excluding current user)
+    if (so_dien_thoai && so_dien_thoai !== user.so_dien_thoai) {
+      const existingPhone = await NguoiDung.findOne({ where: { so_dien_thoai } });
+      if (existingPhone) {
+        return res.status(409).json({
+          success: false,
+          message: 'Số điện thoại này đã tồn tại trong hệ thống.',
         });
       }
     }

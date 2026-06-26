@@ -244,7 +244,12 @@ async function updateStatus(orderId, selectElement, oldStatus) {
     };
     const label = statusOptions[newStatus] || newStatus;
 
-    if (!confirm(`Bạn chắc chắn muốn cập nhật trạng thái đơn hàng thành: ${label}?`)) {
+    const confirmResult = await window.showCustomDialog({
+        title: 'Cập nhật trạng thái',
+        message: `Bạn chắc chắn muốn cập nhật trạng thái đơn hàng thành: ${label}?`,
+        isPrompt: false
+    });
+    if (!confirmResult) {
         selectElement.value = oldStatus; // Revert nếu cancel
         return;
     }
@@ -258,16 +263,16 @@ async function updateStatus(orderId, selectElement, oldStatus) {
         const result = await response.json();
 
         if (result.status === 'success') {
-            alert(result.message || 'Cập nhật thành công');
+            showAlert(result.message || 'Cập nhật thành công', 'success');
             loadOrders(document.getElementById('order-search-input').value, currentStatus, currentPage);
             loadStats();
         } else {
-            alert(result.message || 'Lỗi khi cập nhật');
+            showAlert(result.message || 'Lỗi khi cập nhật', 'error');
             selectElement.value = oldStatus; // Revert
         }
     } catch (error) {
         console.error('Error updating status:', error);
-        alert('Lỗi khi kết nối đến server');
+        showAlert('Lỗi khi kết nối đến server', 'error');
         selectElement.value = oldStatus; // Revert
     }
 }
@@ -275,7 +280,12 @@ async function updateStatus(orderId, selectElement, oldStatus) {
 // ========== Handle Return Request ==========
 async function handleReturn(returnId, status) {
     const label = status === 'da_duyet' ? 'PHÊ DUYỆT' : 'TỪ CHỐI';
-    if (!confirm(`Bạn chắc chắn muốn ${label} yêu cầu trả hàng này?`)) return;
+    const confirmResult = await window.showCustomDialog({
+        title: 'Xử lý yêu cầu trả hàng',
+        message: `Bạn chắc chắn muốn ${label} yêu cầu trả hàng này?`,
+        isPrompt: false
+    });
+    if (!confirmResult) return;
 
     try {
         const response = await fetch(`${API_BASE_URL}/returns/${returnId}/status`, {
@@ -286,15 +296,15 @@ async function handleReturn(returnId, status) {
         const result = await response.json();
 
         if (result.status === 'success') {
-            alert(result.message || 'Xử lý thành công');
+            showAlert(result.message || 'Xử lý thành công', 'success');
             loadOrders(document.getElementById('order-search-input').value, currentStatus, currentPage);
             loadStats();
         } else {
-            alert(result.message || 'Lỗi khi xử lý');
+            showAlert(result.message || 'Lỗi khi xử lý', 'error');
         }
     } catch (error) {
         console.error('Error handling return:', error);
-        alert('Lỗi khi kết nối đến server');
+        showAlert('Lỗi khi kết nối đến server', 'error');
     }
 }
 

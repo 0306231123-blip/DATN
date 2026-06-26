@@ -38,8 +38,10 @@
             <thead>
                 <tr>
                     <th>Người dùng</th>
-                    <th>Email</th>
-                    <th>Số điện thoại</th>
+                    <th>Email / SĐT</th>
+                    <th>Tổng đơn</th>
+                    <th>Đơn hủy</th>
+                    <th>Đã chi</th>
                     <th>Vai trò</th>
                     <th>Trạng thái</th>
                     <th>Thao tác</th>
@@ -47,13 +49,15 @@
             </thead>
             <tbody id="users-tbody">
                 <tr class="loading-row">
-                    <td colspan="6" style="text-align: center; padding: 20px;">
+                    <td colspan="8" style="text-align: center; padding: 20px;">
                         <span>Đang tải dữ liệu...</span>
                     </td>
                 </tr>
             </tbody>
         </table>
     </div>
+    <!-- Pagination Container -->
+    <div id="pagination-container" style="display: flex; justify-content: center; align-items: center; padding: 20px 0;"></div>
 </div>
 
 <!-- Stats Card -->
@@ -132,6 +136,9 @@
     </div>
 </div>
 
+    </div>
+</div>
+
 <!-- Modal Overlay -->
 <div class="modal-overlay" id="modal-overlay" style="display: none;"></div>
 
@@ -144,12 +151,17 @@ let allUsers = [];
 let currentFilter = 'all';
 let currentEditId = null;
 
+let currentPage = 1;
+
 // Load users
-async function loadUsers(search = '', role = 'all') {
+async function loadUsers(search = '', role = 'all', page = 1) {
     try {
-        let url = `${API_BASE_URL}/users?per_page=100`;
+        let url = `${API_BASE_URL}/users?per_page=15&page=${page}`;
         if (search) {
             url += `&search=${encodeURIComponent(search)}`;
+        }
+        if (role !== 'all') {
+            url += `&vai_tro=${role}`;
         }
 
         const response = await fetch(url);
@@ -157,14 +169,8 @@ async function loadUsers(search = '', role = 'all') {
 
         if (result.success || result.status === 'success') {
             allUsers = result.data;
-
-            // Apply role filter
-            let filtered = allUsers;
-            if (role !== 'all') {
-                filtered = allUsers.filter(user => user.vai_tro === role);
-            }
-
-            renderTable(filtered);
+            renderTable(allUsers);
+            renderPagination(result.pagination);
             loadStats();
         }
     } catch (error) {
@@ -173,12 +179,36 @@ async function loadUsers(search = '', role = 'all') {
     }
 }
 
+// Render pagination
+function renderPagination(pagination) {
+    const container = document.getElementById('pagination-container');
+    if (!container) return;
+
+    if (!pagination || pagination.last_page <= 1) {
+        container.innerHTML = '';
+        return;
+    }
+
+    let html = `<div class="pagination" style="display: flex; gap: 10px; align-items: center;">
+        <button class="btn btn-secondary" style="padding: 6px 12px;" onclick="changePage(${pagination.current_page - 1})" ${pagination.current_page === 1 ? 'disabled' : ''}>Trang trước</button>
+        <span style="font-size: 14px; font-weight: 500;">Trang ${pagination.current_page} / ${pagination.last_page}</span>
+        <button class="btn btn-secondary" style="padding: 6px 12px;" onclick="changePage(${pagination.current_page + 1})" ${pagination.current_page === pagination.last_page ? 'disabled' : ''}>Trang sau</button>
+    </div>`;
+    container.innerHTML = html;
+}
+
+function changePage(newPage) {
+    currentPage = newPage;
+    const searchVal = document.getElementById('user-search-input').value;
+    loadUsers(searchVal, currentFilter, currentPage);
+}
+
 // Render table
 function renderTable(users) {
     const tbody = document.getElementById('users-tbody');
 
     if (users.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="6" style="text-align: center;">Không có người dùng nào</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="8" style="text-align: center;">Không có người dùng nào</td></tr>';
         return;
     }
 
@@ -188,6 +218,21 @@ function renderTable(users) {
         const roleBadgeClass = user.vai_tro === 'quan_tri_vien' ? 'role-badge--admin' : 'role-badge--customer';
         const statusLabel = user.trang_thai === 'hoat_dong' ? 'Hoạt động' : 'Bị khóa';
         const statusClass = user.trang_thai === 'hoat_dong' ? 'status-badge--active' : 'status-badge--inactive';
+        
+        let cancelBadge = '';
+        if (user.so_don_huy >= 5) {
+            cancelBadge = `<span class="status-badge status-badge--inactive" title="Hủy quá nhiều đơn">${user.so_don_huy} đơn</span>`;
+        } else if (user.so_don_huy >= 3) {
+            cancelBadge = `<span class="status-badge status-badge--warning" title="Có dấu hiệu bom hàng">${user.so_don_huy} đơn</span>`;
+        } else {
+            cancelBadge = `<span class="text-secondary">${user.so_don_huy} đơn</span>`;
+        }
+
+        const formattedSpent = new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(user.tong_chi || 0);
+
+        const lockAction = user.trang_thai === 'hoat_dong' 
+            ? `<button class="icon-action-btn icon-action-btn--warning" title="Khóa tài khoản" onclick="toggleUserStatus(${user.ma_nguoi_dung}, 'bi_khoa')"><i data-lucide="lock" class="icon-xs"></i></button>`
+            : `<button class="icon-action-btn icon-action-btn--success" title="Mở khóa tài khoản" onclick="toggleUserStatus(${user.ma_nguoi_dung}, 'hoat_dong')"><i data-lucide="unlock" class="icon-xs"></i></button>`;
 
         return `
             <tr>
@@ -199,12 +244,20 @@ function renderTable(users) {
                         <span class="text-bold">${escapeHtml(user.ho_ten)}</span>
                     </div>
                 </td>
-                <td><span class="text-secondary">${escapeHtml(user.email)}</span></td>
-                <td><span class="text-secondary">${user.so_dien_thoai || '--'}</span></td>
+                <td>
+                    <div style="display:flex; flex-direction:column; gap:4px;">
+                        <span class="text-secondary">${escapeHtml(user.email)}</span>
+                        <span class="text-secondary" style="font-size:12px;">${user.so_dien_thoai || '--'}</span>
+                    </div>
+                </td>
+                <td><span class="text-bold">${user.tong_don || 0}</span></td>
+                <td>${cancelBadge}</td>
+                <td><span class="text-bold" style="color:var(--primary-color)">${formattedSpent}</span></td>
                 <td><span class="role-badge ${roleBadgeClass}">${roleLabel}</span></td>
                 <td><span class="status-badge ${statusClass}">${statusLabel}</span></td>
                 <td>
                     <div class="action-btns">
+                        ${lockAction}
                         <button class="icon-action-btn" title="Sửa" onclick="editUser(${user.ma_nguoi_dung})">
                             <i data-lucide="pencil" class="icon-xs"></i>
                         </button>
@@ -294,7 +347,12 @@ function editUser(id) {
 
 // Delete user
 async function deleteUser(id) {
-    if (!confirm('Bạn chắc chắn muốn xóa người dùng này?')) return;
+    const confirmResult = await showCustomDialog({
+        title: 'Xóa người dùng',
+        message: 'Bạn chắc chắn muốn xóa người dùng này? Hành động này không thể hoàn tác.',
+        isPrompt: false
+    });
+    if (!confirmResult) return;
 
     try {
         const response = await fetch(`${API_BASE_URL}/users/${id}`, {
@@ -304,7 +362,8 @@ async function deleteUser(id) {
 
         if (result.success || result.status === 'success') {
             showAlert(result.message || 'Xóa người dùng thành công', 'success');
-            loadUsers();
+            const searchVal = document.getElementById('user-search-input').value;
+            loadUsers(searchVal, currentFilter, currentPage);
         } else {
             showAlert(result.message, 'error');
         }
@@ -314,10 +373,51 @@ async function deleteUser(id) {
     }
 }
 
-// Show alert
-function showAlert(message, type = 'info') {
-    alert(message);
+// Toggle User Status
+async function toggleUserStatus(id, newStatus) {
+    const actionText = newStatus === 'bi_khoa' ? 'Khóa' : 'Mở khóa';
+    let reason = '';
+    
+    if (newStatus === 'bi_khoa') {
+        const promptResult = await showCustomDialog({
+            title: 'Khóa tài khoản',
+            message: 'Nhập lý do khóa tài khoản này (hoặc để trống):',
+            isPrompt: true,
+            defaultValue: 'Quản trị viên chủ động khóa'
+        });
+        if (promptResult === null) return; // Cancelled
+        reason = promptResult;
+    } else {
+        const confirmResult = await showCustomDialog({
+            title: 'Mở khóa tài khoản',
+            message: `Bạn chắc chắn muốn mở khóa tài khoản này?`,
+            isPrompt: false
+        });
+        if (!confirmResult) return;
+    }
+
+    try {
+        const response = await fetch(`${API_BASE_URL}/users/${id}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ trang_thai: newStatus, ly_do_khoa: reason })
+        });
+        const result = await response.json();
+
+        if (result.success || result.status === 'success') {
+            showAlert(`Tài khoản đã được ${newStatus === 'bi_khoa' ? 'khóa' : 'mở khóa'} thành công`, 'success');
+            const searchVal = document.getElementById('user-search-input').value;
+            loadUsers(searchVal, currentFilter, currentPage);
+        } else {
+            showAlert(result.message, 'error');
+        }
+    } catch (error) {
+        console.error('Error toggling user status:', error);
+        showAlert('Lỗi khi cập nhật trạng thái', 'error');
+    }
 }
+
+
 
 // Form submit
 document.getElementById('form-user').addEventListener('submit', async (e) => {
@@ -367,7 +467,8 @@ document.getElementById('form-user').addEventListener('submit', async (e) => {
         if (result.success || result.status === 'success') {
             showAlert(result.message || 'Lưu thành công', 'success');
             closeModal();
-            loadUsers('', currentFilter);
+            const searchVal = document.getElementById('user-search-input').value;
+            loadUsers(searchVal, currentFilter, currentPage);
         } else {
             showAlert(result.message, 'error');
         }
@@ -392,19 +493,26 @@ document.querySelectorAll('.role-tab').forEach(tab => {
         document.querySelectorAll('.role-tab').forEach(t => t.classList.remove('active'));
         this.classList.add('active');
         currentFilter = this.getAttribute('data-role');
-        loadUsers('', currentFilter);
+        currentPage = 1; // Reset page when filtering
+        const searchVal = document.getElementById('user-search-input').value;
+        loadUsers(searchVal, currentFilter, currentPage);
     });
 });
 
 // Search
+let searchTimeout;
 document.getElementById('user-search-input').addEventListener('input', (e) => {
-    loadUsers(e.target.value, currentFilter);
+    clearTimeout(searchTimeout);
+    searchTimeout = setTimeout(() => {
+        currentPage = 1;
+        loadUsers(e.target.value, currentFilter, currentPage);
+    }, 500); // Debounce search
 });
 
 // Initial load
 document.addEventListener('DOMContentLoaded', function() {
     lucide.createIcons();
-    loadUsers();
+    loadUsers('', 'all', 1);
 });
 </script>
 

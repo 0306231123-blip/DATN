@@ -14,7 +14,8 @@ async function getUsersStats(userIds) {
     SELECT 
       ma_nguoi_dung,
       COUNT(*) as tong_don,
-      COALESCE(SUM(tong_thanh_toan), 0) as tong_chi
+      COALESCE(SUM(tong_thanh_toan), 0) as tong_chi,
+      SUM(CASE WHEN trang_thai_don = 'da_huy' THEN 1 ELSE 0 END) as so_don_huy
     FROM don_hang
     WHERE ma_nguoi_dung IN (${placeholders})
     GROUP BY ma_nguoi_dung
@@ -31,6 +32,7 @@ async function getUsersStats(userIds) {
     statsMap[stat.ma_nguoi_dung] = {
       tong_don: parseInt(stat.tong_don) || 0,
       tong_chi: parseFloat(stat.tong_chi) || 0,
+      so_don_huy: parseInt(stat.so_don_huy) || 0,
     };
   });
 
@@ -42,7 +44,7 @@ async function getUsersStats(userIds) {
  */
 async function getUserStats(userId) {
   const statsMap = await getUsersStats([userId]);
-  return statsMap[userId] || { tong_don: 0, tong_chi: 0 };
+  return statsMap[userId] || { tong_don: 0, tong_chi: 0, so_don_huy: 0 };
 }
 
 module.exports = {

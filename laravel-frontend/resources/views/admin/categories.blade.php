@@ -257,7 +257,12 @@ function editCategory(id) {
 
 // Delete category
 async function deleteCategory(id) {
-    if (!confirm('Bạn chắc chắn muốn xóa danh mục này?')) return;
+    const confirmDelete = await window.showCustomDialog({
+        title: 'Xóa danh mục',
+        message: 'Bạn chắc chắn muốn xóa danh mục này?',
+        isPrompt: false
+    });
+    if (!confirmDelete) return;
 
     try {
         const response = await fetch(`${API_BASE_URL}/categories/${id}`, {
@@ -275,11 +280,6 @@ async function deleteCategory(id) {
         console.error('Error deleting category:', error);
         showAlert('Lỗi khi xóa danh mục', 'error');
     }
-}
-
-// Show alert
-function showAlert(message, type = 'info') {
-    alert(message); // Simple alert, có thể thay bằng toast notification
 }
 
 // Form submit

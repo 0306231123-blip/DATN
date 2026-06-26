@@ -547,10 +547,6 @@ function escapeHtml(text) {
     return div.innerHTML;
 }
 
-function showAlert(message, type = 'info') {
-    alert(message);
-}
-
 // ========== IMAGE PICKER ==========
 
 // Set selected image URL into hidden input & show preview
@@ -805,8 +801,14 @@ function editProduct(id) {
     showModal('Sửa sản phẩm', id);
 }
 
+// Delete Product
 async function deleteProduct(id) {
-    if (!confirm('Bạn chắc chắn muốn xóa sản phẩm này?')) return;
+    const confirmDelete = await window.showCustomDialog({
+        title: 'Xóa sản phẩm',
+        message: 'Bạn chắc chắn muốn xóa sản phẩm này?',
+        isPrompt: false
+    });
+    if (!confirmDelete) return;
     try {
         const response = await fetch(`${API_BASE_URL}/products/${id}`, { method: 'DELETE' });
         const result = await response.json();
