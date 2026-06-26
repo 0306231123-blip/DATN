@@ -53,7 +53,7 @@ const DonHang = sequelize.define('don_hang', {
     defaultValue: 'chua_thanh_toan',
   },
   trang_thai_don: {
-    type: DataTypes.ENUM('cho_xac_nhan', 'da_xac_nhan', 'dang_giao', 'giao_thanh_cong', 'da_huy'),
+    type: DataTypes.ENUM('cho_xac_nhan', 'da_xac_nhan', 'dang_giao', 'giao_thanh_cong', 'da_huy', 'dang_tra_hang', 'da_tra_hang'),
     defaultValue: 'cho_xac_nhan',
   },
   ngay_dat: {

@@ -16,6 +16,7 @@ const GioHang = require('./GioHang');
 const BienTheSanPham = require('./BienTheSanPham');
 const NhaCungCap = require('./NhaCungCap');
 const LichSuKho = require('./LichSuKho');
+const YeuCauTraHang = require('./YeuCauTraHang');
 
 // ========== User ↔ Order ==========
 // User has many Orders
@@ -40,6 +41,17 @@ DonHang.hasMany(ChiTietDonHang, {
 // OrderDetail belongs to Order
 ChiTietDonHang.belongsTo(DonHang, {
   foreignKey: 'ma_don_hang',
+});
+
+// ========== Order ↔ ReturnRequest ==========
+DonHang.hasOne(YeuCauTraHang, {
+  foreignKey: 'ma_don_hang',
+  as: 'yeu_cau_tra_hang',
+});
+
+YeuCauTraHang.belongsTo(DonHang, {
+  foreignKey: 'ma_don_hang',
+  as: 'don_hang',
 });
 
 // ========== OrderDetail ↔ Product ==========
@@ -124,5 +136,6 @@ module.exports = {
   BienTheSanPham,
   NhaCungCap,
   LichSuKho,
+  YeuCauTraHang,
 };
 

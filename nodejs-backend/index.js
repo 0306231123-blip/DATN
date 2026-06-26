@@ -18,6 +18,7 @@ const statisticsRoutes = require('./routes/statistics');
 const uploadRoutes = require('./routes/upload');
 const supplierRoutes = require('./routes/suppliers');
 const inventoryRoutes = require('./routes/inventory');
+const returnRoutes = require('./routes/returns');
 
 const app = express();
 
@@ -46,6 +47,7 @@ app.use('/api/statistics', statisticsRoutes);
 app.use('/api/upload', uploadRoutes);
 app.use('/api/suppliers', supplierRoutes);
 app.use('/api/inventory', inventoryRoutes);
+app.use('/api/returns', returnRoutes);
 
 // Kết nối database và khởi động server
 const PORT = process.env.PORT || 3000;

@@ -2,6 +2,7 @@ const DonHang = require('../models/DonHang');
 const NguoiDung = require('../models/NguoiDung');
 const ChiTietDonHang = require('../models/ChiTietDonHang');
 const SanPham = require('../models/SanPham');
+const YeuCauTraHang = require('../models/YeuCauTraHang');
 const { Op } = require('sequelize');
 const sequelize = require('../config/database');
 const { QueryTypes } = require('sequelize');
@@ -36,7 +37,7 @@ exports.getAllOrders = async (req, res) => {
     }
 
     // Filter by status
-    const validStatuses = ['cho_xac_nhan', 'da_xac_nhan', 'dang_giao', 'giao_thanh_cong', 'da_huy'];
+    const validStatuses = ['cho_xac_nhan', 'da_xac_nhan', 'dang_giao', 'giao_thanh_cong', 'da_huy', 'dang_tra_hang', 'da_tra_hang'];
     if (trang_thai && trang_thai !== 'all' && validStatuses.includes(trang_thai)) {
       where.trang_thai_don = trang_thai;
     }
@@ -64,6 +65,11 @@ exports.getAllOrders = async (req, res) => {
           attributes: ['ma_chi_tiet', 'ten_san_pham', 'don_gia', 'so_luong', 'thanh_tien'],
           required: false,
         },
+        {
+          model: YeuCauTraHang,
+          as: 'yeu_cau_tra_hang',
+          required: false,
+        }
       ],
     });
 
@@ -128,6 +134,11 @@ exports.getOrderById = async (req, res) => {
             required: false,
           }],
         },
+        {
+          model: YeuCauTraHang,
+          as: 'yeu_cau_tra_hang',
+          required: false,
+        }
       ],
     });
 
@@ -169,7 +180,7 @@ exports.updateOrderStatus = async (req, res) => {
       });
     }
 
-    const validStatuses = ['cho_xac_nhan', 'da_xac_nhan', 'dang_giao', 'giao_thanh_cong', 'da_huy'];
+    const validStatuses = ['cho_xac_nhan', 'da_xac_nhan', 'dang_giao', 'giao_thanh_cong', 'da_huy', 'dang_tra_hang', 'da_tra_hang'];
     if (!trang_thai_don || !validStatuses.includes(trang_thai_don)) {
       return res.status(400).json({
         status: 'error',
@@ -191,7 +202,9 @@ exports.updateOrderStatus = async (req, res) => {
       'cho_xac_nhan': ['da_xac_nhan', 'da_huy'],
       'da_xac_nhan': ['dang_giao', 'da_huy'],
       'dang_giao': ['giao_thanh_cong', 'da_huy'],
-      'giao_thanh_cong': [],
+      'giao_thanh_cong': ['dang_tra_hang'],
+      'dang_tra_hang': ['da_tra_hang', 'giao_thanh_cong'],
+      'da_tra_hang': [],
       'da_huy': [],
     };
 
@@ -235,6 +248,8 @@ exports.getOrderStats = async (req, res) => {
     const dangGiao = await DonHang.count({ where: { trang_thai_don: 'dang_giao' } });
     const giaoThanhCong = await DonHang.count({ where: { trang_thai_don: 'giao_thanh_cong' } });
     const daHuy = await DonHang.count({ where: { trang_thai_don: 'da_huy' } });
+    const dangTraHang = await DonHang.count({ where: { trang_thai_don: 'dang_tra_hang' } });
+    const daTraHang = await DonHang.count({ where: { trang_thai_don: 'da_tra_hang' } });
 
     // Total revenue (completed orders only)
     const [revenueResult] = await sequelize.query(
@@ -264,6 +279,8 @@ exports.getOrderStats = async (req, res) => {
         dang_giao: dangGiao,
         giao_thanh_cong: giaoThanhCong,
         da_huy: daHuy,
+        dang_tra_hang: dangTraHang,
+        da_tra_hang: daTraHang,
         tong_doanh_thu: Number(revenueResult.tong_doanh_thu),
         don_thang_nay: Number(monthResult.don_thang_nay),
         doanh_thu_thang: Number(monthResult.doanh_thu_thang),

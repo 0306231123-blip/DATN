@@ -37,6 +37,14 @@
                 <span>Đã hủy</span>
                 <span class="tab-count" id="count-da_huy">0</span>
             </button>
+            <button class="status-tab" data-status="dang_tra_hang" id="tab-returning">
+                <span>Yêu cầu trả</span>
+                <span class="tab-count" id="count-dang_tra_hang">0</span>
+            </button>
+            <button class="status-tab" data-status="da_tra_hang" id="tab-returned">
+                <span>Đã trả hàng</span>
+                <span class="tab-count" id="count-da_tra_hang">0</span>
+            </button>
         </div>
     </div>
     <div class="action-bar-right">
@@ -142,6 +150,8 @@ async function loadStats() {
             document.getElementById('count-dang_giao').textContent = s.dang_giao;
             document.getElementById('count-giao_thanh_cong').textContent = s.giao_thanh_cong;
             document.getElementById('count-da_huy').textContent = s.da_huy;
+            document.getElementById('count-dang_tra_hang').textContent = s.dang_tra_hang || 0;
+            document.getElementById('count-da_tra_hang').textContent = s.da_tra_hang || 0;
 
             const summaryText = `${s.total} đơn · tháng ${new Date().getMonth() + 1}/${new Date().getFullYear()}`;
             const pageSubtitle = document.getElementById('page-subtitle');
@@ -208,6 +218,9 @@ function getActionButtons(order) {
     } else if (status === 'dang_giao') {
         buttons += `<button class="icon-action-btn icon-action-btn--success" title="Hoàn thành" onclick="updateStatus(${order.ma_don_hang}, 'giao_thanh_cong')"><i data-lucide="check-circle" class="icon-xs"></i></button>`;
         buttons += `<button class="icon-action-btn icon-action-btn--danger" title="Hủy đơn" onclick="updateStatus(${order.ma_don_hang}, 'da_huy')"><i data-lucide="x" class="icon-xs"></i></button>`;
+    } else if (status === 'dang_tra_hang' && order.yeu_cau_tra_hang) {
+        buttons += `<button class="icon-action-btn icon-action-btn--success" title="Phê duyệt trả hàng" onclick="handleReturn(${order.yeu_cau_tra_hang.ma_yeu_cau}, 'da_duyet')"><i data-lucide="check" class="icon-xs"></i></button>`;
+        buttons += `<button class="icon-action-btn icon-action-btn--danger" title="Từ chối trả hàng" onclick="handleReturn(${order.yeu_cau_tra_hang.ma_yeu_cau}, 'tu_choi')"><i data-lucide="x" class="icon-xs"></i></button>`;
     }
 
     return buttons;
@@ -242,6 +255,32 @@ async function updateStatus(orderId, newStatus) {
         }
     } catch (error) {
         console.error('Error updating status:', error);
+        alert('Lỗi khi kết nối đến server');
+    }
+}
+
+// ========== Handle Return Request ==========
+async function handleReturn(returnId, status) {
+    const label = status === 'da_duyet' ? 'PHÊ DUYỆT' : 'TỪ CHỐI';
+    if (!confirm(`Bạn chắc chắn muốn ${label} yêu cầu trả hàng này?`)) return;
+
+    try {
+        const response = await fetch(`${API_BASE_URL}/returns/${returnId}/status`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ trang_thai: status }),
+        });
+        const result = await response.json();
+
+        if (result.status === 'success') {
+            alert(result.message || 'Xử lý thành công');
+            loadOrders(document.getElementById('order-search-input').value, currentStatus, currentPage);
+            loadStats();
+        } else {
+            alert(result.message || 'Lỗi khi xử lý');
+        }
+    } catch (error) {
+        console.error('Error handling return:', error);
         alert('Lỗi khi kết nối đến server');
     }
 }
@@ -284,6 +323,30 @@ async function viewOrderDetail(orderId) {
                     </div>
                 </div>
             `;
+
+            if (order.yeu_cau_tra_hang) {
+                const req = order.yeu_cau_tra_hang;
+                let imagesList = [];
+                try {
+                    imagesList = Array.isArray(req.hinh_anh_bang_chung) ? req.hinh_anh_bang_chung : JSON.parse(req.hinh_anh_bang_chung || '[]');
+                } catch (e) {
+                    console.error('Lỗi parse hình ảnh:', e);
+                }
+
+                const imagesHtml = imagesList.length > 0 ? 
+                    imagesList.map(url => `<a href="${url}" target="_blank"><img src="${url}" style="width:60px; height:60px; object-fit:cover; margin-right:5px; border-radius:4px; border:1px solid #ddd;"></a>`).join('')
+                    : 'Không có hình ảnh';
+
+                detailsHTML += `
+                    <h4 style="margin-top: 20px; margin-bottom: 10px; color: #e11d48;"><i data-lucide="alert-triangle" class="icon-xs"></i> Thông tin Hoàn trả</h4>
+                    <div class="order-info-section" style="background-color: #fff1f2; border: 1px solid #fecdd3; border-radius: 8px; padding: 15px;">
+                        <p><strong>Lý do:</strong> ${escapeHtml(req.ly_do)}</p>
+                        ${req.ghi_chu_khach_hang ? `<p><strong>Ghi chú của khách:</strong> ${escapeHtml(req.ghi_chu_khach_hang)}</p>` : ''}
+                        <p><strong>Bằng chứng:</strong></p>
+                        <div style="margin-top: 5px;">${imagesHtml}</div>
+                    </div>
+                `;
+            }
 
             if (order.chi_tiet && order.chi_tiet.length > 0) {
                 detailsHTML += `
@@ -368,6 +431,8 @@ function getStatusInfo(status) {
         'dang_giao': { label: 'Đang giao', class: 'status-badge--info' },
         'giao_thanh_cong': { label: 'Hoàn thành', class: 'status-badge--success' },
         'da_huy': { label: 'Đã hủy', class: 'status-badge--danger' },
+        'dang_tra_hang': { label: 'Yêu cầu trả', class: 'status-badge--warning' },
+        'da_tra_hang': { label: 'Đã trả hàng', class: 'status-badge--secondary' },
     };
     return map[status] || { label: status, class: '' };
 }
