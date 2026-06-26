@@ -141,11 +141,7 @@
 
             if (result.success) {
                 const user = result.data;
-                
-                // Gán tên bên cột trái
                 document.getElementById('sidebar-name').textContent = user.ho_ten;
-                
-                // Đổ dữ liệu vào Form
                 document.getElementById('input-name').value = user.ho_ten || '';
                 document.getElementById('input-email').value = user.email || '';
                 document.getElementById('input-phone').value = user.so_dien_thoai || '';
@@ -214,7 +210,7 @@
         window.location.href = '/login';
     }
 
-    // 5. TẢI VÀ HIỂN THỊ ĐƠN HÀNG (ĐÃ CẬP NHẬT NÚT TRẢ HÀNG)
+    // 5. TẢI VÀ HIỂN THỊ ĐƠN HÀNG (ĐÃ CẬP NHẬT GIAO THÀNH CÔNG VÀ HOÀN THÀNH)
     async function loadMyOrders() {
         const token = localStorage.getItem('token');
         const ordersContainer = document.getElementById('orders-container');
@@ -251,26 +247,35 @@
                     productsHtml += '</div>';
 
                     // ==========================================
-                    // XỬ LÝ LỊCH SỬ MUA HÀNG (Đã giao, Đã hủy, Trả hàng)
+                    // 1. TAB LỊCH SỬ MUA HÀNG (Giao thành công, Đã hủy, Hoàn thành)
                     // ==========================================
-                    if(['giao_thanh_cong', 'da_huy', 'tra_hang_hoan_tien'].includes(order.trang_thai_don)) {
+                    if(['giao_thanh_cong', 'da_huy', 'hoan_thanh'].includes(order.trang_thai_don)) {
                         hasHistory = true;
                         let statusColor, statusText, actionBtnHtml = '';
 
                         if (order.trang_thai_don === 'giao_thanh_cong') {
                             statusColor = 'bg-green-100 text-green-700';
-                            statusText = 'Giao thành công';
-                            // CHỈ KHI GIAO THÀNH CÔNG MỚI HIỆN NÚT TRẢ HÀNG
+                            statusText = 'Giao thành công (Chờ xác nhận)';
+                            // NẾU GIAO THÀNH CÔNG -> HIỆN 2 NÚT GIỐNG SHOPEE
                             actionBtnHtml = `
-                                <button onclick="updateOrderStatus(${order.ma_don_hang}, 'tra_hang_hoan_tien')" class="mt-4 w-full bg-yellow-500 hover:bg-yellow-600 text-white font-bold py-2 px-4 rounded-lg transition text-sm">
-                                    Yêu cầu trả hàng & Hoàn tiền
-                                </button>`;
+                                <div class="flex space-x-3 mt-4 w-full">
+                                    <button onclick="updateOrderStatus(${order.ma_don_hang}, 'hoan_thanh')" class="w-1/2 bg-gray-800 hover:bg-black text-white font-bold py-2 px-4 rounded-lg transition text-sm shadow">
+                                        Đã nhận được hàng
+                                    </button>
+                                    <button onclick="updateOrderStatus(${order.ma_don_hang}, 'tra_hang_hoan_tien')" class="w-1/2 bg-white border-2 border-gray-200 hover:border-yellow-500 hover:text-yellow-600 text-gray-600 font-bold py-2 px-4 rounded-lg transition text-sm">
+                                        Yêu cầu Trả hàng
+                                    </button>
+                                </div>
+                                <p class="text-xs text-gray-400 mt-2 text-center w-full">Đơn hàng sẽ tự động hoàn thành sau 7 ngày</p>
+                            `;
                         } else if (order.trang_thai_don === 'da_huy') {
                             statusColor = 'bg-red-100 text-red-700';
                             statusText = 'Đã hủy';
-                        } else if (order.trang_thai_don === 'tra_hang_hoan_tien') {
-                            statusColor = 'bg-yellow-100 text-yellow-800 border border-yellow-300';
-                            statusText = 'Đang xử lý trả hàng';
+                        } else if (order.trang_thai_don === 'hoan_thanh') {
+                            statusColor = 'bg-blue-100 text-blue-700 border border-blue-200';
+                            statusText = 'Hoàn thành';
+                            // ĐÃ HOÀN THÀNH THÌ KHÓA TÍNH NĂNG TRẢ HÀNG
+                            actionBtnHtml = `<div class="mt-4 text-center text-green-600 font-bold w-full bg-green-50 py-2 rounded-lg">Cảm ơn bạn đã mua sắm!</div>`;
                         }
 
                         htmlHistory += `
@@ -293,7 +298,7 @@
                             </div>`;
                     } 
                     // ==========================================
-                    // XỬ LÝ QUẢN LÝ ĐƠN HÀNG (Đang chờ xử lý, đang giao)
+                    // 2. TAB QUẢN LÝ ĐƠN HÀNG (Chờ xác nhận, Đã xác nhận, Đang giao, Đang xử lý trả hàng)
                     // ==========================================
                     else {
                         hasOrders = true;
@@ -312,6 +317,13 @@
                         } else if (order.trang_thai_don === 'da_xac_nhan') {
                             activeStatusText = 'Đã xác nhận';
                             activeStatusColor = 'bg-purple-100 text-purple-700';
+                        } else if (order.trang_thai_don === 'tra_hang_hoan_tien') {
+                            activeStatusText = 'Đang xử lý trả hàng';
+                            activeStatusColor = 'bg-orange-100 text-orange-700 border border-orange-300'; 
+                            // Nếu có lý do thì in ra cho khách xem luôn
+                            if (order.ly_do_tra_hang) {
+                                actionBtnHtml = `<div class="mt-4 text-sm text-left text-orange-600 bg-orange-50 p-3 rounded-lg w-full"><b>Lý do:</b> ${order.ly_do_tra_hang}</div>`;
+                            }
                         }
 
                         htmlOrders += `
@@ -321,9 +333,12 @@
                                     <span class="px-4 py-1 text-sm font-bold rounded-full ${activeStatusColor}">${activeStatusText}</span>
                                 </div>
                                 ${productsHtml}
-                                <div class="mt-4 pt-4 border-t border-gray-100 text-right">
-                                    <p class="font-black text-pink-600 text-xl">${total}</p>
-                                    ${actionBtnHtml}
+                                <div class="mt-4 pt-4 border-t border-gray-100 flex flex-col justify-end items-end space-y-2">
+                                    <div class="flex justify-between items-center w-full">
+                                        <span class="font-bold text-gray-700">Tổng thanh toán:</span>
+                                        <span class="font-black text-pink-600 text-xl">${total}</span>
+                                    </div>
+                                    <div class="w-full">${actionBtnHtml}</div>
                                 </div>
                             </div>`;
                     }
@@ -346,13 +361,24 @@
         }
     }
 
-    // 6. HÀM CHUNG ĐỂ CẬP NHẬT TRẠNG THÁI (HỦY / TRẢ HÀNG)
+    // 6. HÀM CHUNG ĐỂ CẬP NHẬT TRẠNG THÁI (CÓ THÊM NHẬP LÝ DO)
     async function updateOrderStatus(maDonHang, trangThaiMoi) {
-        let confirmMsg = trangThaiMoi === 'da_huy' 
-            ? "Bạn có chắc chắn muốn hủy đơn hàng này không? Hành động này không thể hoàn tác."
-            : "Bạn muốn yêu cầu trả hàng và hoàn tiền cho đơn hàng này?";
+        let lyDoTraHang = null;
 
-        if (!confirm(confirmMsg)) return;
+        if (trangThaiMoi === 'da_huy') {
+            if (!confirm("Bạn có chắc chắn muốn hủy đơn hàng này không? Hành động này không thể hoàn tác.")) return;
+        } 
+        else if (trangThaiMoi === 'hoan_thanh') {
+            if (!confirm("Xác nhận bạn đã nhận được hàng và sản phẩm không có vấn đề gì? (Sau khi xác nhận sẽ không thể trả hàng nữa)")) return;
+        }
+        else if (trangThaiMoi === 'tra_hang_hoan_tien') {
+            // HIỆN KHUNG NHẬP LÝ DO BẮT BUỘC
+            lyDoTraHang = prompt("Vui lòng nhập chi tiết lý do bạn muốn trả hàng (Bắt buộc):");
+            if (!lyDoTraHang || lyDoTraHang.trim() === "") {
+                alert("Bạn phải nhập lý do thì Shop mới xử lý được nhé!");
+                return;
+            }
+        }
 
         const token = localStorage.getItem('token');
         try {
@@ -364,7 +390,8 @@
                 },
                 body: JSON.stringify({ 
                     ma_don_hang: maDonHang, 
-                    trang_thai: trangThaiMoi 
+                    trang_thai: trangThaiMoi,
+                    ly_do_tra_hang: lyDoTraHang // Gửi lý do lên Server
                 })
             });
 

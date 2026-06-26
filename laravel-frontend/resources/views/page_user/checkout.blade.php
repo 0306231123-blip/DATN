@@ -19,24 +19,18 @@
                 <div class="space-y-4">
                     <div>
                         <select id="province" required class="w-full border-2 border-gray-200 rounded-lg px-4 py-3 font-medium text-gray-700 focus:outline-none focus:border-pink-500 focus:ring-1 focus:ring-pink-500 transition cursor-pointer">
-                            <option value="" disabled selected>1. Chọn Tỉnh / Thành phố</option>
-                        </select>
-                    </div>
-
-                    <div>
-                        <select id="district" required class="w-full border-2 border-gray-200 rounded-lg px-4 py-3 font-medium text-gray-700 focus:outline-none focus:border-pink-500 focus:ring-1 focus:ring-pink-500 transition cursor-pointer">
-                            <option value="" disabled selected>2. Chọn Quận / Huyện</option>
+                            <option value="" disabled selected>1. Chọn Tỉnh / Thành phố (Chuẩn mới)</option>
                         </select>
                     </div>
 
                     <div>
                         <select id="ward" required class="w-full border-2 border-gray-200 rounded-lg px-4 py-3 font-medium text-gray-700 focus:outline-none focus:border-pink-500 focus:ring-1 focus:ring-pink-500 transition cursor-pointer">
-                            <option value="" disabled selected>3. Chọn Phường / Xã</option>
+                            <option value="" disabled selected>2. Chọn Phường / Xã</option>
                         </select>
                     </div>
 
                     <div>
-                        <input type="text" id="street" required placeholder="4. Nhập số nhà, tên đường..." class="w-full border-2 border-gray-200 rounded-lg px-4 py-3 font-medium text-gray-700 focus:outline-none focus:border-pink-500 focus:ring-1 focus:ring-pink-500 transition">
+                        <input type="text" id="street" required placeholder="3. Nhập số nhà, tên đường..." class="w-full border-2 border-gray-200 rounded-lg px-4 py-3 font-medium text-gray-700 focus:outline-none focus:border-pink-500 focus:ring-1 focus:ring-pink-500 transition">
                     </div>
                 </div>
             </div>
@@ -98,69 +92,46 @@
         const totalPriceEl = document.getElementById('total-price');
         const token = localStorage.getItem('token');
 
-        // Các biến của form địa chỉ
+        // Các biến của form địa chỉ (Bỏ Quận/Huyện)
         const provinceSelect = document.getElementById('province');
-        const districtSelect = document.getElementById('district');
         const wardSelect = document.getElementById('ward');
         const streetInput = document.getElementById('street');
 
         // ==========================================
-        // 1. TẢI DỮ LIỆU TỈNH THÀNH
+        // 1. TẢI DỮ LIỆU TỈNH THÀNH (API MỚI - 34 TỈNH)
         // ==========================================
-        fetch('https://esgoo.net/api-tinhthanh/1/0.htm')
+        fetch('https://provinces.open-api.vn/api/v2/p/')
             .then(res => res.json())
-            .then(response => {
-                if (response.error === 0) {
-                    response.data.forEach(province => {
-                        let option = document.createElement('option');
-                        option.value = province.id; 
-                        option.text = province.full_name;
-                        option.setAttribute('data-name', province.full_name);
-                        provinceSelect.appendChild(option);
-                    });
-                }
+            .then(data => {
+                data.forEach(province => {
+                    let option = document.createElement('option');
+                    option.value = province.code; 
+                    option.text = province.name;
+                    option.setAttribute('data-name', province.name);
+                    provinceSelect.appendChild(option);
+                });
             })
             .catch(err => console.error('Lỗi tải API Tỉnh:', err));
 
-        // Khi chọn Tỉnh -> Tải Quận Huyện
+        // Khi chọn Tỉnh -> Tải Phường Xã (API trả thẳng về Phường/Xã bằng depth=2)
         provinceSelect.addEventListener('change', function() {
             const provinceId = this.value;
-            districtSelect.innerHTML = '<option value="" disabled selected>2. Chọn Quận / Huyện</option>';
-            wardSelect.innerHTML = '<option value="" disabled selected>3. Chọn Phường / Xã</option>';
+            wardSelect.innerHTML = '<option value="" disabled selected>2. Chọn Phường / Xã</option>';
             
-            fetch(`https://esgoo.net/api-tinhthanh/2/${provinceId}.htm`)
+            fetch(`https://provinces.open-api.vn/api/v2/p/${provinceId}?depth=2`)
                 .then(res => res.json())
-                .then(response => {
-                    if (response.error === 0) {
-                        response.data.forEach(district => {
+                .then(data => {
+                    if (data.wards) {
+                        data.wards.forEach(ward => {
                             let option = document.createElement('option');
-                            option.value = district.id;
-                            option.text = district.full_name;
-                            option.setAttribute('data-name', district.full_name);
-                            districtSelect.appendChild(option);
-                        });
-                    }
-                });
-        });
-
-        // Khi chọn Quận Huyện -> Tải Phường Xã
-        districtSelect.addEventListener('change', function() {
-            const districtId = this.value;
-            wardSelect.innerHTML = '<option value="" disabled selected>3. Chọn Phường / Xã</option>';
-            
-            fetch(`https://esgoo.net/api-tinhthanh/3/${districtId}.htm`)
-                .then(res => res.json())
-                .then(response => {
-                    if (response.error === 0) {
-                        response.data.forEach(ward => {
-                            let option = document.createElement('option');
-                            option.value = ward.id;
-                            option.text = ward.full_name;
-                            option.setAttribute('data-name', ward.full_name);
+                            option.value = ward.code;
+                            option.text = ward.name;
+                            option.setAttribute('data-name', ward.name);
                             wardSelect.appendChild(option);
                         });
                     }
-                });
+                })
+                .catch(err => console.error('Lỗi tải API Phường/Xã:', err));
         });
 
         // ==========================================
@@ -193,32 +164,24 @@
         // 3. KIỂM TRA BẮT BUỘC & THANH TOÁN
         // ==========================================
         btnPay.addEventListener('click', async function() {
-            // Lấy Tên Tỉnh/Quận/Phường
+            // Lấy Tên Tỉnh/Phường
             const provinceOption = provinceSelect.options[provinceSelect.selectedIndex];
-            const districtOption = districtSelect.options[districtSelect.selectedIndex];
             const wardOption = wardSelect.options[wardSelect.selectedIndex];
             
             const provinceName = (provinceOption && provinceOption.value !== "") ? provinceOption.getAttribute('data-name') : null;
-            const districtName = (districtOption && districtOption.value !== "") ? districtOption.getAttribute('data-name') : null;
             const wardName = (wardOption && wardOption.value !== "") ? wardOption.getAttribute('data-name') : null;
             const street = streetInput.value.trim();
 
             // Reset viền đỏ trước khi kiểm tra lại
-            [provinceSelect, districtSelect, wardSelect, streetInput].forEach(el => {
+            [provinceSelect, wardSelect, streetInput].forEach(el => {
                 el.classList.remove('border-red-500', 'ring-1', 'ring-red-500');
             });
 
-            // KIỂM TRA ĐIỀU KIỆN BẮT BUỘC (SẼ CHỚP VIỀN ĐỎ NẾU THIẾU)
+            // KIỂM TRA ĐIỀU KIỆN BẮT BUỘC
             if (!provinceName) {
                 alert('🛑 BẮT BUỘC: Vui lòng chọn Tỉnh / Thành phố!');
                 provinceSelect.classList.add('border-red-500', 'ring-1', 'ring-red-500');
                 provinceSelect.focus();
-                return;
-            }
-            if (!districtName) {
-                alert('🛑 BẮT BUỘC: Vui lòng chọn Quận / Huyện!');
-                districtSelect.classList.add('border-red-500', 'ring-1', 'ring-red-500');
-                districtSelect.focus();
                 return;
             }
             if (!wardName) {
@@ -228,11 +191,7 @@
                 return;
             }
             
-            // ... code phía trên giữ nguyên ...
-            
-            // ==========================================
             // CHỐT CHẶN KIỂM TRA SỐ NHÀ SIÊU CẤP
-            // ==========================================
             if (!street) {
                 alert('🛑 BẮT BUỘC: Vui lòng nhập Số nhà, tên đường!');
                 streetInput.classList.add('border-red-500', 'ring-1', 'ring-red-500');
@@ -240,7 +199,6 @@
                 return;
             }
 
-            // 1. Kiểm tra độ dài (Ít nhất 5 ký tự)
             if (street.length < 5) {
                 alert('🛑 ĐỊA CHỈ QUÁ NGẮN: Vui lòng nhập rõ ràng và chi tiết hơn (ít nhất 5 ký tự)!');
                 streetInput.classList.add('border-red-500', 'ring-1', 'ring-red-500');
@@ -248,7 +206,6 @@
                 return;
             }
 
-            // 2. Chống spam ký tự (Chặn lặp 3 ký tự liên tiếp như aaa, 111, bbb...)
             const isSpam = /(.)\1{2,}/.test(street);
             if (isSpam) {
                 alert('🛑 ĐỊA CHỈ KHÔNG HỢP LỆ: Vui lòng nhập địa chỉ có ý nghĩa, không nhập ký tự linh tinh!');
@@ -265,10 +222,8 @@
                 return;
             }
 
-            // Gom địa chỉ chuẩn 3 cấp + chi tiết
-            const fullAddress = `${street}, ${wardName}, ${districtName}, ${provinceName}`;
-            
-            // ... code khóa nút bấm phía dưới giữ nguyên ...
+            // Gom địa chỉ chuẩn 2 cấp + chi tiết
+            const fullAddress = `${street}, ${wardName}, ${provinceName}`;
 
             // Khóa nút bấm để tránh spam click
             btnPay.disabled = true;
@@ -291,7 +246,6 @@
                 const result = await response.json();
 
                 if (result.success) {
-                    // Thành công -> Hiện Popup
                     successPopup.classList.remove('hidden');
                     setTimeout(() => {
                         successPopup.classList.remove('opacity-0');

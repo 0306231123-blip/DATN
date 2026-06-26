@@ -16,12 +16,9 @@ const productRoutes = require('./routes/products');
 const orderRoutes = require('./routes/orders');
 const statisticsRoutes = require('./routes/statistics');
 const uploadRoutes = require('./routes/upload');
-<<<<<<< HEAD
 
-=======
 const supplierRoutes = require('./routes/suppliers');
 const inventoryRoutes = require('./routes/inventory');
->>>>>>> origin/kiet
 
 const app = express();
 

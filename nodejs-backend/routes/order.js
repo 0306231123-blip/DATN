@@ -88,11 +88,12 @@ router.post('/create', async (req, res) => {
     }
 });
 
-// --- 2. CẬP NHẬT TRẠNG THÁI ĐƠN (HỦY ĐƠN / TRẢ HÀNG HOÀN TIỀN) ---
+// --- 2. CẬP NHẬT TRẠNG THÁI ĐƠN (HỦY ĐƠN / TRẢ HÀNG HOÀN TIỀN / HOÀN THÀNH) ---
 router.post('/update-status', async (req, res) => {
     const t = await sequelize.transaction();
     try {
-        const { ma_don_hang, trang_thai } = req.body;
+        // Lấy thêm ly_do_tra_hang từ Frontend gửi lên
+        const { ma_don_hang, trang_thai, ly_do_tra_hang } = req.body;
         
         const donHang = await DonHang.findByPk(ma_don_hang, {
             include: [{ model: ChiTietDonHang, as: 'chi_tiet' }],
@@ -104,16 +105,12 @@ router.post('/update-status', async (req, res) => {
             return res.status(404).json({ success: false, message: 'Không tìm thấy đơn' });
         }
 
-        // ==========================================
-        // CASE 1: KHÁCH HÀNG HỦY ĐƠN
-        // ==========================================
+        // CASE 1: HỦY ĐƠN
         if (trang_thai === 'da_huy') {
             if (donHang.trang_thai_don !== 'cho_xac_nhan') {
                 await t.rollback();
                 return res.status(400).json({ success: false, message: 'Đơn đã xác nhận hoặc đang giao, không hủy được!' });
             }
-
-            // CỘNG LẠI KHO
             for (let item of donHang.chi_tiet) {
                 await SanPham.increment('so_luong_ton', {
                     by: item.so_luong,
@@ -123,26 +120,26 @@ router.post('/update-status', async (req, res) => {
             }
         } 
         
-        // ==========================================
-        // CASE 2: KHÁCH HÀNG TRẢ HÀNG & HOÀN TIỀN
-        // ==========================================
+        // CASE 2: YÊU CẦU TRẢ HÀNG
         else if (trang_thai === 'tra_hang_hoan_tien') {
             if (donHang.trang_thai_don !== 'giao_thanh_cong') {
                 await t.rollback();
                 return res.status(400).json({ success: false, message: 'Chỉ đơn hàng đã giao thành công mới được yêu cầu trả hàng!' });
             }
+            
+            // LƯU LÝ DO TRẢ HÀNG VÀO DATABASE
+            donHang.ly_do_tra_hang = ly_do_tra_hang;
+        }
 
-            // CỘNG LẠI KHO (Vì khách trả lại hàng cho shop)
-            for (let item of donHang.chi_tiet) {
-                await SanPham.increment('so_luong_ton', {
-                    by: item.so_luong,
-                    where: { ma_san_pham: item.ma_san_pham },
-                    transaction: t
-                });
+        // CASE 3: KHÁCH BẤM "ĐÃ NHẬN ĐƯỢC HÀNG" (HOÀN THÀNH)
+        else if (trang_thai === 'hoan_thanh') {
+            if (donHang.trang_thai_don !== 'giao_thanh_cong') {
+                await t.rollback();
+                return res.status(400).json({ success: false, message: 'Chỉ đơn hàng đã giao mới có thể xác nhận hoàn thành!' });
             }
         }
 
-        // Cập nhật trạng thái mới cho đơn hàng
+        // Cập nhật trạng thái mới
         donHang.trang_thai_don = trang_thai;
         await donHang.save({ transaction: t });
 
@@ -154,7 +151,7 @@ router.post('/update-status', async (req, res) => {
     }
 });
 
-// --- 3. LẤY LỊCH SỬ ĐƠN HÀNG ---
+// --- 3. LẤY LỊCH SỬ ĐƠN HÀNG (KÈM AUTO-COMPLETE 7 NGÀY) ---
 router.get('/my-orders', async (req, res) => {
     try {
         const token = req.headers.authorization.split(' ')[1];
@@ -170,6 +167,26 @@ router.get('/my-orders', async (req, res) => {
                 include: [{ model: SanPham, as: 'san_pham' }] 
             }]
         });
+
+        // ==========================================
+        // AUTO 7 NGÀY: QUÉT VÀ CẬP NHẬT TRẠNG THÁI
+        // ==========================================
+        const now = new Date();
+        for (let order of orders) {
+            if (order.trang_thai_don === 'giao_thanh_cong') {
+                // Lấy ngày đơn hàng được cập nhật thành "Giao thành công" (Nếu null thì lấy ngày đặt)
+                const ngayGiao = new Date(order.ngay_cap_nhat || order.updatedAt || order.ngay_dat);
+                const diffTime = Math.abs(now - ngayGiao);
+                const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)); 
+                
+                // Nếu đã qua 7 ngày -> Tự ép thành 'hoan_thanh'
+                if (diffDays >= 7) {
+                    order.trang_thai_don = 'hoan_thanh';
+                    await order.save(); // Lưu lại vào Database
+                }
+            }
+        }
+        // ==========================================
 
         res.json({ success: true, data: orders });
     } catch (error) {
