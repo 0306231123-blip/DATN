@@ -8,7 +8,8 @@ const GioHang = require('../models/GioHang');
 const SanPham = require('../models/SanPham');
 const DonHang = require('../models/DonHang');
 const ChiTietDonHang = require('../models/ChiTietDonHang');
-const YeuCauTraHang = require('../models/YeuCauTraHang'); // <--- IMPORT MODEL MỚI Ở ĐÂY
+const YeuCauTraHang = require('../models/YeuCauTraHang');
+const NguoiDung = require('../models/NguoiDung');
 
 // --- 1. TẠO ĐƠN HÀNG (TRỪ KHO) ---
 router.post('/create', async (req, res) => {
@@ -25,6 +26,8 @@ router.post('/create', async (req, res) => {
         }
 
         const maNguoiDung = decoded.ma_nguoi_dung;
+        const user = await NguoiDung.findByPk(maNguoiDung);
+
         const items = await GioHang.findAll({
             where: { ma_nguoi_dung: maNguoiDung },
             include: [{ model: SanPham, as: 'san_pham' }]
@@ -42,9 +45,15 @@ router.post('/create', async (req, res) => {
         }
 
         const donHangMoi = await DonHang.create({
-            ma_nguoi_dung: maNguoiDung, ho_ten_nguoi_nhan: 'Khách hàng', so_dien_thoai_nhan: so_dien_thoai || '0123456789', 
-            dia_chi_giao: dia_chi, tong_tien_hang: tong_tien, tong_thanh_toan: tong_tien,
-            trang_thai_don: 'cho_xac_nhan', phuong_thuc_thanh_toan: 'chuyen_khoan', trang_thai_thanh_toan: 'da_thanh_toan'
+            ma_nguoi_dung: maNguoiDung, 
+            ho_ten_nguoi_nhan: req.body.ho_ten || (user ? user.ho_ten : 'Khách hàng'), 
+            so_dien_thoai_nhan: so_dien_thoai || (user ? user.so_dien_thoai : '0123456789'), 
+            dia_chi_giao: dia_chi, 
+            tong_tien_hang: tong_tien, 
+            tong_thanh_toan: tong_tien,
+            trang_thai_don: 'cho_xac_nhan', 
+            phuong_thuc_thanh_toan: 'chuyen_khoan', 
+            trang_thai_thanh_toan: 'da_thanh_toan'
         }, { transaction: t });
 
         for (let item of items) {
@@ -100,19 +109,22 @@ router.post('/update-status', async (req, res) => {
         // ==========================================
         // CASE 2: YÊU CẦU TRẢ HÀNG (GHI VÀO BẢNG MỚI)
         // ==========================================
-        else if (trang_thai === 'tra_hang_hoan_tien') {
+        else if (trang_thai === 'tra_hang_hoan_tien' || trang_thai === 'dang_tra_hang') {
             if (donHang.trang_thai_don !== 'giao_thanh_cong') {
                 await t.rollback();
                 return res.status(400).json({ success: false, message: 'Chỉ đơn hàng đã giao thành công mới được yêu cầu trả hàng!' });
             }
             
-            // LƯU LOGIC VÀO BẢNG `yeu_cau_tra_hang` THAY VÌ `don_hang`
+            // LƯU LOGIC VÀO BẢNG `yeu_cau_tra_hang`
             await YeuCauTraHang.create({
                 ma_don_hang: ma_don_hang,
-                ly_do: ly_do_tra_hang, // Nhận từ hộp thoại prompt của người dùng
-                trang_thai: 'cho_xu_ly',
+                ly_do: ly_do_tra_hang || 'Không có lý do', // Đảm bảo không bị null
+                trang_thai: 'cho_duyet', // Map với ENUM của Admin
                 ngay_yeu_cau: new Date()
             }, { transaction: t });
+
+            // Ép kiểu trạng thái về chuẩn của hệ thống Admin
+            trang_thai = 'dang_tra_hang';
         }
 
         // CASE 3: KHÁCH BẤM "ĐÃ NHẬN ĐƯỢC HÀNG" (HOÀN THÀNH)

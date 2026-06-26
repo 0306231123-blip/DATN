@@ -247,9 +247,9 @@
                     productsHtml += '</div>';
 
                     // ==========================================
-                    // 1. TAB LỊCH SỬ MUA HÀNG (Giao thành công, Đã hủy, Hoàn thành)
+                    // 1. TAB LỊCH SỬ MUA HÀNG (Giao thành công, Đã hủy, Hoàn thành, Đã trả hàng)
                     // ==========================================
-                    if(['giao_thanh_cong', 'da_huy', 'hoan_thanh'].includes(order.trang_thai_don)) {
+                    if(['giao_thanh_cong', 'da_huy', 'hoan_thanh', 'da_tra_hang'].includes(order.trang_thai_don)) {
                         hasHistory = true;
                         let statusColor, statusText, actionBtnHtml = '';
 
@@ -281,6 +281,11 @@
                             statusText = 'Hoàn thành';
                             actionBtnHtml = `<div class="mt-4 text-center text-green-600 font-bold w-full bg-green-50 py-2 rounded-lg">Cảm ơn bạn đã mua sắm!</div>`;
                         }
+                        else if (order.trang_thai_don === 'da_tra_hang') {
+                            statusColor = 'bg-gray-100 text-gray-700 border border-gray-300';
+                            statusText = 'Đã hoàn tiền / Trả hàng';
+                            actionBtnHtml = `<div class="mt-4 text-center text-gray-600 font-bold w-full bg-gray-50 py-2 rounded-lg">Đơn hàng đã được trả thành công</div>`;
+                        }
 
                         htmlHistory += `
                             <div class="border border-gray-200 p-6 rounded-2xl flex flex-col bg-white">
@@ -306,7 +311,7 @@
                     // ==========================================
                     else {
                         hasOrders = true;
-                        let activeStatusText = 'Đang xử lý';
+                        let activeStatusText = 'Chờ xác nhận';
                         let activeStatusColor = 'bg-yellow-100 text-yellow-700';
                         let actionBtnHtml = '';
 
@@ -321,7 +326,7 @@
                         } else if (order.trang_thai_don === 'da_xac_nhan') {
                             activeStatusText = 'Đã xác nhận';
                             activeStatusColor = 'bg-purple-100 text-purple-700';
-                        } else if (order.trang_thai_don === 'tra_hang_hoan_tien') {
+                        } else if (order.trang_thai_don === 'dang_tra_hang' || order.trang_thai_don === 'tra_hang_hoan_tien') {
                             activeStatusText = 'Đang xử lý trả hàng';
                             activeStatusColor = 'bg-orange-100 text-orange-700 border border-orange-300'; 
                             // In ra ghi chú chờ shop duyệt (nếu muốn)

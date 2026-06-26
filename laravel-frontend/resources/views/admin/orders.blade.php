@@ -175,7 +175,8 @@ function renderTable(orders) {
 
     tbody.innerHTML = orders.map(order => {
         const statusInfo = getStatusInfo(order.trang_thai_don);
-        const customerName = order.ho_ten_nguoi_nhan || (order.nguoi_dung ? order.nguoi_dung.ho_ten : 'N/A');
+        const isDefaultName = !order.ho_ten_nguoi_nhan || order.ho_ten_nguoi_nhan === 'Khách hàng';
+        const customerName = isDefaultName && order.nguoi_dung ? order.nguoi_dung.ho_ten : (order.ho_ten_nguoi_nhan || 'N/A');
         const totalFormatted = formatCurrency(order.tong_thanh_toan);
         const dateFormatted = formatDate(order.ngay_dat);
         const soSanPham = order.so_san_pham || 0;
@@ -187,7 +188,18 @@ function renderTable(orders) {
                 <td><span class="text-bold">${escapeHtml(customerName)}</span></td>
                 <td><span class="text-secondary">${soSanPham} sản phẩm</span></td>
                 <td><span class="text-bold">${totalFormatted}</span></td>
-                <td><span class="status-badge ${statusInfo.class}">${statusInfo.label}</span></td>
+                <td>
+                    <select class="status-select" onchange="updateStatus(${order.ma_don_hang}, this, '${order.trang_thai_don}')" style="padding: 6px 10px; border-radius: 6px; border: 1px solid #e5e7eb; background: #f9fafb; font-size: 13px; cursor: pointer; outline: none; font-weight: 500; color: #374151;">
+                        <option value="cho_xac_nhan" ${order.trang_thai_don === 'cho_xac_nhan' ? 'selected' : ''}>Chờ xác nhận</option>
+                        <option value="da_xac_nhan" ${order.trang_thai_don === 'da_xac_nhan' ? 'selected' : ''}>Đã xác nhận</option>
+                        <option value="dang_giao" ${order.trang_thai_don === 'dang_giao' ? 'selected' : ''}>Đang giao</option>
+                        <option value="giao_thanh_cong" ${order.trang_thai_don === 'giao_thanh_cong' ? 'selected' : ''}>Giao thành công</option>
+                        <option value="hoan_thanh" ${order.trang_thai_don === 'hoan_thanh' ? 'selected' : ''}>Hoàn thành</option>
+                        <option value="da_huy" ${order.trang_thai_don === 'da_huy' ? 'selected' : ''}>Đã hủy</option>
+                        <option value="dang_tra_hang" ${order.trang_thai_don === 'dang_tra_hang' ? 'selected' : ''}>Yêu cầu trả</option>
+                        <option value="da_tra_hang" ${order.trang_thai_don === 'da_tra_hang' ? 'selected' : ''}>Đã trả hàng</option>
+                    </select>
+                </td>
                 <td><span class="text-secondary">${dateFormatted}</span></td>
                 <td>
                     <div class="action-btns">
@@ -209,16 +221,7 @@ function getActionButtons(order) {
     const status = order.trang_thai_don;
     let buttons = '';
 
-    if (status === 'cho_xac_nhan') {
-        buttons += `<button class="icon-action-btn icon-action-btn--success" title="Xác nhận" onclick="updateStatus(${order.ma_don_hang}, 'da_xac_nhan')"><i data-lucide="check" class="icon-xs"></i></button>`;
-        buttons += `<button class="icon-action-btn icon-action-btn--danger" title="Hủy đơn" onclick="updateStatus(${order.ma_don_hang}, 'da_huy')"><i data-lucide="x" class="icon-xs"></i></button>`;
-    } else if (status === 'da_xac_nhan') {
-        buttons += `<button class="icon-action-btn icon-action-btn--info" title="Giao hàng" onclick="updateStatus(${order.ma_don_hang}, 'dang_giao')"><i data-lucide="truck" class="icon-xs"></i></button>`;
-        buttons += `<button class="icon-action-btn icon-action-btn--danger" title="Hủy đơn" onclick="updateStatus(${order.ma_don_hang}, 'da_huy')"><i data-lucide="x" class="icon-xs"></i></button>`;
-    } else if (status === 'dang_giao') {
-        buttons += `<button class="icon-action-btn icon-action-btn--success" title="Hoàn thành" onclick="updateStatus(${order.ma_don_hang}, 'giao_thanh_cong')"><i data-lucide="check-circle" class="icon-xs"></i></button>`;
-        buttons += `<button class="icon-action-btn icon-action-btn--danger" title="Hủy đơn" onclick="updateStatus(${order.ma_don_hang}, 'da_huy')"><i data-lucide="x" class="icon-xs"></i></button>`;
-    } else if (status === 'dang_tra_hang' && order.yeu_cau_tra_hang) {
+    if (status === 'dang_tra_hang' && order.yeu_cau_tra_hang) {
         buttons += `<button class="icon-action-btn icon-action-btn--success" title="Phê duyệt trả hàng" onclick="handleReturn(${order.yeu_cau_tra_hang.ma_yeu_cau}, 'da_duyet')"><i data-lucide="check" class="icon-xs"></i></button>`;
         buttons += `<button class="icon-action-btn icon-action-btn--danger" title="Từ chối trả hàng" onclick="handleReturn(${order.yeu_cau_tra_hang.ma_yeu_cau}, 'tu_choi')"><i data-lucide="x" class="icon-xs"></i></button>`;
     }
@@ -227,16 +230,24 @@ function getActionButtons(order) {
 }
 
 // ========== Update Order Status ==========
-async function updateStatus(orderId, newStatus) {
-    const statusLabels = {
-        'da_xac_nhan': 'xác nhận',
-        'dang_giao': 'chuyển sang giao hàng',
-        'giao_thanh_cong': 'đánh dấu hoàn thành',
-        'da_huy': 'hủy'
+async function updateStatus(orderId, selectElement, oldStatus) {
+    const newStatus = selectElement.value;
+    
+    // Tìm label của newStatus để hiển thị confirm
+    const statusOptions = {
+        'cho_xac_nhan': 'Chờ xác nhận',
+        'da_xac_nhan': 'Đã xác nhận',
+        'dang_giao': 'Đang giao',
+        'giao_thanh_cong': 'Giao thành công',
+        'hoan_thanh': 'Hoàn thành',
+        'da_huy': 'Đã hủy'
     };
+    const label = statusOptions[newStatus] || newStatus;
 
-    const label = statusLabels[newStatus] || newStatus;
-    if (!confirm(`Bạn chắc chắn muốn ${label} đơn hàng này?`)) return;
+    if (!confirm(`Bạn chắc chắn muốn cập nhật trạng thái đơn hàng thành: ${label}?`)) {
+        selectElement.value = oldStatus; // Revert nếu cancel
+        return;
+    }
 
     try {
         const response = await fetch(`${API_BASE_URL}/orders/${orderId}/status`, {
@@ -252,10 +263,12 @@ async function updateStatus(orderId, newStatus) {
             loadStats();
         } else {
             alert(result.message || 'Lỗi khi cập nhật');
+            selectElement.value = oldStatus; // Revert
         }
     } catch (error) {
         console.error('Error updating status:', error);
         alert('Lỗi khi kết nối đến server');
+        selectElement.value = oldStatus; // Revert
     }
 }
 
@@ -298,7 +311,8 @@ async function viewOrderDetail(orderId) {
         if (result.status === 'success') {
             const order = result.data;
             const statusInfo = getStatusInfo(order.trang_thai_don);
-            const customerName = order.ho_ten_nguoi_nhan || (order.nguoi_dung ? order.nguoi_dung.ho_ten : 'N/A');
+            const isDefaultName = !order.ho_ten_nguoi_nhan || order.ho_ten_nguoi_nhan === 'Khách hàng';
+            const customerName = isDefaultName && order.nguoi_dung ? order.nguoi_dung.ho_ten : (order.ho_ten_nguoi_nhan || 'N/A');
             const customerEmail = order.nguoi_dung ? order.nguoi_dung.email : '';
             const customerPhone = order.so_dien_thoai_nhan || (order.nguoi_dung ? order.nguoi_dung.so_dien_thoai : '');
 
@@ -429,7 +443,8 @@ function getStatusInfo(status) {
         'cho_xac_nhan': { label: 'Chờ xác nhận', class: 'status-badge--warning' },
         'da_xac_nhan': { label: 'Đã xác nhận', class: 'status-badge--info' },
         'dang_giao': { label: 'Đang giao', class: 'status-badge--info' },
-        'giao_thanh_cong': { label: 'Hoàn thành', class: 'status-badge--success' },
+        'giao_thanh_cong': { label: 'Giao thành công', class: 'status-badge--success' },
+        'hoan_thanh': { label: 'Hoàn thành', class: 'status-badge--success' },
         'da_huy': { label: 'Đã hủy', class: 'status-badge--danger' },
         'dang_tra_hang': { label: 'Yêu cầu trả', class: 'status-badge--warning' },
         'da_tra_hang': { label: 'Đã trả hàng', class: 'status-badge--secondary' },

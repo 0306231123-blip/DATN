@@ -196,31 +196,26 @@ exports.updateOrderStatus = async (req, res) => {
       });
     }
 
-    // Validate state transitions
+    // Validate state transitions (Đã gỡ bỏ để Admin có thể tự do chuyển trạng thái qua Combobox)
     const currentStatus = order.trang_thai_don;
-    const allowedTransitions = {
-      'cho_xac_nhan': ['da_xac_nhan', 'da_huy'],
-      'da_xac_nhan': ['dang_giao', 'da_huy'],
-      'dang_giao': ['giao_thanh_cong', 'da_huy'],
-      'giao_thanh_cong': ['dang_tra_hang', 'hoan_thanh'],
-      'dang_tra_hang': ['da_tra_hang', 'giao_thanh_cong', 'tra_hang_hoan_tien'],
-      'da_tra_hang': [],
-      'da_huy': [],
-      'tra_hang_hoan_tien': [],
-      'hoan_thanh': [],
-    };
-
-    if (!allowedTransitions[currentStatus]?.includes(trang_thai_don)) {
-      return res.status(400).json({
-        status: 'error',
-        message: `Không thể chuyển từ "${currentStatus}" sang "${trang_thai_don}".`,
-      });
-    }
 
     await order.update({
       trang_thai_don,
       ngay_cap_nhat: new Date(),
     });
+
+    // Nếu Admin chủ động đổi sang 'dang_tra_hang' qua combobox mà chưa có request, tạo dummy request
+    if (trang_thai_don === 'dang_tra_hang') {
+      const existingReq = await YeuCauTraHang.findOne({ where: { ma_don_hang: orderId } });
+      if (!existingReq) {
+        await YeuCauTraHang.create({
+          ma_don_hang: orderId,
+          ly_do: 'Admin đổi trạng thái bằng tay',
+          trang_thai: 'cho_duyet',
+          ngay_yeu_cau: new Date()
+        });
+      }
+    }
 
     res.status(200).json({
       status: 'success',
