@@ -16,6 +16,7 @@ const productRoutes = require('./routes/products');
 const orderRoutes = require('./routes/orders');
 const statisticsRoutes = require('./routes/statistics');
 const uploadRoutes = require('./routes/upload');
+
 const supplierRoutes = require('./routes/suppliers');
 const inventoryRoutes = require('./routes/inventory');
 const returnRoutes = require('./routes/returns');
@@ -45,6 +46,7 @@ app.use('/api/products', productRoutes);
 app.use('/api/orders', orderRoutes);
 app.use('/api/statistics', statisticsRoutes);
 app.use('/api/upload', uploadRoutes);
+
 app.use('/api/suppliers', supplierRoutes);
 app.use('/api/inventory', inventoryRoutes);
 app.use('/api/returns', returnRoutes);

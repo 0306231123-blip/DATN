@@ -98,4 +98,6 @@ const SanPham = sequelize.define('san_pham', {
   freezeTableName: true,
 });
 
+
+
 module.exports = SanPham;

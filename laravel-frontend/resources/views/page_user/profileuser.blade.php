@@ -141,11 +141,7 @@
 
             if (result.success) {
                 const user = result.data;
-                
-                // Gán tên bên cột trái
                 document.getElementById('sidebar-name').textContent = user.ho_ten;
-                
-                // Đổ dữ liệu vào Form
                 document.getElementById('input-name').value = user.ho_ten || '';
                 document.getElementById('input-email').value = user.email || '';
                 document.getElementById('input-phone').value = user.so_dien_thoai || '';
@@ -213,7 +209,9 @@
         localStorage.removeItem('user');
         window.location.href = '/login';
     }
-async function loadMyOrders() {
+
+    // 5. TẢI VÀ HIỂN THỊ ĐƠN HÀNG (CÓ IN LÝ DO HỦY ĐƠN)
+    async function loadMyOrders() {
         const token = localStorage.getItem('token');
         const ordersContainer = document.getElementById('orders-container');
         const historyContainer = document.getElementById('history-container'); 
@@ -234,7 +232,6 @@ async function loadMyOrders() {
                     const date = new Date(order.ngay_dat).toLocaleDateString('vi-VN');
                     const total = parseInt(order.tong_thanh_toan).toLocaleString() + ' đ';
                     
-                    // Danh sách sản phẩm
                     let productsHtml = '<div class="mt-4 pt-4 border-t border-gray-100 space-y-3">';
                     if (order.chi_tiet && order.chi_tiet.length > 0) {
                         order.chi_tiet.forEach(item => {
@@ -249,59 +246,100 @@ async function loadMyOrders() {
                     }
                     productsHtml += '</div>';
 
-                    // KIỂM TRA TRẠNG THÁI
-                    if(order.trang_thai_don === 'giao_thanh_cong' || order.trang_thai_don === 'da_huy') {
-                        // ---> NẰM Ở TAB LỊCH SỬ MUA HÀNG
+                    // ==========================================
+                    // 1. TAB LỊCH SỬ MUA HÀNG (Giao thành công, Đã hủy, Hoàn thành)
+                    // ==========================================
+                    if(['giao_thanh_cong', 'da_huy', 'hoan_thanh'].includes(order.trang_thai_don)) {
                         hasHistory = true;
-                        let statusColor = order.trang_thai_don === 'giao_thanh_cong' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700';
-                        let statusText = order.trang_thai_don === 'giao_thanh_cong' ? 'Giao thành công' : 'Đã hủy';
+                        let statusColor, statusText, actionBtnHtml = '';
+
+                        if (order.trang_thai_don === 'giao_thanh_cong') {
+                            statusColor = 'bg-green-100 text-green-700';
+                            statusText = 'Giao thành công (Chờ xác nhận)';
+                            actionBtnHtml = `
+                                <div class="flex space-x-3 mt-4 w-full">
+                                    <button onclick="updateOrderStatus(${order.ma_don_hang}, 'hoan_thanh')" class="w-1/2 bg-gray-800 hover:bg-black text-white font-bold py-2 px-4 rounded-lg transition text-sm shadow">
+                                        Đã nhận được hàng
+                                    </button>
+                                    <button onclick="updateOrderStatus(${order.ma_don_hang}, 'tra_hang_hoan_tien')" class="w-1/2 bg-white border-2 border-gray-200 hover:border-yellow-500 hover:text-yellow-600 text-gray-600 font-bold py-2 px-4 rounded-lg transition text-sm">
+                                        Yêu cầu Trả hàng
+                                    </button>
+                                </div>
+                                <p class="text-xs text-gray-400 mt-2 text-center w-full">Đơn hàng sẽ tự động hoàn thành sau 7 ngày</p>
+                            `;
+                        } 
+                        else if (order.trang_thai_don === 'da_huy') {
+                            statusColor = 'bg-red-100 text-red-700';
+                            statusText = 'Đã hủy';
+                            // ĐOẠN NÀY HIỂN THỊ LÝ DO HỦY ĐƠN LÊN MÀN HÌNH
+                            if (order.ly_do_huy_don) {
+                                actionBtnHtml = `<div class="mt-4 text-sm text-left text-red-600 bg-red-50 p-3 rounded-lg w-full border border-red-100"><b>Lý do hủy:</b> ${order.ly_do_huy_don}</div>`;
+                            }
+                        } 
+                        else if (order.trang_thai_don === 'hoan_thanh') {
+                            statusColor = 'bg-blue-100 text-blue-700 border border-blue-200';
+                            statusText = 'Hoàn thành';
+                            actionBtnHtml = `<div class="mt-4 text-center text-green-600 font-bold w-full bg-green-50 py-2 rounded-lg">Cảm ơn bạn đã mua sắm!</div>`;
+                        }
 
                         htmlHistory += `
-                            <div class="border border-gray-200 p-6 rounded-2xl flex flex-col hover:shadow-lg transition bg-white">
+                            <div class="border border-gray-200 p-6 rounded-2xl flex flex-col bg-white">
                                 <div class="flex justify-between items-start mb-2">
                                     <div>
                                         <p class="font-black text-gray-800 text-lg">Đơn hàng #${order.ma_don_hang}</p>
                                         <p class="text-sm text-gray-500">Ngày đặt: ${date}</p>
                                     </div>
-                                    <span class="inline-block px-4 py-1 text-sm font-bold rounded-full ${statusColor}">${statusText}</span>
+                                    <span class="px-4 py-1 text-sm font-bold rounded-full ${statusColor}">${statusText}</span>
                                 </div>
                                 ${productsHtml}
-                                <div class="mt-4 pt-4 border-t border-gray-100 flex justify-between items-center">
-                                    <span class="font-bold text-gray-700">Tổng thanh toán:</span>
-                                    <span class="font-black text-pink-600 text-xl">${total}</span>
+                                <div class="mt-4 pt-4 border-t border-gray-100 flex flex-col justify-end items-end space-y-2">
+                                    <div class="flex justify-between items-center w-full">
+                                        <span class="font-bold text-gray-700">Tổng thanh toán:</span>
+                                        <span class="font-black text-pink-600 text-xl">${total}</span>
+                                    </div>
+                                    <div class="w-full">${actionBtnHtml}</div>
                                 </div>
-                            </div>
-                        `;
-                    } else {
-                        // ---> NẰM Ở TAB QUẢN LÝ ĐƠN HÀNG (Đang chạy)
+                            </div>`;
+                    } 
+                    // ==========================================
+                    // 2. TAB QUẢN LÝ ĐƠN HÀNG (Chờ xác nhận, Đã xác nhận, Đang giao, Đang xử lý trả hàng)
+                    // ==========================================
+                    else {
                         hasOrders = true;
-                        
-                        // Xét chi tiết các trạng thái đang chạy
                         let activeStatusText = 'Đang xử lý';
                         let activeStatusColor = 'bg-yellow-100 text-yellow-700';
+                        let actionBtnHtml = '';
 
-                        if (order.trang_thai_don === 'dang_giao') {
+                        if (order.trang_thai_don === 'cho_xac_nhan') {
+                            actionBtnHtml = `
+                                <button onclick="updateOrderStatus(${order.ma_don_hang}, 'da_huy')" class="mt-4 w-full bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded-lg transition text-sm">
+                                    Hủy đơn hàng
+                                </button>`;
+                        } else if (order.trang_thai_don === 'dang_giao') {
                             activeStatusText = 'Đang giao hàng';
-                            activeStatusColor = 'bg-blue-100 text-blue-700'; // Đổi màu xanh dương cho đẹp
-                        } else if (order.trang_thai_don === 'cho_xac_nhan') {
-                            activeStatusText = 'Chờ xác nhận';
-                            activeStatusColor = 'bg-orange-100 text-orange-700';
+                            activeStatusColor = 'bg-blue-100 text-blue-700';
+                        } else if (order.trang_thai_don === 'da_xac_nhan') {
+                            activeStatusText = 'Đã xác nhận';
+                            activeStatusColor = 'bg-purple-100 text-purple-700';
+                        } else if (order.trang_thai_don === 'tra_hang_hoan_tien') {
+                            activeStatusText = 'Đang xử lý trả hàng';
+                            activeStatusColor = 'bg-orange-100 text-orange-700 border border-orange-300'; 
+                            // In ra ghi chú chờ shop duyệt (nếu muốn)
+                            actionBtnHtml = `<div class="mt-4 text-sm text-left text-orange-600 bg-orange-50 p-3 rounded-lg w-full">Shop đang xử lý yêu cầu trả hàng của bạn.</div>`;
                         }
 
                         htmlOrders += `
-                            <div class="border border-gray-200 p-6 rounded-2xl flex flex-col hover:shadow-lg transition bg-white">
+                            <div class="border border-gray-200 p-6 rounded-2xl flex flex-col bg-white">
                                 <div class="flex justify-between items-center mb-4">
                                     <p class="font-black text-gray-800 text-lg">Đơn hàng #${order.ma_don_hang}</p>
-                                    <span class="inline-block px-4 py-1 text-sm font-bold rounded-full ${activeStatusColor}">${activeStatusText}</span>
+                                    <span class="px-4 py-1 text-sm font-bold rounded-full ${activeStatusColor}">${activeStatusText}</span>
                                 </div>
-                                <p class="text-sm text-gray-500 mb-1"><span class="font-bold">Ngày đặt:</span> ${date}</p>
-                                <p class="text-sm text-gray-500"><span class="font-bold">Địa chỉ:</span> ${order.dia_chi_giao}</p>
                                 ${productsHtml}
                                 <div class="mt-4 pt-4 border-t border-gray-100 text-right">
                                     <p class="font-black text-pink-600 text-xl">${total}</p>
+                                    ${actionBtnHtml}
                                 </div>
-                            </div>
-                        `;
+                            </div>`;
                     }
                 });
                 
@@ -319,6 +357,58 @@ async function loadMyOrders() {
             }
         } catch (error) {
             console.error('Lỗi tải đơn hàng:', error);
+        }
+    }
+
+    // 6. HÀM CHUNG ĐỂ CẬP NHẬT TRẠNG THÁI (GỬI KÈM LÝ DO HỦY / LÝ DO TRẢ HÀNG)
+    async function updateOrderStatus(maDonHang, trangThaiMoi) {
+        let lyDoTraHang = null;
+        let lyDoHuyDon = null;
+
+        // KIỂM TRA NẾU LÀ HỦY ĐƠN -> BẬT PROMPT NHẬP LÝ DO
+        if (trangThaiMoi === 'da_huy') {
+            lyDoHuyDon = prompt("Vui lòng nhập lý do hủy đơn hàng (Bắt buộc):");
+            if (!lyDoHuyDon || lyDoHuyDon.trim() === "") {
+                alert("Bạn phải nhập lý do thì hệ thống mới xử lý hủy đơn!");
+                return; // Dừng lại không gọi API nữa
+            }
+        } 
+        else if (trangThaiMoi === 'hoan_thanh') {
+            if (!confirm("Xác nhận bạn đã nhận được hàng và sản phẩm không có vấn đề gì? (Sau khi xác nhận sẽ không thể trả hàng nữa)")) return;
+        }
+        else if (trangThaiMoi === 'tra_hang_hoan_tien') {
+            lyDoTraHang = prompt("Vui lòng nhập chi tiết lý do bạn muốn trả hàng (Bắt buộc):");
+            if (!lyDoTraHang || lyDoTraHang.trim() === "") {
+                alert("Bạn phải nhập lý do thì Shop mới xử lý được nhé!");
+                return;
+            }
+        }
+
+        const token = localStorage.getItem('token');
+        try {
+            const response = await fetch(`${API_URL}/order/update-status`, {
+                method: 'POST',
+                headers: { 
+                    'Content-Type': 'application/json',
+                    'Authorization': 'Bearer ' + token 
+                },
+                body: JSON.stringify({ 
+                    ma_don_hang: maDonHang, 
+                    trang_thai: trangThaiMoi,
+                    ly_do_tra_hang: lyDoTraHang,
+                    ly_do_huy_don: lyDoHuyDon // Backend sẽ tự lấy cái này lưu vào Database
+                })
+            });
+
+            const result = await response.json();
+            if (result.success) {
+                alert(result.message);
+                location.reload(); 
+            } else {
+                alert("Lỗi: " + result.message);
+            }
+        } catch (error) {
+            alert("Có lỗi xảy ra, vui lòng thử lại sau!");
         }
     }
 </script>

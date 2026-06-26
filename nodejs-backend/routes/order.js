@@ -1,89 +1,173 @@
 const express = require('express');
 const router = express.Router();
 const jwt = require('jsonwebtoken');
+
+// IMPORT ĐÚNG ĐƯỜNG DẪN 
+const sequelize = require('../config/database');
 const GioHang = require('../models/GioHang');
 const SanPham = require('../models/SanPham');
-const DonHang = require('../models/DonHang'); // Hãy đảm bảo bạn đã tạo model này
-const ChiTietDonHang = require('../models/ChiTietDonHang'); // Hãy đảm bảo bạn đã tạo model này
+const DonHang = require('../models/DonHang');
+const ChiTietDonHang = require('../models/ChiTietDonHang');
+const YeuCauTraHang = require('../models/YeuCauTraHang'); // <--- IMPORT MODEL MỚI Ở ĐÂY
 
+// --- 1. TẠO ĐƠN HÀNG (TRỪ KHO) ---
 router.post('/create', async (req, res) => {
+    // ... [ĐOẠN CODE NÀY GIỮ NGUYÊN KHÔNG ĐỔI] ...
+    const t = await sequelize.transaction();
     try {
         const token = req.headers.authorization.split(' ')[1];
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
-        const { dia_chi } = req.body;
-        const maNguoiDung = decoded.ma_nguoi_dung;
+        const { dia_chi, so_dien_thoai } = req.body; 
+        
+        if (!dia_chi || dia_chi.trim() === '' || dia_chi.trim().startsWith(',')) {
+            await t.rollback();
+            return res.status(400).json({ success: false, message: 'Bắt buộc phải nhập đầy đủ số nhà và tên đường!' });
+        }
 
-        // 1. Lấy toàn bộ sản phẩm trong giỏ hàng
+        const maNguoiDung = decoded.ma_nguoi_dung;
         const items = await GioHang.findAll({
             where: { ma_nguoi_dung: maNguoiDung },
             include: [{ model: SanPham, as: 'san_pham' }]
         });
 
-        if (items.length === 0) {
+        if (!items || items.length === 0) {
+            await t.rollback();
             return res.status(400).json({ success: false, message: 'Giỏ hàng trống' });
         }
 
-        // 2. Tính tổng tiền
         let tong_tien = 0;
-        items.forEach(item => {
-            const gia = item.san_pham.gia_khuyen_mai || item.san_pham.gia;
-            tong_tien += gia * item.so_luong;
-        });
-
-       const donHangMoi = await DonHang.create({
-            ma_nguoi_dung: maNguoiDung,
-            ho_ten_nguoi_nhan: 'Khách hàng', // Dữ liệu tạm (vì form chưa có)
-            so_dien_thoai_nhan: '0123456789', // Dữ liệu tạm 
-            dia_chi_giao: dia_chi,
-            tong_tien_hang: tong_tien,
-            phi_van_chuyen: 0,
-            tong_thanh_toan: tong_tien,
-            phuong_thuc_thanh_toan: 'chuyen_khoan', 
-            trang_thai_thanh_toan: 'da_thanh_toan', // Giả sử quét QR là đã thanh toán
-            trang_thai_don: 'dang_giao' 
-        });
-
-        // 4. Lưu từng sản phẩm vào bảng chi_tiet_don_hang
         for (let item of items) {
-            const gia = item.san_pham.gia_khuyen_mai || item.san_pham.gia;
-            const thanhTien = gia * item.so_luong; // Tính thành tiền theo DB
-            
-            await ChiTietDonHang.create({
-                ma_don_hang: donHangMoi.ma_don_hang, 
-                ma_san_pham: item.ma_san_pham,
-                ten_san_pham: item.san_pham.ten_san_pham, // Thêm tên SP
-                don_gia: gia, // Dùng don_gia thay vì gia
-                so_luong: item.so_luong,
-                thanh_tien: thanhTien // Thêm cột thanh_tien
-            });
+            if (item.san_pham.so_luong_ton < item.so_luong) throw new Error(`Sản phẩm ${item.san_pham.ten_san_pham} không đủ hàng!`);
+            tong_tien += (item.san_pham.gia_khuyen_mai || item.san_pham.gia) * item.so_luong;
         }
 
-        // 5. Xóa sạch giỏ hàng của user sau khi đặt hàng thành công
-        await GioHang.destroy({ where: { ma_nguoi_dung: maNguoiDung } });
+        const donHangMoi = await DonHang.create({
+            ma_nguoi_dung: maNguoiDung, ho_ten_nguoi_nhan: 'Khách hàng', so_dien_thoai_nhan: so_dien_thoai || '0123456789', 
+            dia_chi_giao: dia_chi, tong_tien_hang: tong_tien, tong_thanh_toan: tong_tien,
+            trang_thai_don: 'cho_xac_nhan', phuong_thuc_thanh_toan: 'chuyen_khoan', trang_thai_thanh_toan: 'da_thanh_toan'
+        }, { transaction: t });
 
-        res.json({ success: true, message: 'Tạo đơn hàng thành công' });
+        for (let item of items) {
+            await SanPham.decrement('so_luong_ton', { by: item.so_luong, where: { ma_san_pham: item.ma_san_pham }, transaction: t });
+            await ChiTietDonHang.create({
+                ma_don_hang: donHangMoi.ma_don_hang, ma_san_pham: item.ma_san_pham, ten_san_pham: item.san_pham.ten_san_pham, 
+                so_luong: item.so_luong, don_gia: (item.san_pham.gia_khuyen_mai || item.san_pham.gia),
+                thanh_tien: (item.san_pham.gia_khuyen_mai || item.san_pham.gia) * item.so_luong
+            }, { transaction: t });
+        }
 
+        await GioHang.destroy({ where: { ma_nguoi_dung: maNguoiDung }, transaction: t });
+        await t.commit();
+        res.json({ success: true, message: 'Đặt hàng thành công!' });
     } catch (error) {
-        console.error("Lỗi tạo đơn hàng:", error);
-        res.status(500).json({ success: false, message: 'Lỗi server' });
+        await t.rollback();
+        res.status(500).json({ success: false, message: error.message });
     }
 });
+
+// --- 2. CẬP NHẬT TRẠNG THÁI (HỦY ĐƠN / TRẢ HÀNG / HOÀN THÀNH) ---
+router.post('/update-status', async (req, res) => {
+    const t = await sequelize.transaction();
+    try {
+        const { ma_don_hang, trang_thai, ly_do_tra_hang, ly_do_huy_don } = req.body;
+        
+        const donHang = await DonHang.findByPk(ma_don_hang, {
+            include: [{ model: ChiTietDonHang, as: 'chi_tiet' }],
+            transaction: t
+        });
+
+        if (!donHang) {
+            await t.rollback();
+            return res.status(404).json({ success: false, message: 'Không tìm thấy đơn' });
+        }
+
+        // CASE 1: HỦY ĐƠN
+        if (trang_thai === 'da_huy') {
+            if (donHang.trang_thai_don !== 'cho_xac_nhan') {
+                await t.rollback();
+                return res.status(400).json({ success: false, message: 'Đơn đã xác nhận hoặc đang giao, không hủy được!' });
+            }
+            // Lưu lý do hủy trực tiếp vào bảng don_hang
+            donHang.ly_do_huy_don = ly_do_huy_don;
+            
+            for (let item of donHang.chi_tiet) {
+                await SanPham.increment('so_luong_ton', {
+                    by: item.so_luong, where: { ma_san_pham: item.ma_san_pham }, transaction: t
+                });
+            }
+        } 
+        
+        // ==========================================
+        // CASE 2: YÊU CẦU TRẢ HÀNG (GHI VÀO BẢNG MỚI)
+        // ==========================================
+        else if (trang_thai === 'tra_hang_hoan_tien') {
+            if (donHang.trang_thai_don !== 'giao_thanh_cong') {
+                await t.rollback();
+                return res.status(400).json({ success: false, message: 'Chỉ đơn hàng đã giao thành công mới được yêu cầu trả hàng!' });
+            }
+            
+            // LƯU LOGIC VÀO BẢNG `yeu_cau_tra_hang` THAY VÌ `don_hang`
+            await YeuCauTraHang.create({
+                ma_don_hang: ma_don_hang,
+                ly_do: ly_do_tra_hang, // Nhận từ hộp thoại prompt của người dùng
+                trang_thai: 'cho_xu_ly',
+                ngay_yeu_cau: new Date()
+            }, { transaction: t });
+        }
+
+        // CASE 3: KHÁCH BẤM "ĐÃ NHẬN ĐƯỢC HÀNG" (HOÀN THÀNH)
+        else if (trang_thai === 'hoan_thanh') {
+            if (donHang.trang_thai_don !== 'giao_thanh_cong') {
+                await t.rollback();
+                return res.status(400).json({ success: false, message: 'Chỉ đơn hàng đã giao mới có thể xác nhận hoàn thành!' });
+            }
+        }
+
+        // Cập nhật trạng thái mới cho bảng đơn hàng
+        donHang.trang_thai_don = trang_thai;
+        await donHang.save({ transaction: t });
+
+        await t.commit();
+        res.json({ success: true, message: 'Cập nhật trạng thái thành công' });
+    } catch (error) {
+        await t.rollback();
+        console.log(error);
+        res.status(500).json({ success: false, message: error.message });
+    }
+});
+
+// --- 3. LẤY LỊCH SỬ ĐƠN HÀNG (AUTO-COMPLETE 7 NGÀY) ---
 router.get('/my-orders', async (req, res) => {
     try {
         const token = req.headers.authorization.split(' ')[1];
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
-        // Tìm tất cả đơn hàng của user này, sắp xếp ngày đặt mới nhất lên đầu
         const orders = await DonHang.findAll({
             where: { ma_nguoi_dung: decoded.ma_nguoi_dung },
-            order: [['ngay_dat', 'DESC']],
-            include: [{ model: ChiTietDonHang, as: 'chi_tiet' }]
+            order: [['ngay_dat', 'DESC']], 
+            include: [{ 
+                model: ChiTietDonHang, as: 'chi_tiet', include: [{ model: SanPham, as: 'san_pham' }] 
+            }]
         });
+
+        const now = new Date();
+        for (let order of orders) {
+            if (order.trang_thai_don === 'giao_thanh_cong') {
+                const ngayGiao = new Date(order.ngay_cap_nhat || order.ngay_dat);
+                const diffTime = Math.abs(now - ngayGiao);
+                const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)); 
+                
+                if (diffDays >= 7) {
+                    order.trang_thai_don = 'hoan_thanh';
+                    await order.save();
+                }
+            }
+        }
 
         res.json({ success: true, data: orders });
     } catch (error) {
-        console.error("Lỗi lấy danh sách đơn hàng:", error);
         res.status(500).json({ success: false, message: 'Lỗi server' });
     }
 });
+
 module.exports = router;

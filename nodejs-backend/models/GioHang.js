@@ -10,4 +10,6 @@ const GioHang = sequelize.define('gio_hang', {
   ngay_them: { type: DataTypes.DATE, defaultValue: DataTypes.NOW }
 }, { timestamps: false });
 
+
+
 module.exports = GioHang;

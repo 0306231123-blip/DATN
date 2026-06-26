@@ -37,7 +37,7 @@ exports.getAllOrders = async (req, res) => {
     }
 
     // Filter by status
-    const validStatuses = ['cho_xac_nhan', 'da_xac_nhan', 'dang_giao', 'giao_thanh_cong', 'da_huy', 'dang_tra_hang', 'da_tra_hang'];
+    const validStatuses = ['cho_xac_nhan', 'da_xac_nhan', 'dang_giao', 'giao_thanh_cong', 'da_huy', 'dang_tra_hang', 'da_tra_hang', 'tra_hang_hoan_tien', 'hoan_thanh'];
     if (trang_thai && trang_thai !== 'all' && validStatuses.includes(trang_thai)) {
       where.trang_thai_don = trang_thai;
     }
@@ -180,7 +180,7 @@ exports.updateOrderStatus = async (req, res) => {
       });
     }
 
-    const validStatuses = ['cho_xac_nhan', 'da_xac_nhan', 'dang_giao', 'giao_thanh_cong', 'da_huy', 'dang_tra_hang', 'da_tra_hang'];
+    const validStatuses = ['cho_xac_nhan', 'da_xac_nhan', 'dang_giao', 'giao_thanh_cong', 'da_huy', 'dang_tra_hang', 'da_tra_hang', 'tra_hang_hoan_tien', 'hoan_thanh'];
     if (!trang_thai_don || !validStatuses.includes(trang_thai_don)) {
       return res.status(400).json({
         status: 'error',
@@ -202,10 +202,12 @@ exports.updateOrderStatus = async (req, res) => {
       'cho_xac_nhan': ['da_xac_nhan', 'da_huy'],
       'da_xac_nhan': ['dang_giao', 'da_huy'],
       'dang_giao': ['giao_thanh_cong', 'da_huy'],
-      'giao_thanh_cong': ['dang_tra_hang'],
-      'dang_tra_hang': ['da_tra_hang', 'giao_thanh_cong'],
+      'giao_thanh_cong': ['dang_tra_hang', 'hoan_thanh'],
+      'dang_tra_hang': ['da_tra_hang', 'giao_thanh_cong', 'tra_hang_hoan_tien'],
       'da_tra_hang': [],
       'da_huy': [],
+      'tra_hang_hoan_tien': [],
+      'hoan_thanh': [],
     };
 
     if (!allowedTransitions[currentStatus]?.includes(trang_thai_don)) {
