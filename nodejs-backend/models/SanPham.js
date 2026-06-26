@@ -12,6 +12,15 @@ const SanPham = sequelize.define('san_pham', {
     type: DataTypes.STRING(255),
     allowNull: false,
   },
+  sku: {
+    type: DataTypes.STRING(100),
+    allowNull: true,
+    unique: true,
+  },
+  co_bien_the: {
+    type: DataTypes.BOOLEAN,
+    defaultValue: false,
+  },
   mo_ta: {
     type: DataTypes.TEXT,
     allowNull: true,
@@ -29,6 +38,10 @@ const SanPham = sequelize.define('san_pham', {
     allowNull: false,
   },
   gia_khuyen_mai: {
+    type: DataTypes.DECIMAL(12, 2),
+    allowNull: true,
+  },
+  gia_max: {
     type: DataTypes.DECIMAL(12, 2),
     allowNull: true,
   },

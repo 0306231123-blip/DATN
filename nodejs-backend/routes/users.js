@@ -1,8 +1,11 @@
 const express = require('express');
 const UserController = require('../controllers/UserController');
+const { verifyToken, requireAdmin } = require('../middleware/verifyToken');
 const { validateListQuery, validateUserCreate, validateUserUpdate } = require('../middleware/userValidation');
 
 const router = express.Router();
+
+router.use(verifyToken, requireAdmin);
 
 /**
  * User Management Routes

@@ -7,11 +7,16 @@ use Illuminate\Support\Facades\Http;
 
 class DashboardController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
         try {
             // Gọi API Node.js backend để lấy dữ liệu dashboard
-            $response = Http::timeout(10)->get('http://localhost:3000/api/dashboard/stats');
+            $token = $request->cookie('token');
+            $client = Http::timeout(10);
+            if ($token) {
+                $client = $client->withToken($token);
+            }
+            $response = $client->get('http://localhost:3000/api/dashboard/stats');
 
             if ($response->successful()) {
                 $data = $response->json('data');

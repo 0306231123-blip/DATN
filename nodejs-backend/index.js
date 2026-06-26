@@ -16,7 +16,12 @@ const productRoutes = require('./routes/products');
 const orderRoutes = require('./routes/orders');
 const statisticsRoutes = require('./routes/statistics');
 const uploadRoutes = require('./routes/upload');
+<<<<<<< HEAD
 
+=======
+const supplierRoutes = require('./routes/suppliers');
+const inventoryRoutes = require('./routes/inventory');
+>>>>>>> origin/kiet
 
 const app = express();
 
@@ -44,6 +49,8 @@ app.use('/api/orders', orderRoutes);
 app.use('/api/statistics', statisticsRoutes);
 app.use('/api/upload', uploadRoutes);
 
+app.use('/api/suppliers', supplierRoutes);
+app.use('/api/inventory', inventoryRoutes);
 
 // Kết nối database và khởi động server
 const PORT = process.env.PORT || 3000;

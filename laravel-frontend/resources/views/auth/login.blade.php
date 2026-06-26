@@ -127,6 +127,7 @@
                 // Lưu token và thông tin user vào localStorage
                 localStorage.setItem('token', data.data.token);
                 localStorage.setItem('user', JSON.stringify(data.data.user));
+                document.cookie = 'token=' + encodeURIComponent(data.data.token) + '; path=/; max-age=604800; SameSite=Lax';
 
                 showAlert('Đăng nhập thành công! Đang chuyển hướng...', false);
 

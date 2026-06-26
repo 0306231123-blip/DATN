@@ -1,4 +1,4 @@
-﻿@extends('layouts.admin')
+@extends('layouts.admin')
 
 @section('title', 'Quản lý sản phẩm')
 @section('page-title', 'Quản lý sản phẩm')
@@ -6,6 +6,12 @@
 
 @section('content')
 <!-- Action Bar -->
+<div class="view-tabs" style="margin-bottom: 20px; border-bottom: 1px solid #e2e8f0; display: flex; gap: 20px;">
+    <button class="view-tab active" data-view="products" onclick="switchView('products')" style="padding: 10px 20px; font-weight: bold; background: none; border: none; border-bottom: 2px solid var(--primary-color); color: var(--primary-color); cursor: pointer;">Sản Phẩm</button>
+    <button class="view-tab" data-view="inventory" onclick="switchView('inventory')" style="padding: 10px 20px; font-weight: bold; background: none; border: none; border-bottom: 2px solid transparent; color: #64748b; cursor: pointer;">Kho Hàng</button>
+</div>
+
+<div id="view-products">
 <div class="page-action-bar" id="products-action-bar">
     <div class="action-bar-left">
         <button class="btn btn-primary" id="btn-add-product">
@@ -23,6 +29,7 @@
             <button class="role-tab active" data-status="all">Tất cả</button>
             <button class="role-tab" data-status="dang_ban">Đang bán</button>
             <button class="role-tab" data-status="ngung_ban">Ngừng bán</button>
+            <button class="role-tab" data-status="sap_het_hang">Sắp hết</button>
             <button class="role-tab" data-status="het_hang">Hết hàng</button>
         </div>
     </div>
@@ -83,6 +90,41 @@
             <span class="stat-label">Khuyến mãi</span>
             <span class="stat-value" id="stat-khuyen-mai">0</span>
         </div>
+    </div>
+</div>
+</div> <!-- End view-products -->
+
+<!-- Bắt đầu view-inventory -->
+<div id="view-inventory" style="display: none;">
+    <div class="page-action-bar">
+        <div class="action-bar-left">
+            <h3>Quản lý Tồn Kho</h3>
+        </div>
+        <div class="action-bar-right">
+            <button class="btn btn-secondary" onclick="viewAllLogs()" style="margin-right: 10px;">
+                <i data-lucide="clock" class="icon-xs"></i> Lịch sử chung
+            </button>
+            <button class="btn btn-primary" onclick="openBulkImportModal()" style="margin-right: 10px;">
+                <i data-lucide="download" class="icon-xs"></i> Nhập hàng loạt
+            </button>
+            <button class="btn btn-secondary" onclick="loadInventory()">
+                <i data-lucide="refresh-cw" class="icon-xs"></i> Tải lại
+            </button>
+        </div>
+    </div>
+    <div class="data-card">
+        <table class="admin-table">
+            <thead>
+                <tr>
+                    <th>SKU</th>
+                    <th>Sản phẩm / Biến thể</th>
+                    <th>Tồn kho</th>
+                    <th>Thao tác</th>
+                </tr>
+            </thead>
+            <tbody id="inventory-tbody">
+            </tbody>
+        </table>
     </div>
 </div>
 
@@ -245,6 +287,36 @@
                 </select>
             </div>
 
+            <div class="form-group" style="margin-top: 20px; background: #f8fafc; padding: 15px; border-radius: 6px;">
+                <label style="display: flex; align-items: center; gap: 10px; cursor: pointer; margin: 0;">
+                    <input type="checkbox" id="co_bien_the" name="co_bien_the" onchange="toggleVariants()" style="width: 18px; height: 18px;"> 
+                    <strong>Sản phẩm có nhiều phân loại (màu sắc, dung tích...)</strong>
+                </label>
+            </div>
+
+            <div id="variants-section" style="display: none; margin-top: 15px; border: 1px solid #e2e8f0; padding: 15px; border-radius: 8px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                    <h3 style="margin: 0; font-size: 15px;">Danh sách biến thể</h3>
+                    <button type="button" class="btn btn-secondary btn-sm" onclick="addVariantRow()">+ Thêm phân loại</button>
+                </div>
+                <div class="table-wrapper" style="max-height: 300px; overflow-y: auto;">
+                    <table class="admin-table" id="variants-table">
+                        <thead>
+                            <tr>
+                                <th>Phân loại</th>
+                                <th>SKU</th>
+                                <th>Giá *</th>
+                                <th>Giá KM</th>
+                                <th>Tồn kho</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody id="variants-tbody">
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" id="btn-cancel-modal">Hủy</button>
                 <button type="submit" class="btn btn-primary">Lưu</button>
@@ -256,6 +328,74 @@
 <!-- Modal Overlay -->
 <div class="modal-overlay" id="modal-overlay" style="display: none;"></div>
 
+<!-- Modal Nhập Kho Hàng Loạt -->
+<div class="modal" id="modal-bulk-import" style="display: none; z-index: 1002;">
+    <div class="modal-content modal-content--wide">
+        <div class="modal-header">
+            <h2>Nhập kho hàng loạt</h2>
+            <button class="modal-close" type="button" onclick="closeBulkImportModal()">&times;</button>
+        </div>
+        <form id="form-bulk-import" class="form">
+            <div class="table-wrapper" style="max-height: 400px; overflow-y: auto; margin-bottom: 20px;">
+                <table class="admin-table">
+                    <thead>
+                        <tr>
+                            <th>Sản phẩm / Phân loại</th>
+                            <th>SKU</th>
+                            <th>Tồn kho</th>
+                            <th style="width: 120px;">Số lượng nhập</th>
+                            <th style="width: 150px;">Giá nhập</th>
+                        </tr>
+                    </thead>
+                    <tbody id="bulk-import-tbody">
+                    </tbody>
+                </table>
+            </div>
+            <div class="form-row">
+                <div class="form-group" style="flex: 1;">
+                    <label>Nhà cung cấp (Tùy chọn)</label>
+                    <select id="bulk-supplier" class="form-control">
+                        <option value="">-- Chọn nhà cung cấp --</option>
+                    </select>
+                </div>
+                <div class="form-group" style="flex: 2;">
+                    <label>Ghi chú</label>
+                    <input type="text" id="bulk-note" class="form-control" placeholder="Ví dụ: Nhập hàng tháng 10...">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" onclick="closeBulkImportModal()">Hủy</button>
+                <button type="submit" class="btn btn-primary">Xác nhận Nhập Kho</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Modal Thẻ Kho -->
+<div class="modal" id="modal-logs" style="display: none; z-index: 1002;">
+    <div class="modal-content modal-content--wide">
+        <div class="modal-header">
+            <h2>Lịch sử biến động kho</h2>
+            <button class="modal-close" onclick="closeLogsModal()">&times;</button>
+        </div>
+        <div class="table-wrapper" style="max-height: 400px; overflow-y: auto;">
+            <table class="admin-table">
+                <thead>
+                    <tr>
+                        <th>Ngày</th>
+                        <th>Sản phẩm / Phân loại</th>
+                        <th>Thao tác</th>
+                        <th>Thay đổi</th>
+                        <th>Tồn cuối</th>
+                        <th>Ghi chú</th>
+                    </tr>
+                </thead>
+                <tbody id="logs-tbody">
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
 @endsection
 
 
@@ -277,7 +417,7 @@ let galleryImages = []; // cached gallery images
 
 async function loadCategories() {
     try {
-        const response = await fetch(`${API_BASE_URL}/categories?limit=100`);
+        const response = await fetch(`${API_BASE_URL}/categories?per_page=100`);
         const result = await response.json();
         if (result.status === 'success' || result.success) {
             categories = result.data;
@@ -300,7 +440,7 @@ function updateCategorySelects() {
 
 async function loadProducts(search = '', status = 'all') {
     try {
-        let url = `${API_BASE_URL}/products?limit=100`;
+        let url = `${API_BASE_URL}/products?per_page=100`;
         if (search) url += `&search=${encodeURIComponent(search)}`;
         if (status && status !== 'all') url += `&trang_thai=${status}`;
 
@@ -334,9 +474,15 @@ function renderTable() {
         const imgPath = product.anh_san_pham ? (product.anh_san_pham.startsWith('http') ? product.anh_san_pham : product.anh_san_pham) : '/images/logo.jpg';
 
         let statusBadge = '';
-        if (product.trang_thai === 'dang_ban') statusBadge = '<span class="status-badge status-badge--active">Đang bán</span>';
-        else if (product.trang_thai === 'ngung_ban') statusBadge = '<span class="status-badge status-badge--inactive">Ngừng bán</span>';
-        else statusBadge = '<span class="status-badge status-badge--danger">Hết hàng</span>';
+        if (product.trang_thai === 'ngung_ban') {
+            statusBadge = '<span class="status-badge status-badge--inactive">Ngừng bán</span>';
+        } else if (product.so_luong_ton === 0) {
+            statusBadge = '<span class="status-badge status-badge--danger">Hết hàng</span>';
+        } else if (product.so_luong_ton < 20) {
+            statusBadge = '<span class="status-badge" style="background-color: #fff7ed; color: #c2410c;">Sắp hết hàng</span>';
+        } else {
+            statusBadge = '<span class="status-badge status-badge--active">Đang bán</span>';
+        }
 
         return `
         <tr>
@@ -352,7 +498,7 @@ function renderTable() {
             <td><span class="text-secondary">${escapeHtml(catName)}</span></td>
             <td>
                 <div class="price-cell">
-                    ${product.gia_khuyen_mai ? `<span class="price-original">${Number(product.gia).toLocaleString('vi-VN')}đ</span><span class="price-sale">${Number(product.gia_khuyen_mai).toLocaleString('vi-VN')}đ</span>` : `<span>${Number(product.gia).toLocaleString('vi-VN')}đ</span>`}
+                    ${product.co_bien_the ? `<span>${Number(product.gia).toLocaleString('vi-VN')}đ - ${Number(product.gia_max).toLocaleString('vi-VN')}đ</span>` : (product.gia_khuyen_mai ? `<span class="price-original">${Number(product.gia).toLocaleString('vi-VN')}đ</span><span class="price-sale">${Number(product.gia_khuyen_mai).toLocaleString('vi-VN')}đ</span>` : `<span>${Number(product.gia).toLocaleString('vi-VN')}đ</span>`)}
                 </div>
             </td>
             <td>${product.so_luong_ton}</td>
@@ -696,8 +842,29 @@ if (formProduct) {
             mo_ta: document.getElementById('mo_ta') ? document.getElementById('mo_ta').value.trim() : null,
             thanh_phan: document.getElementById('thanh_phan') ? document.getElementById('thanh_phan').value.trim() : null,
             huong_dan_su_dung: document.getElementById('huong_dan_su_dung') ? document.getElementById('huong_dan_su_dung').value.trim() : null,
-            trang_thai: document.getElementById('trang_thai_form') ? document.getElementById('trang_thai_form').value : 'dang_ban'
+            trang_thai: document.getElementById('trang_thai_form') ? document.getElementById('trang_thai_form').value : 'dang_ban',
+            variants: []
         };
+
+        const cbBienThe = document.getElementById('co_bien_the');
+        if (cbBienThe && cbBienThe.checked) {
+            const rows = document.querySelectorAll('.variant-row');
+            rows.forEach(r => {
+                const ma_bien_the = r.dataset.id || null;
+                const ten_bien_the = r.querySelector('.v-ten').value;
+                const sku = r.querySelector('.v-sku').value;
+                const gia = r.querySelector('.v-gia').value;
+                const gia_khuyen_mai = r.querySelector('.v-giakm').value;
+                const so_luong_ton = r.querySelector('.v-ton').value;
+                
+                formData.variants.push({
+                    ma_bien_the, ten_bien_the, sku, gia, gia_khuyen_mai, so_luong_ton,
+                    thuoc_tinh: { ten: ten_bien_the }
+                });
+            });
+            formData.gia = formData.variants[0]?.gia || 0;
+            formData.so_luong_ton = 0;
+        }
 
         if (!formData.ten_san_pham) {
             document.getElementById('error-ten_san_pham').textContent = 'Tên sản phẩm không được để trống';
@@ -848,6 +1015,280 @@ document.addEventListener('DOMContentLoaded', async function() {
     await loadCategories();
     await loadProducts();
 });
+// ==================== NEW JS FOR VARIANTS & INVENTORY ====================
+
+function switchView(view) {
+    document.querySelectorAll('.view-tab').forEach(t => {
+        t.style.borderBottomColor = 'transparent';
+        t.style.color = '#64748b';
+    });
+    const activeTab = document.querySelector(`.view-tab[data-view="${view}"]`);
+    if(activeTab) {
+        activeTab.style.borderBottomColor = 'var(--primary-color)';
+        activeTab.style.color = 'var(--primary-color)';
+    }
+
+    document.getElementById('view-products').style.display = view === 'products' ? 'block' : 'none';
+    document.getElementById('view-inventory').style.display = view === 'inventory' ? 'block' : 'none';
+
+    if (view === 'inventory') {
+        loadInventory();
+    }
+}
+
+// -- Variants Logic --
+function toggleVariants() {
+    const checked = document.getElementById('co_bien_the').checked;
+    document.getElementById('variants-section').style.display = checked ? 'block' : 'none';
+    
+    // Disable main inputs if variants enabled
+    document.getElementById('gia').disabled = checked;
+    document.getElementById('gia_khuyen_mai').disabled = checked;
+    document.getElementById('so_luong_ton').disabled = checked;
+}
+
+function addVariantRow(data = {}) {
+    const tbody = document.getElementById('variants-tbody');
+    const tr = document.createElement('tr');
+    tr.className = 'variant-row';
+    tr.dataset.id = data.ma_bien_the || '';
+    tr.innerHTML = `
+        <td><input type="text" class="form-control v-ten" placeholder="Màu đỏ..." value="${escapeHtml(data.ten_bien_the || '')}"></td>
+        <td><input type="text" class="form-control v-sku" placeholder="SKU..." value="${escapeHtml(data.sku || '')}"></td>
+        <td><input type="number" class="form-control v-gia" required min="0" value="${data.gia || ''}"></td>
+        <td><input type="number" class="form-control v-giakm" min="0" value="${data.gia_khuyen_mai || ''}"></td>
+        <td><input type="number" class="form-control v-ton" min="0" value="${data.so_luong_ton || 0}"></td>
+        <td><button type="button" class="btn btn-sm btn-secondary" onclick="this.closest('tr').remove()">Xóa</button></td>
+    `;
+    tbody.appendChild(tr);
+}
+
+// Hook into showModal to load variants
+const originalShowModal = showModal;
+showModal = function(title, productId = null) {
+    originalShowModal(title, productId);
+    document.getElementById('variants-tbody').innerHTML = '';
+    const cb = document.getElementById('co_bien_the');
+    cb.checked = false;
+    
+    if (productId) {
+        const product = products.find(p => p.ma_san_pham === productId);
+        if (product && product.co_bien_the && product.bien_the) {
+            cb.checked = true;
+            product.bien_the.forEach(v => addVariantRow(v));
+        }
+    }
+    toggleVariants();
+};
+
+// -- Inventory Logic --
+async function loadInventory() {
+    const tbody = document.getElementById('inventory-tbody');
+    tbody.innerHTML = '<tr><td colspan="4" style="text-align: center;">Đang tải...</td></tr>';
+    try {
+        const response = await fetch(`${API_BASE_URL}/products?per_page=100`);
+        const result = await response.json();
+        if (result.status === 'success' || result.success) {
+            let html = '';
+            result.data.forEach(p => {
+                if (p.co_bien_the && p.bien_the && p.bien_the.length > 0) {
+                    p.bien_the.forEach(v => {
+                        html += `<tr>
+                            <td>${escapeHtml(v.sku || '--')}</td>
+                            <td>${escapeHtml(p.ten_san_pham)} - <strong>${escapeHtml(v.ten_bien_the)}</strong></td>
+                            <td>${v.so_luong_ton}</td>
+                            <td>
+                                <button class="btn btn-sm btn-primary" onclick="openInvModal(${p.ma_san_pham}, ${v.ma_bien_the}, 'import', '${escapeHtml(p.ten_san_pham)} - ${escapeHtml(v.ten_bien_the)}')">Nhập</button>
+                                <button class="btn btn-sm btn-secondary" onclick="openInvModal(${p.ma_san_pham}, ${v.ma_bien_the}, 'export', '${escapeHtml(p.ten_san_pham)} - ${escapeHtml(v.ten_bien_the)}')">Xuất</button>
+                                <button class="btn btn-sm btn-secondary" onclick="viewLogs(${p.ma_san_pham}, ${v.ma_bien_the})">Lịch sử</button>
+                            </td>
+                        </tr>`;
+                    });
+                } else {
+                    html += `<tr>
+                        <td>${escapeHtml(p.sku || '--')}</td>
+                        <td>${escapeHtml(p.ten_san_pham)}</td>
+                        <td>${p.so_luong_ton}</td>
+                        <td>
+                            <button class="btn btn-sm btn-secondary" onclick="viewLogs(${p.ma_san_pham}, null)">Lịch sử</button>
+                        </td>
+                    </tr>`;
+                }
+            });
+            tbody.innerHTML = html || '<tr><td colspan="4">Không có dữ liệu</td></tr>';
+        }
+    } catch (e) {
+        tbody.innerHTML = '<tr><td colspan="4">Lỗi tải dữ liệu</td></tr>';
+    }
+}
+// Bulk Import Logic
+async function openBulkImportModal() {
+    document.getElementById('modal-bulk-import').style.display = 'block';
+    if(document.getElementById('modal-overlay')) document.getElementById('modal-overlay').style.display = 'block';
+    
+    document.getElementById('bulk-note').value = '';
+    
+    const tbody = document.getElementById('bulk-import-tbody');
+    tbody.innerHTML = '<tr><td colspan="5" style="text-align: center;">Đang tải...</td></tr>';
+    
+    try {
+        const response = await fetch(`${API_BASE_URL}/products?per_page=1000`);
+        const result = await response.json();
+        if (result.status === 'success' || result.success) {
+            let html = '';
+            result.data.forEach(p => {
+                if (p.co_bien_the && p.bien_the && p.bien_the.length > 0) {
+                    p.bien_the.forEach(v => {
+                        html += `<tr class="bulk-item" data-sp="${p.ma_san_pham}" data-bt="${v.ma_bien_the}">
+                            <td>${escapeHtml(p.ten_san_pham)} - <strong>${escapeHtml(v.ten_bien_the)}</strong></td>
+                            <td>${escapeHtml(v.sku || '--')}</td>
+                            <td>${v.so_luong_ton}</td>
+                            <td><input type="number" class="form-control b-sl" min="1" placeholder="SL"></td>
+                            <td><input type="number" class="form-control b-gia" min="0" placeholder="Giá nhập"></td>
+                        </tr>`;
+                    });
+                } else {
+                    html += `<tr class="bulk-item" data-sp="${p.ma_san_pham}" data-bt="">
+                        <td>${escapeHtml(p.ten_san_pham)}</td>
+                        <td>${escapeHtml(p.sku || '--')}</td>
+                        <td>${p.so_luong_ton}</td>
+                        <td><input type="number" class="form-control b-sl" min="1" placeholder="SL"></td>
+                        <td><input type="number" class="form-control b-gia" min="0" placeholder="Giá nhập"></td>
+                    </tr>`;
+                }
+            });
+            tbody.innerHTML = html || '<tr><td colspan="5">Không có dữ liệu</td></tr>';
+        }
+    } catch (e) {
+        tbody.innerHTML = '<tr><td colspan="5">Lỗi tải dữ liệu</td></tr>';
+    }
+}
+
+function closeBulkImportModal() {
+    document.getElementById('modal-bulk-import').style.display = 'none';
+    if(document.getElementById('modal-overlay') && document.getElementById('modal-product').style.display !== 'block') {
+        document.getElementById('modal-overlay').style.display = 'none';
+    }
+}
+
+const formBulkImport = document.getElementById('form-bulk-import');
+if (formBulkImport) {
+    formBulkImport.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        
+        const items = [];
+        document.querySelectorAll('.bulk-item').forEach(tr => {
+            const sl = tr.querySelector('.b-sl').value;
+            const gia = tr.querySelector('.b-gia').value;
+            
+            if (sl && parseInt(sl) > 0) {
+                items.push({
+                    ma_san_pham: tr.dataset.sp,
+                    ma_bien_the: tr.dataset.bt || null,
+                    so_luong: parseInt(sl),
+                    gia_nhap: gia ? parseInt(gia) : undefined
+                });
+            }
+        });
+        
+        if (items.length === 0) {
+            showAlert('Vui lòng nhập số lượng cho ít nhất 1 sản phẩm', 'error');
+            return;
+        }
+        
+        const payload = {
+            items: items,
+            ghi_chu: document.getElementById('bulk-note').value,
+            ma_nha_cung_cap: document.getElementById('bulk-supplier').value || null
+        };
+        
+        try {
+            const res = await fetch(`${API_BASE_URL}/inventory/import`, {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify(payload)
+            });
+            const result = await res.json();
+            if (result.status === 'success') {
+                showAlert('Nhập kho hàng loạt thành công!', 'success');
+                closeBulkImportModal();
+                loadInventory();
+                loadProducts(); 
+            } else {
+                showAlert(result.message, 'error');
+            }
+        } catch (err) {
+            showAlert('Lỗi kết nối', 'error');
+        }
+    });
+}
+
+async function viewLogs(ma_sp, ma_bt) {
+    document.getElementById('modal-logs').style.display = 'block';
+    if(document.getElementById('modal-overlay')) document.getElementById('modal-overlay').style.display = 'block';
+    const tbody = document.getElementById('logs-tbody');
+    tbody.innerHTML = '<tr><td colspan="6">Đang tải...</td></tr>';
+    try {
+        let url = `${API_BASE_URL}/inventory/logs?ma_san_pham=${ma_sp}`;
+        if (ma_bt) url += `&ma_bien_the=${ma_bt}`;
+        const res = await fetch(url);
+        const result = await res.json();
+        if (result.status === 'success') {
+            tbody.innerHTML = result.data.map(log => {
+                const spName = log.san_pham ? log.san_pham.ten_san_pham : '';
+                const btName = log.bien_the ? ' - ' + log.bien_the.ten_bien_the : '';
+                return `
+                <tr>
+                    <td>${new Date(log.ngay_tao).toLocaleString('vi-VN')}</td>
+                    <td>${escapeHtml(spName + btName)}</td>
+                    <td>${log.loai_thao_tac === 'nhap_kho' ? '<span style="color:green">Nhập</span>' : (log.loai_thao_tac === 'xuat_kho' ? '<span style="color:red">Xuất</span>' : log.loai_thao_tac)}</td>
+                    <td>${log.so_luong_thay_doi > 0 ? '+'+log.so_luong_thay_doi : log.so_luong_thay_doi}</td>
+                    <td>${log.ton_kho_cuoi}</td>
+                    <td>${escapeHtml(log.ghi_chu || '')}</td>
+                </tr>
+                `;
+            }).join('') || '<tr><td colspan="6">Chưa có lịch sử</td></tr>';
+        }
+    } catch(e) {
+        tbody.innerHTML = '<tr><td colspan="6">Lỗi tải dữ liệu</td></tr>';
+    }
+}
+
+async function viewAllLogs() {
+    document.getElementById('modal-logs').style.display = 'block';
+    if(document.getElementById('modal-overlay')) document.getElementById('modal-overlay').style.display = 'block';
+    const tbody = document.getElementById('logs-tbody');
+    tbody.innerHTML = '<tr><td colspan="6">Đang tải...</td></tr>';
+    try {
+        let url = `${API_BASE_URL}/inventory/logs`; // Lấy tất cả, đã sort DESC từ DB
+        const res = await fetch(url);
+        const result = await res.json();
+        if (result.status === 'success') {
+            tbody.innerHTML = result.data.map(log => {
+                const spName = log.san_pham ? log.san_pham.ten_san_pham : '';
+                const btName = log.bien_the ? ' - ' + log.bien_the.ten_bien_the : '';
+                return `
+                <tr>
+                    <td>${new Date(log.ngay_tao).toLocaleString('vi-VN')}</td>
+                    <td>${escapeHtml(spName + btName)}</td>
+                    <td>${log.loai_thao_tac === 'nhap_kho' ? '<span style="color:green">Nhập</span>' : (log.loai_thao_tac === 'xuat_kho' ? '<span style="color:red">Xuất</span>' : log.loai_thao_tac)}</td>
+                    <td>${log.so_luong_thay_doi > 0 ? '+'+log.so_luong_thay_doi : log.so_luong_thay_doi}</td>
+                    <td>${log.ton_kho_cuoi}</td>
+                    <td>${escapeHtml(log.ghi_chu || '')}</td>
+                </tr>
+                `;
+            }).join('') || '<tr><td colspan="6">Chưa có lịch sử</td></tr>';
+        }
+    } catch(e) {
+        tbody.innerHTML = '<tr><td colspan="6">Lỗi tải dữ liệu</td></tr>';
+    }
+}
+function closeLogsModal() {
+    document.getElementById('modal-logs').style.display = 'none';
+    if(document.getElementById('modal-overlay') && document.getElementById('modal-product').style.display !== 'block') {
+        document.getElementById('modal-overlay').style.display = 'none';
+    }
+}
 </script>
 @endsection
 

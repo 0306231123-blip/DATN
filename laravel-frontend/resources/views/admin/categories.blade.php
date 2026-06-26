@@ -120,7 +120,7 @@ let currentEditId = null;
 // Load categories
 async function loadCategories(search = '') {
     try {
-        let url = `${API_BASE_URL}/categories?limit=100`;
+        let url = `${API_BASE_URL}/categories?per_page=100`;
         if (search) {
             url += `&search=${encodeURIComponent(search)}`;
         }

@@ -2,8 +2,11 @@ const express = require('express');
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
+const { verifyToken, requireAdmin } = require('../middleware/verifyToken');
 
 const router = express.Router();
+
+router.use(verifyToken, requireAdmin);
 
 // Upload destination: laravel-frontend/public/images/products/
 const UPLOAD_DIR = path.resolve(__dirname, '../../laravel-frontend/public/images/products');

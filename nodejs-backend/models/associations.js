@@ -13,6 +13,9 @@ const DanhMuc = require('./DanhMuc');
 const ChiTietDonHang = require('./ChiTietDonHang');
 const AnhSanPham = require('./AnhSanPham');
 const GioHang = require('./GioHang');
+const BienTheSanPham = require('./BienTheSanPham');
+const NhaCungCap = require('./NhaCungCap');
+const LichSuKho = require('./LichSuKho');
 
 // ========== User ↔ Order ==========
 // User has many Orders
@@ -91,6 +94,25 @@ SanPham.hasMany(GioHang, {
   as: 'gio_hang',
 });
 
+// ========== Product ↔ Variant ==========
+SanPham.hasMany(BienTheSanPham, {
+  foreignKey: 'ma_san_pham',
+  as: 'bien_the',
+});
+BienTheSanPham.belongsTo(SanPham, {
+  foreignKey: 'ma_san_pham',
+  as: 'san_pham',
+});
+
+// ========== Inventory ↔ Product/Variant/Supplier ==========
+LichSuKho.belongsTo(SanPham, { foreignKey: 'ma_san_pham', as: 'san_pham' });
+LichSuKho.belongsTo(BienTheSanPham, { foreignKey: 'ma_bien_the', as: 'bien_the' });
+LichSuKho.belongsTo(NhaCungCap, { foreignKey: 'ma_nha_cung_cap', as: 'nha_cung_cap' });
+
+SanPham.hasMany(LichSuKho, { foreignKey: 'ma_san_pham', as: 'lich_su_kho' });
+BienTheSanPham.hasMany(LichSuKho, { foreignKey: 'ma_bien_the', as: 'lich_su_kho' });
+NhaCungCap.hasMany(LichSuKho, { foreignKey: 'ma_nha_cung_cap', as: 'lich_su_kho' });
+
 module.exports = {
   NguoiDung,
   DonHang,
@@ -99,5 +121,8 @@ module.exports = {
   ChiTietDonHang,
   AnhSanPham,
   GioHang,
+  BienTheSanPham,
+  NhaCungCap,
+  LichSuKho,
 };
 

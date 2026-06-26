@@ -34,4 +34,15 @@ const verifyToken = (req, res, next) => {
   }
 };
 
-module.exports = { verifyToken };
+const requireAdmin = (req, res, next) => {
+  if (!req.user || req.user.vai_tro !== 'quan_tri_vien') {
+    return res.status(403).json({
+      success: false,
+      status: 'error',
+      message: 'Can quyen quan tri vien.',
+    });
+  }
+
+  next();
+};
+module.exports = { verifyToken, requireAdmin };
