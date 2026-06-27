@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const jwt = require('jsonwebtoken');
+const { verifyToken } = require('../middleware/verifyToken'); // Nhớ check lại đúng đường dẫn thư mục middleware của ông nhé
 
 // IMPORT ĐÚNG ĐƯỜNG DẪN 
 const sequelize = require('../config/database');
@@ -105,7 +106,16 @@ router.post('/create', async (req, res) => {
 router.post('/update-status', async (req, res) => {
     const t = await sequelize.transaction();
     try {
-        let { ma_don_hang, trang_thai, ly_do_tra_hang, ly_do_huy_don } = req.body;
+        // Lấy thêm 3 trường ngân hàng từ req.body
+        let { 
+            ma_don_hang, 
+            trang_thai, 
+            ly_do_tra_hang, 
+            ly_do_huy_don,
+            ngan_hang_hoan_tien,
+            stk_hoan_tien,
+            chu_tk_hoan_tien
+        } = req.body;
         
         const donHang = await DonHang.findByPk(ma_don_hang, {
             include: [{ model: ChiTietDonHang, as: 'chi_tiet' }],
@@ -124,29 +134,24 @@ router.post('/update-status', async (req, res) => {
                 return res.status(400).json({ success: false, message: 'Đơn đã xác nhận hoặc đang giao, không hủy được!' });
             }
             
-            // LƯU LOGIC ĐẾM SỐ ĐƠN HỦY & TỰ ĐỘNG KHÓA
             const soDonHuyTruocDo = await DonHang.count({
                 where: {
-                    // SỬA Ở ĐÂY: Thay maNguoiDung thành donHang.ma_nguoi_dung
                     ma_nguoi_dung: donHang.ma_nguoi_dung, 
                     trang_thai_don: 'da_huy'
                 },
                 transaction: t
             });
             
-            // Nếu đây là lần hủy thứ 5 (đã có 4 đơn hủy trước đó + đơn này là 5)
             if (soDonHuyTruocDo >= 4) {
                 await NguoiDung.update({ 
                     trang_thai: 'bi_khoa',
                     ly_do_khoa: 'Tài khoản bị khóa do hủy quá nhiều đơn hàng (5 đơn)'
                 }, { 
-                    // SỬA Ở ĐÂY: Thay maNguoiDung thành donHang.ma_nguoi_dung
                     where: { ma_nguoi_dung: donHang.ma_nguoi_dung }, 
                     transaction: t 
                 });
             }
             
-            // Lưu lý do hủy trực tiếp vào bảng don_hang
             donHang.ly_do_huy_don = ly_do_huy_don;
             
             for (let item of donHang.chi_tiet) {
@@ -157,7 +162,7 @@ router.post('/update-status', async (req, res) => {
         } 
         
         // ==========================================
-        // CASE 2: YÊU CẦU TRẢ HÀNG (GHI VÀO BẢNG MỚI)
+        // CASE 2: YÊU CẦU TRẢ HÀNG (GHI VÀO BẢNG YÊU CẦU + LƯU ĐỐI CHIẾU VÀO ĐƠN HÀNG)
         // ==========================================
         else if (trang_thai === 'tra_hang_hoan_tien' || trang_thai === 'dang_tra_hang') {
             if (donHang.trang_thai_don !== 'giao_thanh_cong') {
@@ -165,15 +170,19 @@ router.post('/update-status', async (req, res) => {
                 return res.status(400).json({ success: false, message: 'Chỉ đơn hàng đã giao thành công mới được yêu cầu trả hàng!' });
             }
             
-            // LƯU LOGIC VÀO BẢNG `yeu_cau_tra_hang`
+            // 1. Lưu vào bảng yeu_cau_tra_hang
             await YeuCauTraHang.create({
                 ma_don_hang: ma_don_hang,
-                ly_do: ly_do_tra_hang || 'Không có lý do', // Đảm bảo không bị null
-                trang_thai: 'cho_duyet', // Map với ENUM của Admin
+                ly_do: ly_do_tra_hang || 'Không có lý do', 
+                trang_thai: 'cho_duyet', 
                 ngay_yeu_cau: new Date()
             }, { transaction: t });
 
-            // Ép kiểu trạng thái về chuẩn của hệ thống Admin
+            // 2. LƯU THÔNG TIN ĐỐI CHIẾU TRỰC TIẾP VÀO BẢNG DON_HANG
+            donHang.ngan_hang_hoan_tien = ngan_hang_hoan_tien;
+            donHang.stk_hoan_tien = stk_hoan_tien;
+            donHang.chu_tk_hoan_tien = chu_tk_hoan_tien;
+
             trang_thai = 'dang_tra_hang';
         }
 
@@ -184,11 +193,9 @@ router.post('/update-status', async (req, res) => {
                 return res.status(400).json({ success: false, message: 'Chỉ đơn hàng đã giao mới có thể xác nhận hoàn thành!' });
             }
         }
-        // ==========================================
+        
         // CASE 4: ADMIN DUYỆT ĐÃ TRẢ HÀNG -> CỘNG LẠI KHO
-        // ==========================================
         else if (trang_thai === 'da_tra_hang') {
-            // Lặp qua từng sản phẩm trong đơn để cộng lại số lượng tồn kho
             for (let item of donHang.chi_tiet) {
                 await SanPham.increment('so_luong_ton', {
                     by: item.so_luong, 
@@ -198,7 +205,6 @@ router.post('/update-status', async (req, res) => {
             }
         }
 
-        // Cập nhật trạng thái mới cho bảng đơn hàng
         donHang.trang_thai_don = trang_thai;
         await donHang.save({ transaction: t });
 
@@ -241,6 +247,33 @@ router.get('/my-orders', async (req, res) => {
 
         res.json({ success: true, data: orders });
     } catch (error) {
+        res.status(500).json({ success: false, message: 'Lỗi server' });
+    }
+});
+router.post('/request-refund', verifyToken, async (req, res) => {
+    try {
+        // Lấy dữ liệu từ Frontend gửi lên
+        const { ma_don_hang, ly_do, ngan_hang, so_tai_khoan, chu_tai_khoan } = req.body;
+
+        // Bắt lỗi nếu khách cố tình không nhập
+        if (!ngan_hang || !so_tai_khoan || !chu_tai_khoan) {
+            return res.status(400).json({ success: false, message: 'Vui lòng nhập đầy đủ thông tin nhận tiền hoàn!' });
+        }
+
+        // Lưu vào Database
+        await YeuCauTraHang.create({
+            ma_don_hang: ma_don_hang,
+            ma_nguoi_dung: req.user.ma_nguoi_dung,
+            ly_do: ly_do,
+            ngan_hang: ngan_hang,
+            so_tai_khoan: so_tai_khoan,
+            chu_tai_khoan: chu_tai_khoan,
+            trang_thai: 'cho_xac_nhan' // Trạng thái mặc định
+        });
+
+        res.json({ success: true, message: 'Đã gửi yêu cầu hoàn tiền thành công!' });
+    } catch (error) {
+        console.error('Lỗi hoàn tiền:', error);
         res.status(500).json({ success: false, message: 'Lỗi server' });
     }
 });

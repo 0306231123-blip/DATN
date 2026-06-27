@@ -52,6 +52,9 @@ const NguoiDung = sequelize.define('nguoi_dung', {
     type: DataTypes.DATE,
     allowNull: true,
   },
+  ngan_hang: { type: DataTypes.STRING(100) },
+so_tai_khoan: { type: DataTypes.STRING(50) },
+chu_tai_khoan: { type: DataTypes.STRING(100) },
 });
 
 module.exports = NguoiDung;

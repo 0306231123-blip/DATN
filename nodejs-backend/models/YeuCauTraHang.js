@@ -32,6 +32,19 @@ const YeuCauTraHang = sequelize.define('yeu_cau_tra_hang', {
     type: DataTypes.ENUM('cho_duyet', 'da_duyet', 'tu_choi'),
     defaultValue: 'cho_duyet',
   },
+  // Thêm vào bên dưới các trường đã có
+ngan_hang: {
+    type: DataTypes.STRING(100),
+    allowNull: true
+},
+so_tai_khoan: {
+    type: DataTypes.STRING(50),
+    allowNull: true
+},
+chu_tai_khoan: {
+    type: DataTypes.STRING(100),
+    allowNull: true
+},
   ngay_yeu_cau: {
     type: DataTypes.DATE,
     defaultValue: DataTypes.NOW,

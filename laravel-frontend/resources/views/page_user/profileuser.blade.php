@@ -66,7 +66,29 @@
                         <input type="text" id="input-address" class="px-4 py-2 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-800" placeholder="Số nhà, Tên đường, Phường/Xã...">
                     </div>
 
-                    <div class="flex flex-col pt-4 border-t border-gray-100">
+                    <div class="pt-6 mt-6 border-t border-gray-200">
+                        <h3 class="text-lg font-bold text-gray-800 mb-4 flex items-center">
+                            <span class="mr-2 text-2xl">💳</span> Thông tin nhận tiền hoàn
+                        </h3>
+                        <p class="text-sm text-gray-500 mb-4">Cập nhật sẵn tài khoản ngân hàng để quá trình hoàn tiền (nếu có) diễn ra nhanh chóng.</p>
+                        
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div class="flex flex-col">
+                                <label class="font-bold mb-2">Ngân hàng</label>
+                                <input type="text" id="input-bank-name" class="px-4 py-2 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-800" placeholder="VD: Vietcombank, MB Bank...">
+                            </div>
+                            <div class="flex flex-col">
+                                <label class="font-bold mb-2">Số tài khoản</label>
+                                <input type="text" id="input-bank-account" class="px-4 py-2 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-800" placeholder="Nhập số tài khoản">
+                            </div>
+                            <div class="flex flex-col md:col-span-2">
+                                <label class="font-bold mb-2">Tên chủ tài khoản</label>
+                                <input type="text" id="input-bank-owner" class="px-4 py-2 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-800 uppercase" placeholder="VD: NGUYEN VAN A">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="flex flex-col pt-6 border-t border-gray-100">
                         <label class="font-bold mb-2">Mật khẩu mới <span class="text-xs font-normal text-gray-400">(Bỏ trống nếu không muốn đổi)</span></label>
                         <input type="password" id="input-password" class="px-4 py-2 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-800" placeholder="Nhập mật khẩu mới...">
                     </div>
@@ -88,14 +110,12 @@
 
             <div id="tab-orders" class="tab-content hidden">
                 <h2 class="text-2xl font-black text-gray-800 mb-6 border-b-2 border-gray-300 pb-4 uppercase tracking-wider">Quản lý đơn hàng</h2>
-                <div id="orders-container" class="bg-white p-8 rounded-2xl...">
+                <div id="orders-container" class="bg-white p-8 rounded-2xl shadow-sm text-center text-gray-500 font-medium">
                     Bạn chưa có đơn hàng nào đang được xử lý.
                 </div>
             </div>
             
-            
         </div>
-
     </div>
 </section>
 
@@ -147,6 +167,12 @@
                 document.getElementById('input-phone').value = user.so_dien_thoai || '';
                 document.getElementById('input-address').value = user.dia_chi || '';
                 document.getElementById('input-skin-type').value = user.loai_da || '';
+                
+                // Load dữ liệu ngân hàng
+                document.getElementById('input-bank-name').value = user.ngan_hang || '';
+                document.getElementById('input-bank-account').value = user.so_tai_khoan || '';
+                document.getElementById('input-bank-owner').value = user.chu_tai_khoan || '';
+
                 loadMyOrders();
             } else {
                 logout();
@@ -167,7 +193,12 @@
             ho_ten: document.getElementById('input-name').value,
             so_dien_thoai: document.getElementById('input-phone').value,
             dia_chi: document.getElementById('input-address').value,
-            loai_da: document.getElementById('input-skin-type').value
+            loai_da: document.getElementById('input-skin-type').value,
+            
+            // Gửi dữ liệu ngân hàng lên backend
+            ngan_hang: document.getElementById('input-bank-name').value,
+            so_tai_khoan: document.getElementById('input-bank-account').value,
+            chu_tai_khoan: document.getElementById('input-bank-owner').value
         };
 
         const newPassword = document.getElementById('input-password').value;
@@ -210,7 +241,7 @@
         window.location.href = '/login';
     }
 
-    // 5. TẢI VÀ HIỂN THỊ ĐƠN HÀNG
+    // 5. TẢI VÀ HIỂN THỊ ĐƠN HÀNG (Giữ nguyên logic cũ của ông)
     async function loadMyOrders() {
         const token = localStorage.getItem('token');
         const ordersContainer = document.getElementById('orders-container');
@@ -231,11 +262,8 @@
                 result.data.forEach(order => {
                     const date = new Date(order.ngay_dat).toLocaleDateString('vi-VN');
                     
-                    // ==========================================
-                    // XỬ LÝ HIỂN THỊ VOUCHER Ở ĐÂY
-                    // ==========================================
                     const tongTienHang = parseInt(order.tong_tien_hang);
-                    const soTienGiam = parseInt(order.so_tien_giam || 0); // Lấy số tiền giảm từ Database
+                    const soTienGiam = parseInt(order.so_tien_giam || 0); 
                     const tongThanhToan = parseInt(order.tong_thanh_toan);
 
                     let voucherHtml = '';
@@ -262,7 +290,7 @@
                     }
                     productsHtml += '</div>';
 
-                    // 1. TAB LỊCH SỬ MUA HÀNG
+                    // TAB LỊCH SỬ
                     if(['giao_thanh_cong', 'da_huy', 'hoan_thanh', 'da_tra_hang'].includes(order.trang_thai_don)) {
                         hasHistory = true;
                         let statusColor, statusText, actionBtnHtml = '';
@@ -301,7 +329,7 @@
                         }
 
                         htmlHistory += `
-                            <div class="border border-gray-200 p-6 rounded-2xl flex flex-col bg-white">
+                            <div class="border border-gray-200 p-6 rounded-2xl flex flex-col bg-white shadow-sm mb-4">
                                 <div class="flex justify-between items-start mb-2">
                                     <div>
                                         <p class="font-black text-gray-800 text-lg">Đơn hàng #${order.ma_don_hang}</p>
@@ -320,7 +348,7 @@
                                 </div>
                             </div>`;
                     } 
-                    // 2. TAB QUẢN LÝ ĐƠN HÀNG
+                    // TAB QUẢN LÝ ĐƠN HÀNG
                     else {
                         hasOrders = true;
                         let activeStatusText = 'Chờ xác nhận';
@@ -329,7 +357,7 @@
 
                         if (order.trang_thai_don === 'cho_xac_nhan') {
                             actionBtnHtml = `
-                                <button onclick="updateOrderStatus(${order.ma_don_hang}, 'da_huy')" class="mt-4 w-full bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded-lg transition text-sm">
+                                <button onclick="updateOrderStatus(${order.ma_don_hang}, 'da_huy')" class="mt-4 w-full bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded-lg transition text-sm shadow">
                                     Hủy đơn hàng
                                 </button>`;
                         } else if (order.trang_thai_don === 'dang_giao') {
@@ -345,7 +373,7 @@
                         }
 
                         htmlOrders += `
-                            <div class="border border-gray-200 p-6 rounded-2xl flex flex-col bg-white">
+                            <div class="border border-gray-200 p-6 rounded-2xl flex flex-col bg-white shadow-sm mb-4">
                                 <div class="flex justify-between items-center mb-4">
                                     <p class="font-black text-gray-800 text-lg">Đơn hàng #${order.ma_don_hang}</p>
                                     <span class="px-4 py-1 text-sm font-bold rounded-full ${activeStatusColor}">${activeStatusText}</span>
@@ -380,55 +408,119 @@
         }
     }
 
-    // 6. HÀM CHUNG ĐỂ CẬP NHẬT TRẠNG THÁI
-    async function updateOrderStatus(maDonHang, trangThaiMoi) {
-        let lyDoTraHang = null;
-        let lyDoHuyDon = null;
-
-        if (trangThaiMoi === 'da_huy') {
-            lyDoHuyDon = prompt("Vui lòng nhập lý do hủy đơn hàng (Bắt buộc):");
-            if (!lyDoHuyDon || lyDoHuyDon.trim() === "") {
-                alert("Bạn phải nhập lý do thì hệ thống mới xử lý hủy đơn!");
-                return;
-            }
-        } 
-        else if (trangThaiMoi === 'hoan_thanh') {
-            if (!confirm("Xác nhận bạn đã nhận được hàng và sản phẩm không có vấn đề gì? (Sau khi xác nhận sẽ không thể trả hàng nữa)")) return;
-        }
-        else if (trangThaiMoi === 'tra_hang_hoan_tien') {
-            lyDoTraHang = prompt("Vui lòng nhập chi tiết lý do bạn muốn trả hàng (Bắt buộc):");
-            if (!lyDoTraHang || lyDoTraHang.trim() === "") {
-                alert("Bạn phải nhập lý do thì Shop mới xử lý được nhé!");
-                return;
-            }
-        }
-
-        const token = localStorage.getItem('token');
-        try {
-            const response = await fetch(`${API_URL}/order/update-status`, {
-                method: 'POST',
-                headers: { 
-                    'Content-Type': 'application/json',
-                    'Authorization': 'Bearer ' + token 
-                },
-                body: JSON.stringify({ 
-                    ma_don_hang: maDonHang, 
-                    trang_thai: trangThaiMoi,
-                    ly_do_tra_hang: lyDoTraHang,
-                    ly_do_huy_don: lyDoHuyDon 
-                })
-            });
-
-            const result = await response.json();
-            if (result.success) {
-                alert(result.message);
-                location.reload(); 
-            } else {
-                alert("Lỗi: " + result.message);
-            }
-        } catch (error) {
-            alert("Có lỗi xảy ra, vui lòng thử lại sau!");
-        }
+   // Thay thế đoạn xử lý trạng thái 'tra_hang_hoan_tien' trong hàm updateOrderStatus cũ
+async function updateOrderStatus(maDonHang, trangThaiMoi) {
+    if (trangThaiMoi === 'tra_hang_hoan_tien') {
+        // Mở Modal lên thay vì dùng prompt
+        document.getElementById('refund-order-id').value = maDonHang;
+        document.getElementById('refund-modal').classList.remove('hidden');
+        return; // Dừng tại đây, chờ người dùng bấm "Xác nhận gửi" trong Modal
     }
+
+    // Các trạng thái khác (hủy đơn, hoàn thành) giữ nguyên logic cũ của ông
+    let lyDoHuyDon = null;
+    if (trangThaiMoi === 'da_huy') {
+        lyDoHuyDon = prompt("Vui lòng nhập lý do hủy đơn hàng (Bắt buộc):");
+        if (!lyDoHuyDon || lyDoHuyDon.trim() === "") {
+            alert("Bạn phải nhập lý do thì hệ thống mới xử lý hủy đơn!");
+            return;
+        }
+    } else if (trangThaiMoi === 'hoan_thanh') {
+        if (!confirm("Xác nhận bạn đã nhận được hàng và sản phẩm không có vấn đề gì?")) return;
+    }
+
+    // Gọi API cho Hủy và Hoàn thành
+    callUpdateStatusAPI(maDonHang, trangThaiMoi, null, lyDoHuyDon);
+}
+
+// HÀM MỚI: Đóng Modal
+function closeRefundModal() {
+    document.getElementById('refund-modal').classList.add('hidden');
+}
+
+// HÀM MỚI: Xử lý nút "Xác nhận gửi" trong Modal
+function submitRefundRequest() {
+    const maDonHang = document.getElementById('refund-order-id').value;
+    const nganHang = document.getElementById('refund-bank').value;
+    const soTaiKhoan = document.getElementById('refund-account').value;
+    const chuTaiKhoan = document.getElementById('refund-owner').value;
+    const lyDo = document.getElementById('refund-reason').value;
+
+    if (!nganHang || !soTaiKhoan || !chuTaiKhoan || !lyDo) {
+        alert("Vui lòng nhập đầy đủ thông tin bảo mật để đối chiếu!");
+        return;
+    }
+
+    // Đóng modal sau khi lấy đủ data
+    closeRefundModal();
+
+    // Gọi API với đầy đủ thông tin đối chiếu
+    callUpdateStatusAPI(maDonHang, 'tra_hang_hoan_tien', lyDo, null, nganHang, soTaiKhoan, chuTaiKhoan);
+}
+
+// HÀM CHUNG: Gọi API lên Node.js Backend
+async function callUpdateStatusAPI(maDonHang, trangThaiMoi, lyDoTra, lyDoHuy, nganHang = null, soTk = null, chuTk = null) {
+    const token = localStorage.getItem('token');
+    try {
+        const response = await fetch(`${API_URL}/order/update-status`, {
+            method: 'POST',
+            headers: { 
+                'Content-Type': 'application/json',
+                'Authorization': 'Bearer ' + token 
+            },
+            body: JSON.stringify({ 
+                ma_don_hang: maDonHang, 
+                trang_thai: trangThaiMoi,
+                ly_do_tra_hang: lyDoTra,
+                ly_do_huy_don: lyDoHuy,
+                ngan_hang_hoan_tien: nganHang,
+                stk_hoan_tien: soTk,
+                chu_tk_hoan_tien: chuTk
+            })
+        });
+
+        const result = await response.json();
+        if (result.success) {
+            alert(result.message);
+            location.reload(); 
+        } else {
+            alert("Lỗi: " + result.message);
+        }
+    } catch (error) {
+        alert("Có lỗi kết nối đến server Node.js!");
+    }
+}
 </script>
+<div id="refund-modal" class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center z-50 transition-opacity">
+    <div class="bg-white rounded-2xl w-full max-w-md p-6 shadow-2xl relative transform transition-all">
+        <h3 class="text-xl font-black text-gray-800 mb-2 border-b pb-3 uppercase">Yêu cầu hoàn tiền</h3>
+        <p class="text-xs text-red-500 mb-4 font-semibold italic">* Vui lòng nhập thông tin để Admin đối chiếu với hồ sơ gốc nhằm bảo vệ tài sản của bạn.</p>
+
+        <input type="hidden" id="refund-order-id">
+
+        <div class="space-y-4">
+            <div>
+                <label class="text-sm font-bold text-gray-700">Ngân hàng thụ hưởng:</label>
+                <input type="text" id="refund-bank" class="w-full border border-gray-300 rounded-lg px-3 py-2 mt-1 focus:ring-2 focus:ring-pink-500 focus:outline-none" placeholder="VD: Vietcombank, MB Bank...">
+            </div>
+            <div>
+                <label class="text-sm font-bold text-gray-700">Số tài khoản:</label>
+                <input type="number" id="refund-account" class="w-full border border-gray-300 rounded-lg px-3 py-2 mt-1 focus:ring-2 focus:ring-pink-500 focus:outline-none" placeholder="Nhập số tài khoản...">
+            </div>
+            <div>
+                <label class="text-sm font-bold text-gray-700">Chủ tài khoản:</label>
+                <input type="text" id="refund-owner" class="w-full border border-gray-300 rounded-lg px-3 py-2 mt-1 focus:ring-2 focus:ring-pink-500 focus:outline-none uppercase" placeholder="NGUYEN VAN A">
+            </div>
+            <div>
+                <label class="text-sm font-bold text-gray-700">Lý do trả hàng:</label>
+                <textarea id="refund-reason" class="w-full border border-gray-300 rounded-lg px-3 py-2 mt-1 focus:ring-2 focus:ring-pink-500 focus:outline-none" rows="2" placeholder="Ví dụ: Sản phẩm bị tràn, vỡ..."></textarea>
+            </div>
+        </div>
+
+        <div class="mt-6 flex justify-end space-x-3">
+            <button onclick="closeRefundModal()" class="px-5 py-2 bg-gray-200 text-gray-700 font-bold rounded-xl hover:bg-gray-300 transition">Hủy</button>
+            <button onclick="submitRefundRequest()" class="px-5 py-2 bg-pink-600 text-white font-bold rounded-xl hover:bg-pink-700 transition shadow-md">Xác nhận gửi</button>
+        </div>
+    </div>
+</div>
 @endsection

@@ -218,7 +218,6 @@ router.get('/me', async (req, res) => {
   }
 });
 
-module.exports = router;
 router.put('/update-profile', async (req, res) => {
   try {
     // 1. Kiểm tra xem người dùng đã đăng nhập chưa (Kiểm tra Token)
@@ -234,8 +233,17 @@ router.put('/update-profile', async (req, res) => {
     const token = authHeader.split(' ')[1];
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
-    // 2. Lấy các dữ liệu mà Frontend gửi sang
-    const { ho_ten, so_dien_thoai, dia_chi, loai_da, mat_khau_moi } = req.body;
+    // 2. Lấy các dữ liệu mà Frontend gửi sang (ĐÃ THÊM 3 TRƯỜNG NGÂN HÀNG)
+    const { 
+        ho_ten, 
+        so_dien_thoai, 
+        dia_chi, 
+        loai_da, 
+        mat_khau_moi,
+        ngan_hang,
+        so_tai_khoan,
+        chu_tai_khoan
+    } = req.body;
 
     // 3. Tìm người dùng trong Database
     const nguoiDung = await NguoiDung.findByPk(decoded.ma_nguoi_dung);
@@ -251,6 +259,11 @@ router.put('/update-profile', async (req, res) => {
     if (so_dien_thoai !== undefined) nguoiDung.so_dien_thoai = so_dien_thoai;
     if (dia_chi !== undefined) nguoiDung.dia_chi = dia_chi;
     if (loai_da !== undefined) nguoiDung.loai_da = loai_da;
+    
+    // --- LƯU THÔNG TIN NGÂN HÀNG ---
+    if (ngan_hang !== undefined) nguoiDung.ngan_hang = ngan_hang;
+    if (so_tai_khoan !== undefined) nguoiDung.so_tai_khoan = so_tai_khoan;
+    if (chu_tai_khoan !== undefined) nguoiDung.chu_tai_khoan = chu_tai_khoan;
 
     // 5. Nếu người dùng có nhập mật khẩu mới -> Mã hóa nó rồi mới lưu
     if (mat_khau_moi) {
@@ -280,3 +293,4 @@ router.put('/update-profile', async (req, res) => {
     });
   }
 });
+module.exports = router;
