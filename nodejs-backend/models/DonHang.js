@@ -61,6 +61,14 @@ const DonHang = sequelize.define('don_hang', {
     type: DataTypes.TEXT,
     allowNull: true
   },
+  ma_khuyen_mai: {
+    type: DataTypes.INTEGER,
+    allowNull: true
+  },
+  so_tien_giam: {
+    type: DataTypes.INTEGER,
+    defaultValue: 0
+  },
   ngay_dat: {
     type: DataTypes.DATE,
     defaultValue: DataTypes.NOW,

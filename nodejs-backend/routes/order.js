@@ -10,15 +10,18 @@ const DonHang = require('../models/DonHang');
 const ChiTietDonHang = require('../models/ChiTietDonHang');
 const YeuCauTraHang = require('../models/YeuCauTraHang');
 const NguoiDung = require('../models/NguoiDung');
+const KhuyenMai = require('../models/KhuyenMai');
 
 // --- 1. TẠO ĐƠN HÀNG (TRỪ KHO) ---
+// --- 1. TẠO ĐƠN HÀNG (TRỪ KHO VÀ TRỪ VOUCHER) ---
 router.post('/create', async (req, res) => {
-    // ... [ĐOẠN CODE NÀY GIỮ NGUYÊN KHÔNG ĐỔI] ...
     const t = await sequelize.transaction();
     try {
         const token = req.headers.authorization.split(' ')[1];
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
-        const { dia_chi, so_dien_thoai } = req.body; 
+        
+        // 1. Lấy dữ liệu từ Frontend gửi lên
+        const { dia_chi, so_dien_thoai, ma_khuyen_mai, so_tien_giam } = req.body; 
         
         if (!dia_chi || dia_chi.trim() === '' || dia_chi.trim().startsWith(',')) {
             await t.rollback();
@@ -38,38 +41,62 @@ router.post('/create', async (req, res) => {
             return res.status(400).json({ success: false, message: 'Giỏ hàng trống' });
         }
 
+        // 2. Tính TỔNG TIỀN HÀNG từ các món trong giỏ
         let tong_tien = 0;
         for (let item of items) {
             if (item.san_pham.so_luong_ton < item.so_luong) throw new Error(`Sản phẩm ${item.san_pham.ten_san_pham} không đủ hàng!`);
             tong_tien += (item.san_pham.gia_khuyen_mai || item.san_pham.gia) * item.so_luong;
         }
 
+        // 3. Xử lý tính toán VOUCHER
+        const tienGiam = so_tien_giam || 0;
+        let tongThanhToan = tong_tien - tienGiam;
+        if (tongThanhToan < 0) tongThanhToan = 0; // Chống lỗi âm tiền
+
+        // 4. Lệnh tạo đơn hàng (Đã sửa lại biến user cho chuẩn)
         const donHangMoi = await DonHang.create({
             ma_nguoi_dung: maNguoiDung, 
             ho_ten_nguoi_nhan: req.body.ho_ten || (user ? user.ho_ten : 'Khách hàng'), 
             so_dien_thoai_nhan: so_dien_thoai || (user ? user.so_dien_thoai : '0123456789'), 
             dia_chi_giao: dia_chi, 
-            tong_tien_hang: tong_tien, 
-            tong_thanh_toan: tong_tien,
+            tong_tien_hang: tong_tien,          // Giá gốc
+            tong_thanh_toan: tongThanhToan,     // Giá đã trừ voucher
+            ma_khuyen_mai: ma_khuyen_mai || null,
+            so_tien_giam: tienGiam,
             trang_thai_don: 'cho_xac_nhan', 
             phuong_thuc_thanh_toan: 'chuyen_khoan', 
             trang_thai_thanh_toan: 'da_thanh_toan'
         }, { transaction: t });
 
+        // 5. TRỪ LƯỢT SỬ DỤNG VOUCHER (Nếu có áp dụng mã)
+        if (ma_khuyen_mai) {
+            const voucher = await KhuyenMai.findByPk(ma_khuyen_mai, { transaction: t });
+            if (voucher && voucher.so_luong > 0) {
+                await voucher.decrement('so_luong', { by: 1, transaction: t });
+            }
+        }
+
+        // 6. Lưu chi tiết đơn hàng và trừ kho sản phẩm
         for (let item of items) {
             await SanPham.decrement('so_luong_ton', { by: item.so_luong, where: { ma_san_pham: item.ma_san_pham }, transaction: t });
             await ChiTietDonHang.create({
-                ma_don_hang: donHangMoi.ma_don_hang, ma_san_pham: item.ma_san_pham, ten_san_pham: item.san_pham.ten_san_pham, 
-                so_luong: item.so_luong, don_gia: (item.san_pham.gia_khuyen_mai || item.san_pham.gia),
+                ma_don_hang: donHangMoi.ma_don_hang, 
+                ma_san_pham: item.ma_san_pham, 
+                ten_san_pham: item.san_pham.ten_san_pham, 
+                so_luong: item.so_luong, 
+                don_gia: (item.san_pham.gia_khuyen_mai || item.san_pham.gia),
                 thanh_tien: (item.san_pham.gia_khuyen_mai || item.san_pham.gia) * item.so_luong
             }, { transaction: t });
         }
 
+        // 7. Xóa giỏ hàng và lưu Transaction
         await GioHang.destroy({ where: { ma_nguoi_dung: maNguoiDung }, transaction: t });
         await t.commit();
+        
         res.json({ success: true, message: 'Đặt hàng thành công!' });
     } catch (error) {
         await t.rollback();
+        console.error("Lỗi tạo đơn:", error);
         res.status(500).json({ success: false, message: error.message });
     }
 });
@@ -78,7 +105,7 @@ router.post('/create', async (req, res) => {
 router.post('/update-status', async (req, res) => {
     const t = await sequelize.transaction();
     try {
-        const { ma_don_hang, trang_thai, ly_do_tra_hang, ly_do_huy_don } = req.body;
+        let { ma_don_hang, trang_thai, ly_do_tra_hang, ly_do_huy_don } = req.body;
         
         const donHang = await DonHang.findByPk(ma_don_hang, {
             include: [{ model: ChiTietDonHang, as: 'chi_tiet' }],
@@ -100,7 +127,8 @@ router.post('/update-status', async (req, res) => {
             // LƯU LOGIC ĐẾM SỐ ĐƠN HỦY & TỰ ĐỘNG KHÓA
             const soDonHuyTruocDo = await DonHang.count({
                 where: {
-                    ma_nguoi_dung: maNguoiDung,
+                    // SỬA Ở ĐÂY: Thay maNguoiDung thành donHang.ma_nguoi_dung
+                    ma_nguoi_dung: donHang.ma_nguoi_dung, 
                     trang_thai_don: 'da_huy'
                 },
                 transaction: t
@@ -112,7 +140,8 @@ router.post('/update-status', async (req, res) => {
                     trang_thai: 'bi_khoa',
                     ly_do_khoa: 'Tài khoản bị khóa do hủy quá nhiều đơn hàng (5 đơn)'
                 }, { 
-                    where: { ma_nguoi_dung: maNguoiDung }, 
+                    // SỬA Ở ĐÂY: Thay maNguoiDung thành donHang.ma_nguoi_dung
+                    where: { ma_nguoi_dung: donHang.ma_nguoi_dung }, 
                     transaction: t 
                 });
             }
@@ -153,6 +182,19 @@ router.post('/update-status', async (req, res) => {
             if (donHang.trang_thai_don !== 'giao_thanh_cong') {
                 await t.rollback();
                 return res.status(400).json({ success: false, message: 'Chỉ đơn hàng đã giao mới có thể xác nhận hoàn thành!' });
+            }
+        }
+        // ==========================================
+        // CASE 4: ADMIN DUYỆT ĐÃ TRẢ HÀNG -> CỘNG LẠI KHO
+        // ==========================================
+        else if (trang_thai === 'da_tra_hang') {
+            // Lặp qua từng sản phẩm trong đơn để cộng lại số lượng tồn kho
+            for (let item of donHang.chi_tiet) {
+                await SanPham.increment('so_luong_ton', {
+                    by: item.so_luong, 
+                    where: { ma_san_pham: item.ma_san_pham }, 
+                    transaction: t
+                });
             }
         }
 

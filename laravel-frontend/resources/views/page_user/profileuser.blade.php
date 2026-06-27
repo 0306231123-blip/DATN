@@ -210,7 +210,7 @@
         window.location.href = '/login';
     }
 
-    // 5. TẢI VÀ HIỂN THỊ ĐƠN HÀNG (CÓ IN LÝ DO HỦY ĐƠN)
+    // 5. TẢI VÀ HIỂN THỊ ĐƠN HÀNG
     async function loadMyOrders() {
         const token = localStorage.getItem('token');
         const ordersContainer = document.getElementById('orders-container');
@@ -230,7 +230,23 @@
                 
                 result.data.forEach(order => {
                     const date = new Date(order.ngay_dat).toLocaleDateString('vi-VN');
-                    const total = parseInt(order.tong_thanh_toan).toLocaleString() + ' đ';
+                    
+                    // ==========================================
+                    // XỬ LÝ HIỂN THỊ VOUCHER Ở ĐÂY
+                    // ==========================================
+                    const tongTienHang = parseInt(order.tong_tien_hang);
+                    const soTienGiam = parseInt(order.so_tien_giam || 0); // Lấy số tiền giảm từ Database
+                    const tongThanhToan = parseInt(order.tong_thanh_toan);
+
+                    let voucherHtml = '';
+                    if (soTienGiam > 0) {
+                        voucherHtml = `
+                            <div class="flex justify-between items-center w-full mb-1 text-green-600 font-medium text-sm">
+                                <span>Mã giảm giá:</span>
+                                <span>-${soTienGiam.toLocaleString()} đ</span>
+                            </div>
+                        `;
+                    }
                     
                     let productsHtml = '<div class="mt-4 pt-4 border-t border-gray-100 space-y-3">';
                     if (order.chi_tiet && order.chi_tiet.length > 0) {
@@ -246,9 +262,7 @@
                     }
                     productsHtml += '</div>';
 
-                    // ==========================================
-                    // 1. TAB LỊCH SỬ MUA HÀNG (Giao thành công, Đã hủy, Hoàn thành, Đã trả hàng)
-                    // ==========================================
+                    // 1. TAB LỊCH SỬ MUA HÀNG
                     if(['giao_thanh_cong', 'da_huy', 'hoan_thanh', 'da_tra_hang'].includes(order.trang_thai_don)) {
                         hasHistory = true;
                         let statusColor, statusText, actionBtnHtml = '';
@@ -271,7 +285,6 @@
                         else if (order.trang_thai_don === 'da_huy') {
                             statusColor = 'bg-red-100 text-red-700';
                             statusText = 'Đã hủy';
-                            // ĐOẠN NÀY HIỂN THỊ LÝ DO HỦY ĐƠN LÊN MÀN HÌNH
                             if (order.ly_do_huy_don) {
                                 actionBtnHtml = `<div class="mt-4 text-sm text-left text-red-600 bg-red-50 p-3 rounded-lg w-full border border-red-100"><b>Lý do hủy:</b> ${order.ly_do_huy_don}</div>`;
                             }
@@ -298,17 +311,16 @@
                                 </div>
                                 ${productsHtml}
                                 <div class="mt-4 pt-4 border-t border-gray-100 flex flex-col justify-end items-end space-y-2">
+                                    ${voucherHtml}
                                     <div class="flex justify-between items-center w-full">
                                         <span class="font-bold text-gray-700">Tổng thanh toán:</span>
-                                        <span class="font-black text-pink-600 text-xl">${total}</span>
+                                        <span class="font-black text-pink-600 text-xl">${tongThanhToan.toLocaleString()} đ</span>
                                     </div>
                                     <div class="w-full">${actionBtnHtml}</div>
                                 </div>
                             </div>`;
                     } 
-                    // ==========================================
-                    // 2. TAB QUẢN LÝ ĐƠN HÀNG (Chờ xác nhận, Đã xác nhận, Đang giao, Đang xử lý trả hàng)
-                    // ==========================================
+                    // 2. TAB QUẢN LÝ ĐƠN HÀNG
                     else {
                         hasOrders = true;
                         let activeStatusText = 'Chờ xác nhận';
@@ -329,7 +341,6 @@
                         } else if (order.trang_thai_don === 'dang_tra_hang' || order.trang_thai_don === 'tra_hang_hoan_tien') {
                             activeStatusText = 'Đang xử lý trả hàng';
                             activeStatusColor = 'bg-orange-100 text-orange-700 border border-orange-300'; 
-                            // In ra ghi chú chờ shop duyệt (nếu muốn)
                             actionBtnHtml = `<div class="mt-4 text-sm text-left text-orange-600 bg-orange-50 p-3 rounded-lg w-full">Shop đang xử lý yêu cầu trả hàng của bạn.</div>`;
                         }
 
@@ -340,9 +351,13 @@
                                     <span class="px-4 py-1 text-sm font-bold rounded-full ${activeStatusColor}">${activeStatusText}</span>
                                 </div>
                                 ${productsHtml}
-                                <div class="mt-4 pt-4 border-t border-gray-100 text-right">
-                                    <p class="font-black text-pink-600 text-xl">${total}</p>
-                                    ${actionBtnHtml}
+                                <div class="mt-4 pt-4 border-t border-gray-100 flex flex-col justify-end items-end space-y-2">
+                                    ${voucherHtml}
+                                    <div class="flex justify-between items-center w-full">
+                                        <span class="font-bold text-gray-700">Tổng thanh toán:</span>
+                                        <span class="font-black text-pink-600 text-xl">${tongThanhToan.toLocaleString()} đ</span>
+                                    </div>
+                                    <div class="w-full">${actionBtnHtml}</div>
                                 </div>
                             </div>`;
                     }
@@ -365,17 +380,16 @@
         }
     }
 
-    // 6. HÀM CHUNG ĐỂ CẬP NHẬT TRẠNG THÁI (GỬI KÈM LÝ DO HỦY / LÝ DO TRẢ HÀNG)
+    // 6. HÀM CHUNG ĐỂ CẬP NHẬT TRẠNG THÁI
     async function updateOrderStatus(maDonHang, trangThaiMoi) {
         let lyDoTraHang = null;
         let lyDoHuyDon = null;
 
-        // KIỂM TRA NẾU LÀ HỦY ĐƠN -> BẬT PROMPT NHẬP LÝ DO
         if (trangThaiMoi === 'da_huy') {
             lyDoHuyDon = prompt("Vui lòng nhập lý do hủy đơn hàng (Bắt buộc):");
             if (!lyDoHuyDon || lyDoHuyDon.trim() === "") {
                 alert("Bạn phải nhập lý do thì hệ thống mới xử lý hủy đơn!");
-                return; // Dừng lại không gọi API nữa
+                return;
             }
         } 
         else if (trangThaiMoi === 'hoan_thanh') {
@@ -401,7 +415,7 @@
                     ma_don_hang: maDonHang, 
                     trang_thai: trangThaiMoi,
                     ly_do_tra_hang: lyDoTraHang,
-                    ly_do_huy_don: lyDoHuyDon // Backend sẽ tự lấy cái này lưu vào Database
+                    ly_do_huy_don: lyDoHuyDon 
                 })
             });
 

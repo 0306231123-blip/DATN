@@ -199,6 +199,10 @@ exports.createUser = async (req, res) => {
  * PUT /api/users/:id
  * Cập nhật người dùng
  */
+/**
+ * PUT /api/users/:id
+ * Cập nhật người dùng
+ */
 exports.updateUser = async (req, res) => {
   try {
     const { id } = req.params;
@@ -212,7 +216,8 @@ exports.updateUser = async (req, res) => {
       });
     }
 
-    const { ho_ten, email, so_dien_thoai, dia_chi, vai_tro, password, trang_thai } = req.body;
+    // 1. CHÚ Ý: Đã thêm ly_do_khoa vào đây
+    const { ho_ten, email, so_dien_thoai, dia_chi, vai_tro, password, trang_thai, ly_do_khoa } = req.body;
 
     const user = await NguoiDung.findByPk(userId);
     if (!user) {
@@ -253,8 +258,18 @@ exports.updateUser = async (req, res) => {
     if (vai_tro !== undefined && ['khach_hang', 'quan_tri_vien'].includes(vai_tro)) {
       updateData.vai_tro = vai_tro;
     }
+    
+    // 2. CHÚ Ý: Xử lý trạng thái VÀ LÝ DO KHÓA ở đây
     if (trang_thai !== undefined && ['hoat_dong', 'bi_khoa'].includes(trang_thai)) {
       updateData.trang_thai = trang_thai;
+      
+      if (trang_thai === 'bi_khoa') {
+          // Lưu lý do (hoặc dùng câu mặc định nếu không có)
+          updateData.ly_do_khoa = ly_do_khoa || 'Quản trị viên chủ động khóa';
+      } else if (trang_thai === 'hoat_dong') {
+          // Nếu mở khóa thì xóa lý do đi
+          updateData.ly_do_khoa = null;
+      }
     }
 
     // Hash new password if provided
@@ -271,6 +286,7 @@ exports.updateUser = async (req, res) => {
 
     updateData.ngay_cap_nhat = new Date();
 
+    // 3. Thực hiện update vào CSDL
     await user.update(updateData);
 
     res.status(200).json({
@@ -281,6 +297,8 @@ exports.updateUser = async (req, res) => {
         ho_ten: user.ho_ten,
         email: user.email,
         vai_tro: user.vai_tro,
+        trang_thai: user.trang_thai,
+        ly_do_khoa: user.ly_do_khoa // Trả về để Frontend biết
       },
     });
   } catch (error) {

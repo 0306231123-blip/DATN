@@ -165,7 +165,7 @@ exports.getOrderById = async (req, res) => {
 
 /**
  * PUT /api/orders/:id/status
- * Cập nhật trạng thái đơn hàng
+ * Cập nhật trạng thái đơn hàng (Có tích hợp cộng lại kho)
  */
 exports.updateOrderStatus = async (req, res) => {
   try {
@@ -188,7 +188,14 @@ exports.updateOrderStatus = async (req, res) => {
       });
     }
 
-    const order = await DonHang.findByPk(orderId);
+    // 1. SỬA Ở ĐÂY: Phải Include thêm ChiTietDonHang thì mới biết đường mà cộng kho
+    const order = await DonHang.findByPk(orderId, {
+        include: [{
+            model: ChiTietDonHang,
+            as: 'chi_tiet'
+        }]
+    });
+
     if (!order) {
       return res.status(404).json({
         status: 'error',
@@ -196,8 +203,25 @@ exports.updateOrderStatus = async (req, res) => {
       });
     }
 
-    // Validate state transitions (Đã gỡ bỏ để Admin có thể tự do chuyển trạng thái qua Combobox)
     const currentStatus = order.trang_thai_don;
+
+    // ============================================================
+    // 2. THÊM LOGIC: CỘNG LẠI KHO KHI ADMIN DUYỆT TRẢ HÀNG HOẶC HỦY
+    // ============================================================
+    // Kiểm tra: Nếu trạng thái mới là trả hàng/hủy VÀ trạng thái cũ chưa phải là trả hàng/hủy (Chống cộng đúp 2 lần)
+    if (
+        (trang_thai_don === 'da_tra_hang' || trang_thai_don === 'da_huy') && 
+        (currentStatus !== 'da_tra_hang' && currentStatus !== 'da_huy')
+    ) {
+        // Lặp qua từng món trong đơn để cộng lại kho
+        for (let item of order.chi_tiet) {
+            await SanPham.increment('so_luong_ton', {
+                by: item.so_luong,
+                where: { ma_san_pham: item.ma_san_pham }
+            });
+        }
+    }
+    // ============================================================
 
     await order.update({
       trang_thai_don,
