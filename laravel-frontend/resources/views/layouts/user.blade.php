@@ -104,35 +104,39 @@
 
                     // Clear timer cũ, đợi 300ms sau khi người dùng ngừng gõ mới gọi API
                     clearTimeout(debounceTimer);
-                    debounceTimer = setTimeout(async () => {
-                        try {
-                            const response = await fetch(`/search-live?q=${encodeURIComponent(keyword)}`);
-                            const data = await response.json();
+                   debounceTimer = setTimeout(async () => {
+                                    try {
+                                        const response = await fetch(`/search-live?q=${encodeURIComponent(keyword)}`);
+                                        const result = await response.json(); // "result" ở đây là object { data: [...] }
 
-                            if (data.length > 0) {
-                                let html = '';
-                                data.forEach(item => {
-                                    const formattedPrice = new Intl.NumberFormat('vi-VN').format(item.gia) + ' đ';
-                                    html += `
-                                        <a href="/user/detail/${item.ma_san_pham}" class="flex items-center p-3 hover:bg-gray-50 border-b border-gray-50 transition duration-200">
-                                            <img src="${item.anh}" class="w-12 h-12 object-cover rounded-md border border-gray-200 shadow-sm">
-                                            <div class="ml-3 flex-1 overflow-hidden">
-                                                <p class="text-sm font-bold text-gray-800 truncate hover:text-pink-600">${item.ten_san_pham}</p>
-                                                <p class="text-sm text-pink-600 font-black mt-0.5">${formattedPrice}</p>
-                                            </div>
-                                        </a>
-                                    `;
-                                });
-                                searchDropdown.innerHTML = html;
-                                searchDropdown.classList.remove('hidden');
-                            } else {
-                                searchDropdown.innerHTML = '<div class="p-4 text-center text-sm font-medium text-gray-500">Không tìm thấy sản phẩm nào!</div>';
-                                searchDropdown.classList.remove('hidden');
-                            }
-                        } catch (error) {
-                            console.error('Lỗi tìm kiếm:', error);
-                        }
-                    }, 300); // Độ trễ 300ms
+                                        // --- SỬA ĐOẠN NÀY ---
+                                        const products = result.data; // Lấy đúng cái mảng sản phẩm ra từ biến 'data'
+
+                                        if (products && products.length > 0) {
+                                            let html = '';
+                                            products.forEach(item => {
+                                                const formattedPrice = new Intl.NumberFormat('vi-VN').format(item.gia_khuyen_mai || item.gia) + ' đ';
+                                                html += `
+                                                    <a href="/user/detail/${item.ma_san_pham}" class="flex items-center p-3 hover:bg-gray-50 border-b border-gray-50 transition duration-200">
+                                                        <img src="${item.anh}" class="w-12 h-12 object-cover rounded-md border border-gray-200 shadow-sm">
+                                                        <div class="ml-3 flex-1 overflow-hidden">
+                                                            <p class="text-sm font-bold text-gray-800 truncate hover:text-pink-600">${item.ten_san_pham}</p>
+                                                            <p class="text-sm text-pink-600 font-black mt-0.5">${formattedPrice}</p>
+                                                        </div>
+                                                    </a>
+                                                `;
+                                            });
+                                            searchDropdown.innerHTML = html;
+                                            searchDropdown.classList.remove('hidden');
+                                        } else {
+                                            searchDropdown.innerHTML = '<div class="p-4 text-center text-sm font-medium text-gray-500">Không tìm thấy sản phẩm nào!</div>';
+                                            searchDropdown.classList.remove('hidden');
+                                        }
+                                        // ---------------------
+                                    } catch (error) {
+                                        console.error('Lỗi tìm kiếm:', error);
+                                    }
+                                }, 300);
                 });
 
                 // Tự động ẩn bảng tìm kiếm khi bấm chuột ra ngoài
