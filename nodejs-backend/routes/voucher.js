@@ -108,5 +108,26 @@ router.post('/check', async (req, res) => {
         res.status(500).json({ success: false, message: 'Lỗi server khi kiểm tra voucher.' });
     }
 });
+// API: /api/voucher/active
+// Lấy danh sách voucher đang hoạt động, còn lượt và chưa hết hạn
+router.get('/active', async (req, res) => {
+    try {
+        const vouchers = await KhuyenMai.findAll({
+            where: {
+                trang_thai: 'hoat_dong',
+                so_luong: { [Op.gt]: 0 }, // Số lượng phải lớn hơn 0
+                ngay_ket_thuc: { [Op.gt]: new Date() } // Chưa tới hạn kết thúc
+            },
+            order: [['gia_tri', 'DESC']] // Mã giảm giá trị cao xếp trên
+        });
 
+        res.json({
+            success: true,
+            data: vouchers
+        });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ success: false, message: 'Lỗi lấy danh sách voucher' });
+    }
+});
 module.exports = router;

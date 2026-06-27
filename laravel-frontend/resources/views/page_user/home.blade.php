@@ -24,6 +24,19 @@
     </div>
 </section>
 
+<section class="bg-[#fcfdf2] pb-8 px-8">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex items-center mb-6 space-x-2">
+            <span class="text-3xl">🎫</span>
+            <h2 class="text-2xl font-black text-gray-800 uppercase tracking-widest">Kho Voucher</h2>
+        </div>
+        
+        <div id="voucher-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <p class="text-gray-500 font-medium animate-pulse">Đang tìm kiếm mã giảm giá dành cho bạn...</p>
+        </div>
+    </div>
+</section>
+
 <section class="bg-[#fcfdf2] py-4 px-8">
     <div id="ai-guest-section" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-8">
         <div class="bg-white rounded-3xl p-10 text-center border border-pink-100 shadow-sm relative overflow-hidden">
@@ -223,6 +236,57 @@
             aiSection.classList.add('hidden');
         }
     });
+    document.addEventListener('DOMContentLoaded', async function() {
+        const voucherListEl = document.getElementById('voucher-list');
+
+        try {
+            const response = await fetch('http://localhost:3000/api/voucher/active');
+            const result = await response.json();
+
+            if (result.success && result.data.length > 0) {
+                let html = '';
+                result.data.forEach(v => {
+                    const tienGiam = parseInt(v.gia_tri).toLocaleString() + (v.loai_giam === 'tien_mat' ? 'đ' : '%');
+                    const donToiThieu = parseInt(v.don_toi_thieu).toLocaleString() + 'đ';
+                    
+                    html += `
+                        <div class="flex bg-white rounded-xl shadow-sm border border-pink-100 overflow-hidden relative">
+                            <div class="w-24 bg-pink-500 text-white flex flex-col justify-center items-center p-2 border-r-2 border-dashed border-pink-200">
+                                <span class="text-xs font-bold uppercase mb-1">Giảm</span>
+                                <span class="text-xl font-black">${tienGiam}</span>
+                            </div>
+                            <div class="p-4 flex-1 flex flex-col justify-between">
+                                <div>
+                                    <h4 class="font-bold text-gray-800 text-lg">${v.ma_code}</h4>
+                                    <p class="text-xs text-gray-500 mt-1">Đơn tối thiểu ${donToiThieu}</p>
+                                    <p class="text-xs text-red-500 mt-1 font-medium">Còn lại: ${v.so_luong} lượt</p>
+                                </div>
+                                <div class="mt-3 text-right">
+                                    <button onclick="copyVoucher('${v.ma_code}')" class="bg-pink-100 hover:bg-pink-200 text-pink-600 text-xs font-bold py-1.5 px-4 rounded-full transition">
+                                        Copy Mã
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                });
+                voucherListEl.innerHTML = html;
+            } else {
+                voucherListEl.innerHTML = '<p class="text-gray-500 italic">Hiện tại chưa có mã giảm giá nào.</p>';
+            }
+        } catch (error) {
+            voucherListEl.innerHTML = '<p class="text-red-500">Lỗi tải mã giảm giá.</p>';
+        }
+    });
+
+    // Hàm copy mã vào Clipboard
+    function copyVoucher(code) {
+        navigator.clipboard.writeText(code).then(() => {
+            alert('Đã copy mã: ' + code + '. Hãy dán ở bước Thanh toán nhé!');
+        }).catch(err => {
+            console.error('Lỗi copy:', err);
+        });
+    }
 </script>
 
 @endsection

@@ -31,6 +31,7 @@ class DashboardController extends Controller
 
         return view('admin.dashboard', compact('data'));
     }
+    
 
     /**
      * Trả về cấu trúc dữ liệu rỗng khi không kết nối được backend

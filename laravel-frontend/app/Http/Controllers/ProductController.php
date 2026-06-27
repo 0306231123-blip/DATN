@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\SanPham; // Gọi Model Sản Phẩm vào đây
+use Illuminate\Support\Facades\DB;
 
 class ProductController extends Controller
 {
@@ -42,10 +43,18 @@ class ProductController extends Controller
     public function bestseller()
     {
         $danhSachBanChay = SanPham::select('san_pham.*')
-                                  ->join('v_san_pham_ban_chay', 'san_pham.ma_san_pham', '=', 'v_san_pham_ban_chay.ma_san_pham')
-                                  ->where('san_pham.trang_thai', 'dang_ban')
-                                  ->orderBy('v_san_pham_ban_chay.tong_so_luong_ban', 'desc')
-                                  ->paginate(12);
+            ->selectSub(function ($query) {
+                $query->from('chi_tiet_don_hang')
+                    ->join('don_hang', 'chi_tiet_don_hang.ma_don_hang', '=', 'don_hang.ma_don_hang')
+                    ->whereColumn('chi_tiet_don_hang.ma_san_pham', 'san_pham.ma_san_pham')
+                    ->whereNotIn('don_hang.trang_thai_don', ['da_huy', 'da_tra_hang', 'tra_hang_hoan_tien'])
+                    ->selectRaw('SUM(so_luong)');
+            }, 'tong_so_luong_ban')
+            ->where('san_pham.trang_thai', 'dang_ban')
+            // DÒNG NÀY SẼ LỌC BỎ NHỮNG SẢN PHẨM CÓ TỔNG SỐ LƯỢNG BÁN = 0 (HOẶC NULL)
+            ->having('tong_so_luong_ban', '>', 0) 
+            ->orderByRaw('tong_so_luong_ban DESC')
+            ->paginate(12);
 
         return view('page_user.bestseller', compact('danhSachBanChay'));
     }
