@@ -131,15 +131,24 @@
                     </div>
                 </div>
                 <div class="header-right">
-                    <div class="header-month-selector" id="month-selector">
-                        <i data-lucide="calendar" class="icon-xs"></i>
-                        <span>Tháng {{ now()->format('n/Y') }}</span>
-                        <i data-lucide="chevron-down" class="icon-xs"></i>
-                    </div>
-                    <button class="header-icon-btn" id="btn-notifications" aria-label="Notifications">
-                        <i data-lucide="bell" class="icon-sm"></i>
-                        <span class="notification-dot"></span>
+                    <button class="header-icon-btn" id="btn-theme-toggle" aria-label="Toggle Theme" title="Đổi giao diện">
+                        <i data-lucide="moon" class="icon-sm" id="theme-icon"></i>
                     </button>
+                    <div style="position: relative;" id="noti-container">
+                        <button class="header-icon-btn" id="btn-notifications" aria-label="Notifications" title="Nhật ký hoạt động">
+                            <i data-lucide="bell" class="icon-sm"></i>
+                            <span class="notification-dot" id="noti-dot" style="display: none;"></span>
+                        </button>
+                        <div id="notifications-dropdown" class="notifications-dropdown" style="display: none;">
+                            <div class="noti-header">
+                                <h3>Nhật ký hoạt động</h3>
+                                <button id="btn-close-noti"><i data-lucide="x" class="icon-xs"></i></button>
+                            </div>
+                            <div class="noti-body" id="noti-list">
+                                <div style="padding: 15px; text-align: center; color: var(--text-muted);">Đang tải...</div>
+                            </div>
+                        </div>
+                    </div>
                     <div class="header-avatar" id="user-avatar">
                         <span>AD</span>
                     </div>
@@ -274,6 +283,104 @@
             });
         }
 
+    </script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // Dark Mode Logic
+            const btnTheme = document.getElementById('btn-theme-toggle');
+            const themeIcon = document.getElementById('theme-icon');
+            
+            function setTheme(theme) {
+                document.documentElement.setAttribute('data-theme', theme);
+                localStorage.setItem('theme', theme);
+                if(theme === 'dark') {
+                    themeIcon.setAttribute('data-lucide', 'sun');
+                } else {
+                    themeIcon.setAttribute('data-lucide', 'moon');
+                }
+                if(window.lucide) window.lucide.createIcons();
+            }
+
+            const savedTheme = localStorage.getItem('theme') || 'light';
+            setTheme(savedTheme);
+
+            if (btnTheme) {
+                btnTheme.addEventListener('click', () => {
+                    const current = document.documentElement.getAttribute('data-theme');
+                    setTheme(current === 'dark' ? 'light' : 'dark');
+                });
+            }
+
+            // Notifications Logic
+            const btnNoti = document.getElementById('btn-notifications');
+            const notiDropdown = document.getElementById('notifications-dropdown');
+            const btnCloseNoti = document.getElementById('btn-close-noti');
+            const notiList = document.getElementById('noti-list');
+            const notiDot = document.getElementById('noti-dot');
+
+            let notiLoaded = false;
+
+            if (btnNoti) {
+                btnNoti.addEventListener('click', () => {
+                    const isVisible = notiDropdown.style.display === 'block';
+                    notiDropdown.style.display = isVisible ? 'none' : 'block';
+                    if(!isVisible && !notiLoaded) {
+                        loadNotifications();
+                    }
+                });
+            }
+
+            if (btnCloseNoti) {
+                btnCloseNoti.addEventListener('click', () => {
+                    notiDropdown.style.display = 'none';
+                });
+            }
+
+            // Đóng dropdown khi click ra ngoài
+            document.addEventListener('click', (e) => {
+                const notiContainer = document.getElementById('noti-container');
+                if (notiDropdown.style.display === 'block' && notiContainer && !notiContainer.contains(e.target)) {
+                    notiDropdown.style.display = 'none';
+                }
+            });
+
+            async function loadNotifications() {
+                try {
+                    notiList.innerHTML = '<div style="padding: 15px; text-align: center; color: var(--text-muted);">Đang tải...</div>';
+                    const token = localStorage.getItem('token');
+                    // Sử dụng API_BASE_URL (đã được định nghĩa ở các view con) hoặc localhost
+                    const apiUrl = typeof API_BASE_URL !== 'undefined' ? `${API_BASE_URL}/notifications/recent` : 'http://localhost:3000/api/notifications/recent';
+                    const res = await fetch(apiUrl, {
+                        headers: { 'Authorization': `Bearer ${token}` }
+                    });
+                    const data = await res.json();
+                    
+                    if (data.status === 'success') {
+                        notiLoaded = true;
+                        if (data.data.length === 0) {
+                            notiList.innerHTML = '<div style="padding: 15px; text-align: center; color: var(--text-muted);">Chưa có hoạt động nào</div>';
+                            return;
+                        }
+                        notiDot.style.display = 'block'; // Hiển thị chấm đỏ nếu có dl
+                        notiList.innerHTML = data.data.map(log => {
+                            const date = new Date(log.thoi_gian).toLocaleString('vi-VN');
+                            const user = log.nguoi_thuc_hien ? log.nguoi_thuc_hien.ho_ten : 'Hệ thống';
+                            return `
+                                <div class="noti-item">
+                                    <div class="noti-user"><strong>${user}</strong> đã ${log.loai_hanh_dong.toLowerCase()}</div>
+                                    <div class="noti-target">Bảng: ${log.bang_tac_dong}</div>
+                                    <div class="noti-time">${date}</div>
+                                </div>
+                            `;
+                        }).join('');
+                    } else {
+                        notiList.innerHTML = '<div style="padding: 15px; text-align: center; color: var(--text-red);">Lỗi tải dữ liệu</div>';
+                    }
+                } catch(e) {
+                    notiList.innerHTML = '<div style="padding: 15px; text-align: center; color: var(--text-red);">Lỗi kết nối máy chủ</div>';
+                }
+            }
+        });
     </script>
 
     @yield('scripts')

@@ -13,6 +13,7 @@ const DanhMuc = require('../models/DanhMuc');
 const { Op } = require('sequelize');
 const sequelize = require('../config/database');
 const { QueryTypes } = require('sequelize');
+const { logActivity } = require('../utils/logger');
 
 /**
  * GET /api/products
@@ -125,7 +126,7 @@ exports.getProductById = async (req, res) => {
     const { id } = req.params;
 
     const productId = parseInt(id);
-    if (isNaN(productId) || productId <= 0) {
+    if (isNaN(productId) || productId < 0) {
       return res.status(400).json({
         status: 'error',
         message: 'ID sản phẩm không hợp lệ.',
@@ -262,6 +263,11 @@ exports.createProduct = async (req, res) => {
       ]
     });
 
+    // LƯU LOG
+    if (req.user) {
+      await logActivity(req.user.ma_nguoi_dung, 'Thêm', 'san_pham', `Thêm sản phẩm mới: ${product.ten_san_pham}`);
+    }
+
     res.status(201).json({
       status: 'success',
       message: 'Tạo sản phẩm thành công.',
@@ -288,7 +294,7 @@ exports.updateProduct = async (req, res) => {
     const { id } = req.params;
 
     const productId = parseInt(id);
-    if (isNaN(productId) || productId <= 0) {
+    if (isNaN(productId) || productId < 0) {
       await t.rollback();
       return res.status(400).json({ status: 'error', message: 'ID sản phẩm không hợp lệ.' });
     }
@@ -428,7 +434,7 @@ exports.deleteProduct = async (req, res) => {
     const { id } = req.params;
 
     const productId = parseInt(id);
-    if (isNaN(productId) || productId <= 0) {
+    if (isNaN(productId) || productId < 0) {
       return res.status(400).json({
         status: 'error',
         message: 'ID sản phẩm không hợp lệ.',
@@ -457,6 +463,11 @@ exports.deleteProduct = async (req, res) => {
     }
 
     await product.destroy();
+
+    // LƯU LOG XÓA SẢN PHẨM
+    if (req.user) {
+      await logActivity(req.user.ma_nguoi_dung, 'Xóa', 'san_pham', `Xóa sản phẩm: ${product.ten_san_pham}`);
+    }
 
     res.status(200).json({
       status: 'success',

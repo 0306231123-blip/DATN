@@ -52,6 +52,7 @@ app.use('/api/inventory', inventoryRoutes);
 app.use('/api/returns', returnRoutes);
 
 app.use('/api/voucher', require('./routes/voucher'));
+app.use('/api/notifications', require('./routes/notifications'));
 
 // Kết nối database và khởi động server
 const PORT = process.env.PORT || 3000;
