@@ -18,6 +18,11 @@
             <i data-lucide="plus" class="icon-xs"></i>
             <span>Thêm sản phẩm</span>
         </button>
+        <button class="btn" onclick="document.getElementById('excel-upload').click()" style="margin-left: 10px; background-color: #10b981; color: white; border-color: #10b981;">
+            <i data-lucide="file-spreadsheet" class="icon-xs"></i>
+            <span>Nhập từ Excel</span>
+        </button>
+        <input type="file" id="excel-upload" accept=".xlsx, .xls, .csv" style="display: none;" onchange="handleExcelUpload(event)">
         <div class="search-box" id="search-products">
             <i data-lucide="search" class="icon-xs search-icon"></i>
             <input type="text" placeholder="Tìm kiếm sản phẩm..." class="search-input" id="product-search-input">
@@ -326,7 +331,7 @@
 </div>
 
 <!-- Modal Overlay -->
-<div class="modal-overlay" id="modal-overlay" style="display: none;"></div>
+<div class="modal-overlay" id="modal-overlay" style="display: none;" onclick="closeAllModals()"></div>
 
 <!-- Modal Nhập Kho Hàng Loạt -->
 <div class="modal" id="modal-bulk-import" style="display: none; z-index: 1002;">
@@ -336,6 +341,9 @@
             <button class="modal-close" type="button" onclick="closeBulkImportModal()">&times;</button>
         </div>
         <form id="form-bulk-import" class="form">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                <span style="font-size: 14px; color: var(--text-muted);">Vui lòng chọn sản phẩm và điền số lượng.</span>
+            </div>
             <div class="table-wrapper" style="max-height: 400px; overflow-y: auto; margin-bottom: 20px;">
                 <table class="admin-table">
                     <thead>
@@ -343,8 +351,8 @@
                             <th>Sản phẩm / Phân loại</th>
                             <th>SKU</th>
                             <th>Tồn kho</th>
-                            <th style="width: 120px;">Số lượng nhập</th>
-                            <th style="width: 150px;">Giá nhập</th>
+                            <th style="width: 100px; min-width: 80px;">SL nhập</th>
+                            <th style="width: 200px; min-width: 170px;">Giá nhập (VNĐ)</th>
                         </tr>
                     </thead>
                     <tbody id="bulk-import-tbody">
@@ -404,6 +412,8 @@
 <link rel="stylesheet" href="{{ asset('css/admin-products.css') }}">
 @endsection
 
+<!-- Cài đặt thư viện SheetJS để đọc file Excel -->
+<script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
 
 <script>
 const API_BASE_URL = 'http://localhost:3000/api';
@@ -539,6 +549,13 @@ async function loadStats() {
 }
 
 // ========== HELPERS ==========
+
+function closeAllModals() {
+    if (typeof closeModal === 'function') closeModal();
+    if (typeof closeBulkImportModal === 'function') closeBulkImportModal();
+    if (typeof closeLogsModal === 'function') closeLogsModal();
+    if (typeof closeInvModal === 'function') closeInvModal();
+}
 
 function escapeHtml(text) {
     if (!text && text !== 0) return '';
@@ -1141,21 +1158,35 @@ async function openBulkImportModal() {
             result.data.forEach(p => {
                 if (p.co_bien_the && p.bien_the && p.bien_the.length > 0) {
                     p.bien_the.forEach(v => {
+                        // Tính giá nhập tự động (khoảng 65% giá bán lẻ)
+                        const giaNhap = Math.round(((v.gia || 0) * 0.65) / 1000) * 1000;
                         html += `<tr class="bulk-item" data-sp="${p.ma_san_pham}" data-bt="${v.ma_bien_the}">
                             <td>${escapeHtml(p.ten_san_pham)} - <strong>${escapeHtml(v.ten_bien_the)}</strong></td>
                             <td>${escapeHtml(v.sku || '--')}</td>
                             <td>${v.so_luong_ton}</td>
-                            <td><input type="number" class="form-control b-sl" min="1" placeholder="SL"></td>
-                            <td><input type="number" class="form-control b-gia" min="0" placeholder="Giá nhập"></td>
+                            <td><input type="number" class="form-control b-sl" min="1" placeholder="SL" style="min-width: 70px;"></td>
+                            <td>
+                                <div style="display: flex; align-items: center; gap: 5px;">
+                                    <input type="number" class="form-control b-gia" min="0" placeholder="Giá nhập" value="${giaNhap > 0 ? giaNhap : ''}" style="min-width: 100px; flex: 1;">
+                                    <span style="font-weight: 500; color: #64748b;">VNĐ</span>
+                                </div>
+                            </td>
                         </tr>`;
                     });
                 } else {
+                    // Tính giá nhập tự động (khoảng 65% giá bán lẻ)
+                    const giaNhap = Math.round(((p.gia || 0) * 0.65) / 1000) * 1000;
                     html += `<tr class="bulk-item" data-sp="${p.ma_san_pham}" data-bt="">
                         <td>${escapeHtml(p.ten_san_pham)}</td>
                         <td>${escapeHtml(p.sku || '--')}</td>
                         <td>${p.so_luong_ton}</td>
-                        <td><input type="number" class="form-control b-sl" min="1" placeholder="SL"></td>
-                        <td><input type="number" class="form-control b-gia" min="0" placeholder="Giá nhập"></td>
+                        <td><input type="number" class="form-control b-sl" min="1" placeholder="SL" style="min-width: 70px;"></td>
+                        <td>
+                            <div style="display: flex; align-items: center; gap: 5px;">
+                                <input type="number" class="form-control b-gia" min="0" placeholder="Giá nhập" value="${giaNhap > 0 ? giaNhap : ''}" style="min-width: 100px; flex: 1;">
+                                <span style="font-weight: 500; color: #64748b;">VNĐ</span>
+                            </div>
+                        </td>
                     </tr>`;
                 }
             });
@@ -1290,6 +1321,74 @@ function closeLogsModal() {
     if(document.getElementById('modal-overlay') && document.getElementById('modal-product').style.display !== 'block') {
         document.getElementById('modal-overlay').style.display = 'none';
     }
+}
+
+// ========== EXCEL IMPORT & MARKET PRICE ==========
+
+// 1. Nhập từ Excel (Thêm sản phẩm hàng loạt)
+async function handleExcelUpload(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    // Lấy token
+    const token = document.cookie.split('; ').find(row => row.startsWith('token='));
+    const tokenValue = token ? token.split('=')[1] : null;
+
+    if (!tokenValue) {
+        showAlert('Vui lòng đăng nhập để thực hiện chức năng này', 'error');
+        event.target.value = ''; // Reset input
+        return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = async function (e) {
+        try {
+            const data = new Uint8Array(e.target.result);
+            const workbook = XLSX.read(data, { type: 'array' });
+            
+            // Đọc sheet đầu tiên
+            const firstSheetName = workbook.SheetNames[0];
+            const worksheet = workbook.Sheets[firstSheetName];
+            
+            // Chuyển về JSON
+            const jsonData = XLSX.utils.sheet_to_json(worksheet, { defval: '' });
+            
+            if (!jsonData || jsonData.length === 0) {
+                showAlert('File Excel trống hoặc sai định dạng', 'error');
+                event.target.value = '';
+                return;
+            }
+
+            // Hiển thị loading
+            showAlert('Đang xử lý dữ liệu...', 'info');
+
+            // Gọi API Bulk Create
+            const res = await fetch(`${API_BASE_URL}/products/bulk`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${tokenValue}`
+                },
+                body: JSON.stringify({ products: jsonData })
+            });
+
+            const result = await res.json();
+            
+            if (result.success || result.status === 'success') {
+                showAlert(`Đã nhập thành công ${result.data?.length || jsonData.length} sản phẩm từ Excel`, 'success');
+                loadProducts(document.getElementById('product-search-input')?.value || '', document.querySelector('.role-tab.active')?.getAttribute('data-status') || 'all');
+            } else {
+                showAlert('Lỗi: ' + (result.message || 'Không thể nhập từ Excel'), 'error');
+            }
+
+        } catch (err) {
+            console.error('Lỗi khi đọc file Excel:', err);
+            showAlert('Đã xảy ra lỗi khi đọc file Excel', 'error');
+        }
+        
+        event.target.value = ''; // Reset file input
+    };
+    reader.readAsArrayBuffer(file);
 }
 </script>
 @endsection

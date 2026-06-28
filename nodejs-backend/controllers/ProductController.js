@@ -569,6 +569,132 @@ exports.getBrands = async (req, res) => {
 // ==========================================
 // ĐOẠN CODE CỦA MÌNH THÊM VÀO NẰM Ở ĐÂY
 // ==========================================
+
+/**
+ * POST /api/products/bulk
+ * Nhập hàng loạt sản phẩm từ Excel (JSON array)
+ */
+exports.bulkCreateProducts = async (req, res) => {
+  const t = await sequelize.transaction();
+  try {
+    const { products } = req.body;
+    
+    if (!products || !Array.isArray(products) || products.length === 0) {
+      await t.rollback();
+      return res.status(400).json({ status: 'error', message: 'Dữ liệu không hợp lệ hoặc trống.' });
+    }
+
+    let successCount = 0;
+    
+    for (const item of products) {
+      // Map các cột Excel với model (cần map theo tên cột trong file Excel, giả sử tên cột trùng field name hoặc dùng tiếng Việt)
+      // Ví dụ tên cột Excel: "Tên sản phẩm", "Giá", "Tồn kho", "Thương hiệu"...
+      const tenSp = item['Tên sản phẩm'] || item['ten_san_pham'];
+      if (!tenSp) continue; // Bỏ qua nếu không có tên
+      
+      const gia = parseFloat(item['Giá'] || item['gia']) || 0;
+      const soLuong = parseInt(item['Tồn kho'] || item['so_luong_ton']) || 0;
+      const thuongHieu = item['Thương hiệu'] || item['thuong_hieu'] || null;
+      const danhMucName = item['Danh mục'] || item['danh_muc'] || null;
+      
+      let maDanhMuc = null;
+      if (danhMucName) {
+        // Tìm hoặc tạo danh mục (logic đơn giản)
+        let category = await DanhMuc.findOne({ where: { ten_danh_muc: danhMucName } });
+        if (category) {
+          maDanhMuc = category.ma_danh_muc;
+        }
+      }
+
+      // Kiểm tra trùng lặp
+      const existing = await SanPham.findOne({ where: { ten_san_pham: tenSp.trim() } });
+      if (existing) continue; // Bỏ qua nếu đã tồn tại
+
+      await SanPham.create({
+        ten_san_pham: tenSp.trim(),
+        co_bien_the: false,
+        gia: gia,
+        gia_max: gia,
+        so_luong_ton: soLuong,
+        thuong_hieu: thuongHieu,
+        ma_danh_muc: maDanhMuc,
+        trang_thai: 'dang_ban',
+        ngay_tao: new Date(),
+      }, { transaction: t });
+      
+      successCount++;
+    }
+
+    await t.commit();
+    
+    // Log
+    if (req.user) {
+      await logActivity(req.user.ma_nguoi_dung, 'Thêm', 'san_pham', `Nhập từ Excel ${successCount} sản phẩm`);
+    }
+
+    res.status(200).json({
+      status: 'success',
+      message: `Đã nhập thành công ${successCount} sản phẩm.`,
+      data: { count: successCount }
+    });
+    
+  } catch (error) {
+    if (t) await t.rollback();
+    console.error('Bulk create product error:', error);
+    res.status(500).json({
+      status: 'error',
+      message: 'Lỗi khi nhập sản phẩm hàng loạt.',
+      error: error.message,
+    });
+  }
+};
+
+/**
+ * GET /api/products/market-price/:id
+ * Đề xuất giá nhập dựa vào giá bán (giả lập)
+ */
+exports.getMarketPrice = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { type } = req.query; // 'product' or 'variant'
+    
+    let giaBan = 0;
+    
+    if (type === 'variant') {
+      const variant = await BienTheSanPham.findByPk(id);
+      if (!variant) return res.status(404).json({ success: false, message: 'Không tìm thấy phân loại' });
+      giaBan = variant.gia;
+    } else {
+      const product = await SanPham.findByPk(id);
+      if (!product) return res.status(404).json({ success: false, message: 'Không tìm thấy sản phẩm' });
+      giaBan = product.gia;
+    }
+    
+    if (!giaBan || giaBan <= 0) {
+       return res.status(200).json({ success: true, data: { suggested_price: 0 } });
+    }
+    
+    // Tính giá nhập giả lập: khoảng 60% - 70% giá bán
+    const randomFactor = Math.random() * (0.7 - 0.6) + 0.6; // random giữa 0.6 và 0.7
+    let giaNhap = Math.round(giaBan * randomFactor);
+    
+    // Làm tròn đến hàng nghìn
+    giaNhap = Math.round(giaNhap / 1000) * 1000;
+    
+    res.status(200).json({
+      success: true,
+      data: {
+        suggested_price: giaNhap
+      }
+    });
+    
+  } catch (error) {
+    console.error('Get market price error:', error);
+    res.status(500).json({ success: false, message: 'Lỗi khi tính giá nhập đề xuất.' });
+  }
+};
+
+
 // API: GỌI PYTHON ĐỂ LẤY GỢI Ý AI CHO USER
 exports.getAIRecommendation = async (req, res) => {
   try {

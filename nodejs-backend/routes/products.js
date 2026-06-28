@@ -18,8 +18,14 @@ router.get('/stats', verifyToken, requireAdmin, ProductController.getStats);
 // GET /api/products/brands - List unique brands (for filter dropdown)
 router.get('/brands', ProductController.getBrands);
 
-
+// GET /api/products/ai-suggest - AI recommendations
 router.get('/ai-suggest', ProductController.getAIRecommendation);
+
+// GET /api/products/market-price/:id - Get suggested market import price
+router.get('/market-price/:id', verifyToken, requireAdmin, ProductController.getMarketPrice);
+
+// POST /api/products/bulk - Bulk create products from Excel
+router.post('/bulk', verifyToken, requireAdmin, ProductController.bulkCreateProducts);
 
 // Generic routes
 // GET /api/products - List products with search, filter, pagination

@@ -5,28 +5,36 @@
 
 @section('content')
 @php
-    $stats = $data['stats'] ?? [];
+    // ===== Trích xuất dữ liệu từ Controller =====
+    $stats             = $data['stats'] ?? [];
     $doanhThuTheoThang = $data['doanh_thu_theo_thang'] ?? [];
-    $doanhThuTheoDanhMuc = $data['doanh_thu_theo_danh_muc'] ?? [];
-    $sanPhamBanChay = $data['san_pham_ban_chay'] ?? [];
-    $donHangGanDay = $data['don_hang_gan_day'] ?? [];
-    $thongKeTrangThai = $data['thong_ke_trang_thai_don'] ?? [];
+    $sanPhamBanChay    = $data['san_pham_ban_chay'] ?? [];
+    $donHangGanDay     = $data['don_hang_gan_day'] ?? [];
+    $thongKeTrangThai  = $data['thong_ke_trang_thai_don'] ?? [];
 
-    // Format doanh thu
-    $tongDoanhThu = $stats['tong_doanh_thu'] ?? 0;
-    if ($tongDoanhThu >= 1000000000) {
-        $doanhThuFormatted = number_format($tongDoanhThu / 1000000000, 1) . ' tỷ';
-    } elseif ($tongDoanhThu >= 1000000) {
-        $doanhThuFormatted = number_format($tongDoanhThu / 1000000, 1) . ' tr';
-    } elseif ($tongDoanhThu >= 1000) {
-        $doanhThuFormatted = number_format($tongDoanhThu / 1000, 0) . 'k';
-    } else {
-        $doanhThuFormatted = number_format($tongDoanhThu, 0);
-    }
+    // ===== Helper: Format tiền VND rút gọn =====
+    $formatTien = function($soTien) {
+        if ($soTien >= 1000000000) return number_format($soTien / 1000000000, 1) . ' tỷ';
+        if ($soTien >= 1000000)    return number_format($soTien / 1000000, 1) . ' tr';
+        if ($soTien >= 1000)       return number_format($soTien / 1000, 0) . 'k';
+        return number_format($soTien, 0);
+    };
+
+    // ===== Helper: Map trạng thái đơn hàng → tiếng Việt & CSS class =====
+    $trangThaiMap = [
+        'giao_thanh_cong' => ['text' => 'Hoàn thành',   'class' => 'order-badge--completed'],
+        'hoan_thanh'      => ['text' => 'Hoàn thành',   'class' => 'order-badge--completed'],
+        'dang_giao'       => ['text' => 'Đang giao',    'class' => 'order-badge--shipping'],
+        'cho_xac_nhan'    => ['text' => 'Chờ xác nhận', 'class' => 'order-badge--pending'],
+        'da_xac_nhan'     => ['text' => 'Đã xác nhận',  'class' => 'order-badge--confirmed'],
+        'da_huy'          => ['text' => 'Đã hủy',       'class' => 'order-badge--cancelled'],
+    ];
+    $defaultTrangThai = ['text' => 'Không xác định', 'class' => 'order-badge--pending'];
 @endphp
 
 <div class="dashboard-container">
-    <!-- 1. Việc Cần Làm -->
+
+    {{-- ===== 1. VIỆC CẦN LÀM ===== --}}
     <div class="dashboard-card">
         <h2 class="section-title">
             <i data-lucide="clipboard-list" class="icon-sm"></i> Việc Cần Làm
@@ -51,7 +59,7 @@
         </div>
     </div>
 
-    <!-- 2. Phân Tích Bán Hàng -->
+    {{-- ===== 2. PHÂN TÍCH BÁN HÀNG ===== --}}
     <div class="dashboard-card">
         <h2 class="section-title">
             <i data-lucide="trending-up" class="icon-sm"></i> Phân Tích Bán Hàng
@@ -60,7 +68,7 @@
             <div class="analytics-stats">
                 <div class="stat-box">
                     <span class="stat-box-title">Doanh thu</span>
-                    <span class="stat-box-value">{{ $doanhThuFormatted }}</span>
+                    <span class="stat-box-value">{{ $formatTien($stats['tong_doanh_thu'] ?? 0) }}</span>
                 </div>
                 <div class="stat-box">
                     <span class="stat-box-title">Đơn hàng</span>
@@ -81,9 +89,10 @@
         </div>
     </div>
 
-    <!-- 3. Insights -->
+    {{-- ===== 3. INSIGHTS: TOP SẢN PHẨM + ĐƠN GẦN ĐÂY ===== --}}
     <div class="insights-grid">
-        <!-- Top Products -->
+
+        {{-- Top Sản Phẩm Bán Chạy --}}
         <div class="dashboard-card insight-card">
             <h2 class="section-title">
                 <i data-lucide="award" class="icon-sm"></i> Top Sản Phẩm Bán Chạy
@@ -98,17 +107,17 @@
                         </div>
                     </div>
                 @empty
-                    <div style="text-align: center; color: var(--text-muted); padding: 20px;">Chưa có dữ liệu</div>
+                    <div class="empty-state">Chưa có dữ liệu</div>
                 @endforelse
             </div>
         </div>
 
-        <!-- Recent Orders -->
+        {{-- Đơn Hàng Gần Đây --}}
         <div class="dashboard-card insight-card">
             <h2 class="section-title">
                 <i data-lucide="clock" class="icon-sm"></i> Đơn Hàng Gần Đây
             </h2>
-            <div style="overflow-x: auto;">
+            <div class="table-responsive">
                 <table class="recent-orders-minimal">
                     <thead>
                         <tr>
@@ -121,47 +130,24 @@
                     <tbody>
                         @forelse (array_slice($donHangGanDay, 0, 5) as $dh)
                             @php
-                                $tongTT = $dh['tong_thanh_toan'];
-                                if ($tongTT >= 1000000) {
-                                    $tongFormatted = number_format($tongTT / 1000000, 2) . 'tr';
-                                } elseif ($tongTT >= 1000) {
-                                    $tongFormatted = number_format($tongTT / 1000, 0) . 'k';
-                                } else {
-                                    $tongFormatted = number_format($tongTT, 0);
-                                }
-
-                                $badgeClass = match($dh['trang_thai_don']) {
-                                    'giao_thanh_cong', 'hoan_thanh' => 'order-badge--completed',
-                                    'dang_giao' => 'order-badge--shipping',
-                                    'cho_xac_nhan' => 'order-badge--pending',
-                                    'da_xac_nhan' => 'order-badge--confirmed',
-                                    'da_huy' => 'order-badge--cancelled',
-                                    default => 'order-badge--pending',
-                                };
-                                $badgeText = match($dh['trang_thai_don']) {
-                                    'giao_thanh_cong', 'hoan_thanh' => 'Hoàn thành',
-                                    'dang_giao' => 'Đang giao',
-                                    'cho_xac_nhan' => 'Chờ xác nhận',
-                                    'da_xac_nhan' => 'Đã xác nhận',
-                                    'da_huy' => 'Đã hủy',
-                                    default => $dh['trang_thai_don'],
-                                };
+                                $trangThai = $trangThaiMap[$dh['trang_thai_don']] ?? $defaultTrangThai;
                             @endphp
                             <tr>
                                 <td class="ro-id">#DH{{ str_pad($dh['ma_don_hang'], 4, '0', STR_PAD_LEFT) }}</td>
                                 <td>{{ $dh['ho_ten_nguoi_nhan'] }}</td>
-                                <td>{{ $tongFormatted }}</td>
-                                <td><span class="order-badge {{ $badgeClass }}" style="font-size: 0.75rem; padding: 2px 6px;">{{ $badgeText }}</span></td>
+                                <td>{{ $formatTien($dh['tong_thanh_toan']) }}</td>
+                                <td><span class="order-badge order-badge--sm {{ $trangThai['class'] }}">{{ $trangThai['text'] }}</span></td>
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="4" style="text-align: center; color: var(--text-muted); padding: 20px;">Chưa có đơn hàng nào</td>
+                                <td colspan="4" class="empty-state">Chưa có đơn hàng nào</td>
                             </tr>
                         @endforelse
                     </tbody>
                 </table>
             </div>
         </div>
+
     </div>
 </div>
 @endsection
@@ -169,132 +155,126 @@
 @section('scripts')
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    // Re-init icons after dynamic content
     lucide.createIcons();
+    initRevenueChart();
+});
 
-    // Color palette
-    const colors = {
-        primary: '#7c5cfc',
-        primaryLight: 'rgba(124, 92, 252, 0.15)',
-        secondary: '#f472b6',
-        textPrimary: '#1e1b4b',
-        textSecondary: '#6b7280',
-        gridLine: '#f3f4f6'
+/**
+ * Khởi tạo biểu đồ Doanh thu & Đơn hàng theo tháng
+ */
+function initRevenueChart() {
+    const canvas = document.getElementById('revenueOrdersChart');
+    if (!canvas) return;
+
+    // Bảng màu
+    const COLORS = {
+        primary:       '#7c5cfc',
+        primaryAlpha:  'rgba(124, 92, 252, 0.75)',
+        secondary:     '#f472b6',
+        secondaryFill: 'rgba(244, 114, 182, 0.1)',
+        tooltip:       '#1e1b4b',
+        textMuted:     '#6b7280',
+        gridLine:      '#f3f4f6',
     };
 
-    // ========== Data from backend ==========
-    const monthlyData = @json($doanhThuTheoThang);
-
-    // ========== Revenue & Orders Chart ==========
-    const revenueLabels = monthlyData.map(item => item.thang);
-    const revenueValues = monthlyData.map(item => item.doanh_thu / 1000000); // Convert to triệu
-    const orderValues = monthlyData.map(item => item.so_don);
+    // Dữ liệu từ backend
+    const monthlyData   = @json($doanhThuTheoThang);
+    const labels        = monthlyData.map(item => item.thang);
+    const revenueValues = monthlyData.map(item => item.doanh_thu / 1_000_000);
+    const orderValues   = monthlyData.map(item => item.so_don);
 
     const maxRevenue = Math.max(...revenueValues, 10);
-    const maxOrders = Math.max(...orderValues, 10);
+    const maxOrders  = Math.max(...orderValues, 10);
 
-    const revenueCtx = document.getElementById('revenueOrdersChart');
-    if (revenueCtx) {
-        new Chart(revenueCtx.getContext('2d'), {
-            type: 'bar',
-            data: {
-                labels: revenueLabels,
-                datasets: [
-                    {
-                        label: 'Doanh thu',
-                        data: revenueValues,
-                        backgroundColor: 'rgba(124, 92, 252, 0.75)',
-                        borderColor: '#7c5cfc',
-                        borderWidth: 1,
-                        borderRadius: 6,
-                        borderSkipped: false,
-                        yAxisID: 'y',
-                        barPercentage: 0.6,
-                        categoryPercentage: 0.7,
+    new Chart(canvas.getContext('2d'), {
+        type: 'bar',
+        data: {
+            labels,
+            datasets: [
+                {
+                    label: 'Doanh thu',
+                    data: revenueValues,
+                    backgroundColor: COLORS.primaryAlpha,
+                    borderColor: COLORS.primary,
+                    borderWidth: 1,
+                    borderRadius: 6,
+                    borderSkipped: false,
+                    yAxisID: 'y',
+                    barPercentage: 0.6,
+                    categoryPercentage: 0.7,
+                },
+                {
+                    label: 'Đơn hàng',
+                    data: orderValues,
+                    type: 'line',
+                    borderColor: COLORS.secondary,
+                    backgroundColor: COLORS.secondaryFill,
+                    borderWidth: 2.5,
+                    pointRadius: 4,
+                    pointBackgroundColor: '#fff',
+                    pointBorderColor: COLORS.secondary,
+                    pointBorderWidth: 2,
+                    tension: 0.4,
+                    fill: true,
+                    yAxisID: 'y1',
+                },
+            ],
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            interaction: { intersect: false, mode: 'index' },
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    backgroundColor: COLORS.tooltip,
+                    titleFont: { family: 'Inter', size: 12 },
+                    bodyFont:  { family: 'Inter', size: 12 },
+                    padding: 12,
+                    cornerRadius: 8,
+                    callbacks: {
+                        label(ctx) {
+                            return ctx.dataset.label === 'Doanh thu'
+                                ? ` Doanh thu: ${ctx.parsed.y.toFixed(1)}tr`
+                                : ` Đơn hàng: ${ctx.parsed.y}`;
+                        },
                     },
-                    {
-                        label: 'Đơn hàng',
-                        data: orderValues,
-                        type: 'line',
-                        borderColor: colors.secondary,
-                        backgroundColor: 'rgba(244, 114, 182, 0.1)',
-                        borderWidth: 2.5,
-                        pointRadius: 4,
-                        pointBackgroundColor: '#fff',
-                        pointBorderColor: colors.secondary,
-                        pointBorderWidth: 2,
-                        tension: 0.4,
-                        fill: true,
-                        yAxisID: 'y1',
-                    }
-                ]
+                },
             },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                interaction: {
-                    intersect: false,
-                    mode: 'index'
+            scales: {
+                x: {
+                    grid:   { display: false },
+                    ticks:  { font: { family: 'Inter', size: 12, weight: '500' }, color: COLORS.textMuted },
+                    border: { display: false },
                 },
-                plugins: {
-                    legend: { display: false },
-                    tooltip: {
-                        backgroundColor: '#1e1b4b',
-                        titleFont: { family: 'Inter', size: 12 },
-                        bodyFont: { family: 'Inter', size: 12 },
-                        padding: 12,
-                        cornerRadius: 8,
-                        callbacks: {
-                            label: function(context) {
-                                if (context.dataset.label === 'Doanh thu') {
-                                    return ' Doanh thu: ' + context.parsed.y.toFixed(1) + 'tr';
-                                }
-                                return ' Đơn hàng: ' + context.parsed.y;
-                            }
-                        }
-                    }
+                y: {
+                    position: 'left',
+                    grid:   { color: COLORS.gridLine, drawBorder: false },
+                    ticks:  {
+                        font: { family: 'Inter', size: 11 },
+                        color: COLORS.textMuted,
+                        callback: v => v + 'tr',
+                        stepSize: Math.ceil(maxRevenue / 5),
+                    },
+                    border: { display: false },
+                    beginAtZero: true,
+                    suggestedMax: Math.ceil(maxRevenue * 1.2),
                 },
-                scales: {
-                    x: {
-                        grid: { display: false },
-                        ticks: {
-                            font: { family: 'Inter', size: 12, weight: '500' },
-                            color: colors.textSecondary
-                        },
-                        border: { display: false }
+                y1: {
+                    position: 'right',
+                    grid:   { display: false },
+                    ticks:  {
+                        font: { family: 'Inter', size: 11 },
+                        color: COLORS.textMuted,
+                        stepSize: Math.ceil(maxOrders / 5),
                     },
-                    y: {
-                        position: 'left',
-                        grid: {
-                            color: colors.gridLine,
-                            drawBorder: false
-                        },
-                        ticks: {
-                            font: { family: 'Inter', size: 11 },
-                            color: colors.textSecondary,
-                            callback: function(v) { return v + 'tr'; },
-                            stepSize: Math.ceil(maxRevenue / 5)
-                        },
-                        border: { display: false },
-                        beginAtZero: true,
-                        suggestedMax: Math.ceil(maxRevenue * 1.2)
-                    },
-                    y1: {
-                        position: 'right',
-                        grid: { display: false },
-                        ticks: {
-                            font: { family: 'Inter', size: 11 },
-                            color: colors.textSecondary,
-                            stepSize: Math.ceil(maxOrders / 5)
-                        },
-                        border: { display: false },
-                        beginAtZero: true,
-                        suggestedMax: Math.ceil(maxOrders * 1.2)
-                    }
-                }
-            }
-        });
-    }
-});
+                    border: { display: false },
+                    beginAtZero: true,
+                    suggestedMax: Math.ceil(maxOrders * 1.2),
+                },
+            },
+        },
+    });
+}
 </script>
 @endsection
