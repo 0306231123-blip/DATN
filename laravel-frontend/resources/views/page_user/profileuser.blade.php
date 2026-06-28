@@ -291,7 +291,7 @@
                     productsHtml += '</div>';
 
                     // TAB LỊCH SỬ
-                    if(['giao_thanh_cong', 'da_huy', 'hoan_thanh', 'da_tra_hang'].includes(order.trang_thai_don)) {
+                    if(['giao_thanh_cong', 'da_huy', 'hoan_thanh', 'da_tra_hang', 'tu_choi_tra_hang'].includes(order.trang_thai_don)) {
                         hasHistory = true;
                         let statusColor, statusText, actionBtnHtml = '';
 
@@ -326,6 +326,11 @@
                             statusColor = 'bg-gray-100 text-gray-700 border border-gray-300';
                             statusText = 'Đã hoàn tiền / Trả hàng';
                             actionBtnHtml = `<div class="mt-4 text-center text-gray-600 font-bold w-full bg-gray-50 py-2 rounded-lg">Đơn hàng đã được trả thành công</div>`;
+                        }
+                        else if (order.trang_thai_don === 'tu_choi_tra_hang') {
+                            statusColor = 'bg-red-100 text-red-700 border border-red-300';
+                            statusText = 'Bị từ chối trả hàng';
+                            actionBtnHtml = `<div class="mt-4 text-center text-red-600 font-bold w-full bg-red-50 py-2 rounded-lg">Yêu cầu trả hàng của bạn bị từ chối vì sai quy định hoàn trả.</div>`;
                         }
 
                         htmlHistory += `
