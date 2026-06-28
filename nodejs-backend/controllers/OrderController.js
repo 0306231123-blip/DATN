@@ -37,7 +37,7 @@ exports.getAllOrders = async (req, res) => {
     }
 
     // Filter by status
-    const validStatuses = ['cho_xac_nhan', 'da_xac_nhan', 'dang_giao', 'giao_thanh_cong', 'da_huy', 'dang_tra_hang', 'da_tra_hang', 'tra_hang_hoan_tien', 'hoan_thanh'];
+    const validStatuses = ['cho_xac_nhan', 'da_xac_nhan', 'dang_giao', 'giao_thanh_cong', 'da_huy', 'dang_tra_hang', 'da_tra_hang', 'tra_hang_hoan_tien', 'hoan_thanh', 'tu_choi_tra_hang'];
     if (trang_thai && trang_thai !== 'all' && validStatuses.includes(trang_thai)) {
       where.trang_thai_don = trang_thai;
     }
@@ -121,7 +121,7 @@ exports.getOrderById = async (req, res) => {
         {
           model: NguoiDung,
           as: 'nguoi_dung',
-          attributes: ['ma_nguoi_dung', 'ho_ten', 'email', 'so_dien_thoai', 'dia_chi'],
+          attributes: ['ma_nguoi_dung', 'ho_ten', 'email', 'so_dien_thoai', 'dia_chi','ngan_hang', 'so_tai_khoan', 'chu_tai_khoan'],
           required: false,
         },
         {
@@ -170,7 +170,7 @@ exports.getOrderById = async (req, res) => {
 exports.updateOrderStatus = async (req, res) => {
   try {
     const { id } = req.params;
-    const { trang_thai_don } = req.body;
+    const { trang_thai_don, ly_do_tu_choi_tra } = req.body;
 
     const orderId = parseInt(id);
     if (isNaN(orderId) || orderId <= 0) {
@@ -180,7 +180,7 @@ exports.updateOrderStatus = async (req, res) => {
       });
     }
 
-    const validStatuses = ['cho_xac_nhan', 'da_xac_nhan', 'dang_giao', 'giao_thanh_cong', 'da_huy', 'dang_tra_hang', 'da_tra_hang', 'tra_hang_hoan_tien', 'hoan_thanh'];
+    const validStatuses = ['cho_xac_nhan', 'da_xac_nhan', 'dang_giao', 'giao_thanh_cong', 'da_huy', 'dang_tra_hang', 'da_tra_hang', 'tra_hang_hoan_tien', 'hoan_thanh', 'tu_choi_tra_hang'];
     if (!trang_thai_don || !validStatuses.includes(trang_thai_don)) {
       return res.status(400).json({
         status: 'error',
@@ -223,10 +223,18 @@ exports.updateOrderStatus = async (req, res) => {
     }
     // ============================================================
 
-    await order.update({
-      trang_thai_don,
-      ngay_cap_nhat: new Date(),
-    });
+    // CHỖ NÀY: Thay đoạn order.update cũ bằng đoạn này
+    const updateData = {
+        trang_thai_don,
+        ngay_cap_nhat: new Date()
+    };
+
+    // Nếu là từ chối trả hàng thì mới thêm lý do vào dữ liệu update
+    if (trang_thai_don === 'tu_choi_tra_hang') {
+        updateData.ly_do_tu_choi_tra = ly_do_tu_choi_tra;
+    }
+
+    await order.update(updateData);
 
     // Nếu Admin chủ động đổi sang 'dang_tra_hang' qua combobox mà chưa có request, tạo dummy request
     if (trang_thai_don === 'dang_tra_hang') {
@@ -271,7 +279,7 @@ exports.getOrderStats = async (req, res) => {
     const daHuy = await DonHang.count({ where: { trang_thai_don: 'da_huy' } });
     const dangTraHang = await DonHang.count({ where: { trang_thai_don: 'dang_tra_hang' } });
     const daTraHang = await DonHang.count({ where: { trang_thai_don: 'da_tra_hang' } });
-
+    const tuChoiTraHang = await DonHang.count({ where: { trang_thai_don: 'tu_choi_tra_hang' } });
     // Total revenue (completed orders only)
     const [revenueResult] = await sequelize.query(
       `SELECT COALESCE(SUM(tong_thanh_toan), 0) AS tong_doanh_thu 
@@ -302,6 +310,7 @@ exports.getOrderStats = async (req, res) => {
         da_huy: daHuy,
         dang_tra_hang: dangTraHang,
         da_tra_hang: daTraHang,
+        tu_choi_tra_hang: tuChoiTraHang,
         tong_doanh_thu: Number(revenueResult.tong_doanh_thu),
         don_thang_nay: Number(monthResult.don_thang_nay),
         doanh_thu_thang: Number(monthResult.doanh_thu_thang),

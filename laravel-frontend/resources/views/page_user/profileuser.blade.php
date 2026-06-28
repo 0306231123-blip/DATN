@@ -371,8 +371,13 @@
                             activeStatusColor = 'bg-orange-100 text-orange-700 border border-orange-300'; 
                             actionBtnHtml = `<div class="mt-4 text-sm text-left text-orange-600 bg-orange-50 p-3 rounded-lg w-full">Shop đang xử lý yêu cầu trả hàng của bạn.</div>`;
                         }
-
-                        htmlOrders += `
+                        // Thêm đoạn này vào:
+                        else if (order.trang_thai_don === 'tu_choi_tra_hang') {
+                            activeStatusText = 'Bị từ chối trả hàng';
+                            activeStatusColor = 'bg-red-100 text-red-700 border border-red-300';
+                            actionBtnHtml = `<div class="mt-4 text-sm text-left text-red-600 bg-red-50 p-3 rounded-lg w-full border border-red-200">Yêu cầu trả hàng của bạn đã bị từ chối vì lý do sai quy định hoàn trả.</div>`;
+                        }
+                            htmlOrders += `
                             <div class="border border-gray-200 p-6 rounded-2xl flex flex-col bg-white shadow-sm mb-4">
                                 <div class="flex justify-between items-center mb-4">
                                     <p class="font-black text-gray-800 text-lg">Đơn hàng #${order.ma_don_hang}</p>
@@ -440,6 +445,11 @@ function closeRefundModal() {
 
 // HÀM MỚI: Xử lý nút "Xác nhận gửi" trong Modal
 function submitRefundRequest() {
+    const isAgree = document.getElementById('refund-agree').checked;
+    if (!isAgree) {
+        alert("Vui lòng đọc Quy định đổi trả và tích vào ô cam kết trước khi gửi yêu cầu!");
+        return;
+    }
     const maDonHang = document.getElementById('refund-order-id').value;
     const nganHang = document.getElementById('refund-bank').value;
     const soTaiKhoan = document.getElementById('refund-account').value;
@@ -493,19 +503,18 @@ async function callUpdateStatusAPI(maDonHang, trangThaiMoi, lyDoTra, lyDoHuy, ng
 </script>
 <div id="refund-modal" class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center z-50 transition-opacity">
     <div class="bg-white rounded-2xl w-full max-w-md p-6 shadow-2xl relative transform transition-all">
-        <h3 class="text-xl font-black text-gray-800 mb-2 border-b pb-3 uppercase">Yêu cầu hoàn tiền</h3>
+        <h3 class="text-xl font-black text-gray-800 mb-2 border-b pb-3 uppercase">Yêu cầu hoàn trả</h3>
         <p class="text-xs text-red-500 mb-4 font-semibold italic">* Vui lòng nhập thông tin để Admin đối chiếu với hồ sơ gốc nhằm bảo vệ tài sản của bạn.</p>
 
         <input type="hidden" id="refund-order-id">
 
-        <div class="space-y-4">
+        <div class="space-y-3">
             <div>
-                <label class="text-sm font-bold text-gray-700">Ngân hàng thụ hưởng:</label>
-                <input type="text" id="refund-bank" class="w-full border border-gray-300 rounded-lg px-3 py-2 mt-1 focus:ring-2 focus:ring-pink-500 focus:outline-none" placeholder="VD: Vietcombank, MB Bank...">
-            </div>
-            <div>
-                <label class="text-sm font-bold text-gray-700">Số tài khoản:</label>
-                <input type="number" id="refund-account" class="w-full border border-gray-300 rounded-lg px-3 py-2 mt-1 focus:ring-2 focus:ring-pink-500 focus:outline-none" placeholder="Nhập số tài khoản...">
+                <label class="text-sm font-bold text-gray-700">Ngân hàng & Số tài khoản:</label>
+                <div class="flex space-x-2 mt-1">
+                    <input type="text" id="refund-bank" class="w-1/3 border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-pink-500 focus:outline-none" placeholder="Ngân hàng">
+                    <input type="number" id="refund-account" class="w-2/3 border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-pink-500 focus:outline-none" placeholder="Số tài khoản">
+                </div>
             </div>
             <div>
                 <label class="text-sm font-bold text-gray-700">Chủ tài khoản:</label>
@@ -514,6 +523,19 @@ async function callUpdateStatusAPI(maDonHang, trangThaiMoi, lyDoTra, lyDoHuy, ng
             <div>
                 <label class="text-sm font-bold text-gray-700">Lý do trả hàng:</label>
                 <textarea id="refund-reason" class="w-full border border-gray-300 rounded-lg px-3 py-2 mt-1 focus:ring-2 focus:ring-pink-500 focus:outline-none" rows="2" placeholder="Ví dụ: Sản phẩm bị tràn, vỡ..."></textarea>
+            </div>
+
+            <div class="bg-red-50 border border-red-100 rounded-lg p-3 mt-4 text-sm text-gray-700 shadow-inner">
+                <p class="font-black text-red-600 mb-1">📜 QUY ĐỊNH ĐỔI TRẢ CỦA SHOP:</p>
+                <ul class="list-disc pl-5 space-y-1 text-xs text-red-800 font-medium">
+                    <li>Sản phẩm còn nguyên tem mác, hộp, chưa qua sử dụng.</li>
+                    <li>Yêu cầu tạo trong vòng 3 ngày kể từ khi nhận hàng.</li>
+                    <li><b>Shop có quyền từ chối</b> nếu không đáp ứng các điều kiện trên!</li>
+                </ul>
+                <label class="flex items-center mt-3 cursor-pointer">
+                    <input type="checkbox" id="refund-agree" class="w-4 h-4 text-pink-600 focus:ring-pink-500 border-red-300 rounded">
+                    <span class="ml-2 text-xs font-bold text-red-600 uppercase">Tôi đã đọc và cam kết đáp ứng đủ điều kiện</span>
+                </label>
             </div>
         </div>
 

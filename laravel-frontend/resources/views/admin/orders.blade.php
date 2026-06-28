@@ -8,10 +8,8 @@
 @section('styles')
 <link rel="stylesheet" href="{{ asset('css/admin-orders.css') }}">
 @endsection
-<!-- Action Bar -->
 <div class="page-action-bar" id="orders-action-bar">
     <div class="action-bar-left">
-        <!-- Status Tabs -->
         <div class="status-tabs" id="order-status-tabs">
             <button class="status-tab active" data-status="all" id="tab-all">
                 <span>Tất cả</span>
@@ -41,6 +39,10 @@
                 <span>Yêu cầu trả</span>
                 <span class="tab-count" id="count-dang_tra_hang">0</span>
             </button>
+            <button class="status-tab" data-status="tu_choi_tra_hang" id="tab-rejected">
+                <span>Từ chối trả</span>
+                <span class="tab-count" id="count-tu_choi_tra_hang">0</span>
+            </button>
             <button class="status-tab" data-status="da_tra_hang" id="tab-returned">
                 <span>Đã trả hàng</span>
                 <span class="tab-count" id="count-da_tra_hang">0</span>
@@ -55,7 +57,6 @@
     </div>
 </div>
 
-<!-- Orders Table -->
 <div class="data-card" id="orders-table-card">
     <div class="table-wrapper">
         <table class="admin-table" id="orders-table">
@@ -80,11 +81,9 @@
         </table>
     </div>
 
-    <!-- Pagination -->
     <div class="pagination-wrapper" id="orders-pagination"></div>
 </div>
 
-<!-- Modal Chi Tiết Đơn Hàng -->
 <div class="modal" id="modal-order-detail" style="display: none;">
     <div class="modal-content modal-content--lg">
         <div class="modal-header">
@@ -97,7 +96,6 @@
     </div>
 </div>
 
-<!-- Modal Overlay -->
 <div class="modal-overlay" id="modal-overlay" style="display: none;"></div>
 
 @endsection
@@ -152,6 +150,7 @@ async function loadStats() {
             document.getElementById('count-da_huy').textContent = s.da_huy;
             document.getElementById('count-dang_tra_hang').textContent = s.dang_tra_hang || 0;
             document.getElementById('count-da_tra_hang').textContent = s.da_tra_hang || 0;
+            document.getElementById('count-tu_choi_tra_hang').textContent = s.tu_choi_tra_hang || 0; // ĐÃ THÊM
 
             const summaryText = `${s.total} đơn · tháng ${new Date().getMonth() + 1}/${new Date().getFullYear()}`;
             const pageSubtitle = document.getElementById('page-subtitle');
@@ -198,6 +197,7 @@ function renderTable(orders) {
                         <option value="da_huy" ${order.trang_thai_don === 'da_huy' ? 'selected' : ''}>Đã hủy</option>
                         <option value="dang_tra_hang" ${order.trang_thai_don === 'dang_tra_hang' ? 'selected' : ''}>Yêu cầu trả</option>
                         <option value="da_tra_hang" ${order.trang_thai_don === 'da_tra_hang' ? 'selected' : ''}>Đã trả hàng</option>
+                        <option value="tu_choi_tra_hang" ${order.trang_thai_don === 'tu_choi_tra_hang' ? 'selected' : ''}>Từ chối trả</option>
                     </select>
                 </td>
                 <td><span class="text-secondary">${dateFormatted}</span></td>
@@ -233,14 +233,57 @@ function getActionButtons(order) {
 async function updateStatus(orderId, selectElement, oldStatus) {
     const newStatus = selectElement.value;
     
-    // Tìm label của newStatus để hiển thị confirm
+    // ĐÃ THÊM: LOGIC TỪ CHỐI TRẢ HÀNG CÓ CẢNH BÁO
+    if (newStatus === 'tu_choi_tra_hang') {
+        const confirmResult = await window.showCustomDialog({
+            title: 'Từ chối trả hàng',
+            message: 'Bạn có chắc chắn muốn TỪ CHỐI yêu cầu trả hàng này?\nHệ thống sẽ tự động gửi thông báo vi phạm quy định cho khách.',
+            isPrompt: false
+        });
+
+        if (!confirmResult) {
+            selectElement.value = oldStatus; 
+            return;
+        }
+
+        const lyDoMacDinh = "Yêu cầu trả hàng không đáp ứng đủ các điều kiện/quy định đổi trả của Shop (thiếu video, đã bóc tem, hoặc quá hạn).";
+
+        try {
+            const response = await fetch(`${API_BASE_URL}/orders/${orderId}/status`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ 
+                    trang_thai_don: newStatus,
+                    ly_do_tu_choi_tra: lyDoMacDinh
+                }),
+            });
+            const result = await response.json();
+
+            if (result.status === 'success') {
+                showAlert(result.message || 'Cập nhật thành công', 'success');
+                loadOrders(document.getElementById('order-search-input').value, currentStatus, currentPage);
+                loadStats();
+            } else {
+                showAlert(result.message || 'Lỗi khi cập nhật', 'error');
+                selectElement.value = oldStatus;
+            }
+        } catch (error) {
+            console.error('Error updating status:', error);
+            showAlert('Lỗi khi kết nối đến server', 'error');
+            selectElement.value = oldStatus;
+        }
+        return; 
+    }
+
+    // Các trạng thái khác
     const statusOptions = {
         'cho_xac_nhan': 'Chờ xác nhận',
         'da_xac_nhan': 'Đã xác nhận',
         'dang_giao': 'Đang giao',
         'giao_thanh_cong': 'Giao thành công',
         'hoan_thanh': 'Hoàn thành',
-        'da_huy': 'Đã hủy'
+        'da_huy': 'Đã hủy',
+        'da_tra_hang': 'Đã trả hàng'
     };
     const label = statusOptions[newStatus] || newStatus;
 
@@ -250,7 +293,7 @@ async function updateStatus(orderId, selectElement, oldStatus) {
         isPrompt: false
     });
     if (!confirmResult) {
-        selectElement.value = oldStatus; // Revert nếu cancel
+        selectElement.value = oldStatus; 
         return;
     }
 
@@ -268,12 +311,12 @@ async function updateStatus(orderId, selectElement, oldStatus) {
             loadStats();
         } else {
             showAlert(result.message || 'Lỗi khi cập nhật', 'error');
-            selectElement.value = oldStatus; // Revert
+            selectElement.value = oldStatus; 
         }
     } catch (error) {
         console.error('Error updating status:', error);
         showAlert('Lỗi khi kết nối đến server', 'error');
-        selectElement.value = oldStatus; // Revert
+        selectElement.value = oldStatus; 
     }
 }
 
@@ -308,7 +351,7 @@ async function handleReturn(returnId, status) {
     }
 }
 
-// ========== View Order Detail ==========
+// ========== View Order Detail (ĐÃ CẬP NHẬT LÝ DO & NGÂN HÀNG) ==========
 async function viewOrderDetail(orderId) {
     try {
         document.getElementById('modal-order-detail').style.display = 'block';
@@ -329,47 +372,80 @@ async function viewOrderDetail(orderId) {
             document.getElementById('modal-order-title').textContent =
                 `Đơn hàng #DH${String(order.ma_don_hang).padStart(4, '0')}`;
 
-            let detailsHTML = `
-                <div class="order-info-grid">
-                    <div class="order-info-section">
-                        <h4>Thông tin khách hàng</h4>
-                        <p><strong>Tên:</strong> ${escapeHtml(customerName)}</p>
-                        ${customerEmail ? `<p><strong>Email:</strong> ${escapeHtml(customerEmail)}</p>` : ''}
-                        ${customerPhone ? `<p><strong>SĐT:</strong> ${escapeHtml(customerPhone)}</p>` : ''}
-                        ${order.dia_chi_giao ? `<p><strong>Địa chỉ:</strong> ${escapeHtml(order.dia_chi_giao)}</p>` : ''}
-                    </div>
-                    <div class="order-info-section">
-                        <h4>Thông tin đơn hàng</h4>
-                        <p><strong>Trạng thái:</strong> <span class="status-badge ${statusInfo.class}">${statusInfo.label}</span></p>
-                        <p><strong>Ngày đặt:</strong> ${formatDate(order.ngay_dat)}</p>
-                        <p><strong>Tổng tiền:</strong> <span class="text-bold" style="color: #7c5cfc;">${formatCurrency(order.tong_thanh_toan)}</span></p>
-                        ${order.ghi_chu ? `<p><strong>Ghi chú:</strong> ${escapeHtml(order.ghi_chu)}</p>` : ''}
-                    </div>
-                </div>
-            `;
+            // Tìm đoạn hiển thị thông tin ngân hàng trong hàm viewOrderDetail
+// Sửa thành như thế này:
 
-            if (order.yeu_cau_tra_hang) {
-                const req = order.yeu_cau_tra_hang;
-                let imagesList = [];
-                try {
-                    imagesList = Array.isArray(req.hinh_anh_bang_chung) ? req.hinh_anh_bang_chung : JSON.parse(req.hinh_anh_bang_chung || '[]');
-                } catch (e) {
-                    console.error('Lỗi parse hình ảnh:', e);
-                }
+const userInfo = order.nguoi_dung || {}; // Lấy thông tin user
+let detailsHTML = `
+    <div class="order-info-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+        <div class="order-info-section">
+            <h4>Thông tin khách hàng</h4>
+            <p><strong>Tên:</strong> ${escapeHtml(customerName)}</p>
+            <p><strong>SĐT:</strong> ${escapeHtml(customerPhone)}</p>
+            
+            <div class="bank-info-box" style="margin-top: 10px; padding: 10px; background: #f8f9fa; border-radius: 8px; border: 1px solid #eee;">
+                <p style="font-size: 0.85rem; color: #666; margin-bottom: 5px;"><i>Thông tin ngân hàng (từ Profile):</i></p>
+                <p><strong>Ngân hàng:</strong> ${userInfo.ngan_hang || 'Chưa cập nhật'}</p>
+                <p><strong>Số TK:</strong> ${userInfo.so_tai_khoan || 'Chưa cập nhật'}</p>
+                <p><strong>Chủ TK:</strong> ${userInfo.chu_tai_khoan || 'Chưa cập nhật'}</p>
+            </div>
+        </div>
+        
+        <div class="order-info-section">
+            <h4>Thông tin đơn hàng</h4>
+            <p><strong>Trạng thái:</strong> <span class="status-badge ${statusInfo.class}">${statusInfo.label}</span></p>
+            <p><strong>Ngày đặt:</strong> ${formatDate(order.ngay_dat)}</p>
+            <p><strong>Tổng tiền:</strong> <span class="text-bold" style="color: #7c5cfc;">${formatCurrency(order.tong_thanh_toan)}</span></p>
+            ${order.ghi_chu ? `<p><strong>Ghi chú:</strong> ${escapeHtml(order.ghi_chu)}</p>` : ''}
+        </div>
+    </div>
+`;
 
-                const imagesHtml = imagesList.length > 0 ? 
-                    imagesList.map(url => `<a href="${url}" target="_blank"><img src="${url}" style="width:60px; height:60px; object-fit:cover; margin-right:5px; border-radius:4px; border:1px solid #ddd;"></a>`).join('')
-                    : 'Không có hình ảnh';
-
+            // THÔNG TIN NGÂN HÀNG HOÀN TIỀN
+            if (order.ngan_hang_hoan_tien || order.stk_hoan_tien) {
                 detailsHTML += `
-                    <h4 style="margin-top: 20px; margin-bottom: 10px; color: #e11d48;"><i data-lucide="alert-triangle" class="icon-xs"></i> Thông tin Hoàn trả</h4>
-                    <div class="order-info-section" style="background-color: #fff1f2; border: 1px solid #fecdd3; border-radius: 8px; padding: 15px;">
-                        <p><strong>Lý do:</strong> ${escapeHtml(req.ly_do)}</p>
-                        ${req.ghi_chu_khach_hang ? `<p><strong>Ghi chú của khách:</strong> ${escapeHtml(req.ghi_chu_khach_hang)}</p>` : ''}
-                        <p><strong>Bằng chứng:</strong></p>
-                        <div style="margin-top: 5px;">${imagesHtml}</div>
+                    <h4 style="margin-top: 20px; margin-bottom: 10px; color: #0369a1;"><i data-lucide="credit-card" class="icon-xs"></i> Thông tin Nhận tiền hoàn (Khách nhập)</h4>
+                    <div class="order-info-section" style="background-color: #f0f9ff; border: 1px solid #bae6fd; border-radius: 8px; padding: 15px;">
+                        <p><strong>Ngân hàng:</strong> ${escapeHtml(order.ngan_hang_hoan_tien)}</p>
+                        <p><strong>Số tài khoản:</strong> <span class="text-bold">${escapeHtml(order.stk_hoan_tien)}</span></p>
+                        <p><strong>Chủ tài khoản:</strong> <span style="text-transform: uppercase;">${escapeHtml(order.chu_tk_hoan_tien)}</span></p>
                     </div>
                 `;
+            }
+
+            // THÔNG TIN TRẢ HÀNG & LÝ DO TỪ CHỐI
+            const lyDoTraHang = order.ly_do_tra_hang || (order.yeu_cau_tra_hang ? order.yeu_cau_tra_hang.ly_do : null);
+            if (lyDoTraHang || order.yeu_cau_tra_hang || order.trang_thai_don === 'tu_choi_tra_hang') {
+                detailsHTML += `<h4 style="margin-top: 20px; margin-bottom: 10px; color: #e11d48;"><i data-lucide="alert-triangle" class="icon-xs"></i> Thông tin Trả hàng</h4>`;
+                detailsHTML += `<div class="order-info-section" style="background-color: #fff1f2; border: 1px solid #fecdd3; border-radius: 8px; padding: 15px;">`;
+                
+                if (lyDoTraHang) {
+                    detailsHTML += `<p><strong>Khách báo lỗi:</strong> ${escapeHtml(lyDoTraHang)}</p>`;
+                }
+
+                // Nếu có hình ảnh bằng chứng (từ bảng yeu_cau_tra_hang cũ)
+                if (order.yeu_cau_tra_hang && order.yeu_cau_tra_hang.hinh_anh_bang_chung) {
+                    let imagesList = [];
+                    try {
+                        imagesList = Array.isArray(order.yeu_cau_tra_hang.hinh_anh_bang_chung) 
+                            ? order.yeu_cau_tra_hang.hinh_anh_bang_chung 
+                            : JSON.parse(order.yeu_cau_tra_hang.hinh_anh_bang_chung);
+                        
+                        if (imagesList.length > 0) {
+                            const imagesHtml = imagesList.map(url => `<a href="${url}" target="_blank"><img src="${url}" style="width:60px; height:60px; object-fit:cover; margin-right:5px; border-radius:4px; border:1px solid #ddd;"></a>`).join('');
+                            detailsHTML += `<p><strong>Bằng chứng:</strong></p><div style="margin-top: 5px;">${imagesHtml}</div>`;
+                        }
+                    } catch (e) { }
+                }
+
+                // Nếu đơn bị từ chối, hiện lý do của Admin
+                if (order.ly_do_tu_choi_tra) {
+                    detailsHTML += `<div style="margin-top: 10px; padding-top: 10px; border-top: 1px dashed #fca5a5;">
+                        <p style="color: #991b1b;"><strong>Lý do từ chối (Admin):</strong> ${escapeHtml(order.ly_do_tu_choi_tra)}</p>
+                    </div>`;
+                }
+                
+                detailsHTML += `</div>`;
             }
 
             if (order.chi_tiet && order.chi_tiet.length > 0) {
@@ -405,6 +481,7 @@ async function viewOrderDetail(orderId) {
             }
 
             document.getElementById('order-detail-body').innerHTML = detailsHTML;
+            setTimeout(() => { if (window.lucide) lucide.createIcons(); }, 100);
         } else {
             document.getElementById('order-detail-body').innerHTML = '<p style="color: red;">Lỗi khi tải chi tiết đơn hàng</p>';
         }
@@ -458,6 +535,7 @@ function getStatusInfo(status) {
         'da_huy': { label: 'Đã hủy', class: 'status-badge--danger' },
         'dang_tra_hang': { label: 'Yêu cầu trả', class: 'status-badge--warning' },
         'da_tra_hang': { label: 'Đã trả hàng', class: 'status-badge--secondary' },
+        'tu_choi_tra_hang': { label: 'Từ chối trả', class: 'status-badge--danger' } // ĐÃ THÊM
     };
     return map[status] || { label: status, class: '' };
 }

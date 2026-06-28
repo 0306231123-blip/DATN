@@ -179,6 +179,7 @@ router.post('/update-status', async (req, res) => {
             }, { transaction: t });
 
             // 2. LƯU THÔNG TIN ĐỐI CHIẾU TRỰC TIẾP VÀO BẢNG DON_HANG
+            donHang.ly_do_tra_hang = ly_do_tra_hang;
             donHang.ngan_hang_hoan_tien = ngan_hang_hoan_tien;
             donHang.stk_hoan_tien = stk_hoan_tien;
             donHang.chu_tk_hoan_tien = chu_tk_hoan_tien;
