@@ -20,6 +20,7 @@
 
     <link rel="stylesheet" href="{{ asset('css/admin.css') }}">
     <link rel="stylesheet" href="{{ asset('css/admin-components.css') }}">
+    <link rel="stylesheet" href="{{ asset('css/admin-dashboard.css') }}">
     @yield('styles')
 
     <!-- Kiểm tra quyền truy cập Admin -->

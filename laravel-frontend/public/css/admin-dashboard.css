@@ -1,0 +1,250 @@
+/* admin-dashboard.css - Shopee Seller Center Style Dashboard */
+
+.dashboard-container {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    padding-bottom: 24px;
+}
+
+/* Section Title */
+.section-title {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--text-color);
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.dashboard-card {
+    background: var(--bg-card);
+    border-radius: 8px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    border: 1px solid var(--border-color);
+    padding: 20px;
+}
+
+/* 1. Việc Cần Làm (To-Do List) */
+.todo-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+    text-align: center;
+}
+
+.todo-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 12px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+    border-radius: 6px;
+    text-decoration: none;
+}
+
+.todo-item:hover {
+    background-color: var(--bg-hover);
+}
+
+.todo-number {
+    font-size: 1.75rem;
+    font-weight: 700;
+    color: var(--primary-color);
+    margin-bottom: 4px;
+    line-height: 1;
+}
+
+.todo-label {
+    font-size: 0.9rem;
+    color: var(--text-color);
+    font-weight: 500;
+}
+
+/* 2. Phân Tích Bán Hàng */
+.analytics-layout {
+    display: flex;
+    gap: 24px;
+}
+
+.analytics-stats {
+    flex: 0 0 280px;
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    grid-auto-rows: min-content;
+    gap: 12px;
+    align-content: center;
+}
+
+.analytics-chart-area {
+    flex: 1;
+    min-width: 0;
+    height: 280px;
+    position: relative;
+}
+
+.stat-box {
+    display: flex;
+    flex-direction: column;
+    padding: 16px;
+    background: var(--bg-hover);
+    border-radius: 6px;
+}
+
+.stat-box-title {
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    margin-bottom: 8px;
+    font-weight: 500;
+}
+
+.stat-box-value {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--text-color);
+}
+
+/* 3. Hiệu Quả Hoạt Động & Insights */
+.insights-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+}
+
+.insight-card {
+    height: 100%;
+}
+
+.chart-wrapper {
+    position: relative;
+    height: 300px;
+    width: 100%;
+}
+
+.top-products-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-top: 16px;
+}
+
+.top-product-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.top-product-item:last-child {
+    border-bottom: none;
+    padding-bottom: 0;
+}
+
+.tp-rank {
+    width: 24px;
+    height: 24px;
+    background: var(--bg-hover);
+    color: var(--text-color);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.8rem;
+    font-weight: 600;
+}
+
+.tp-rank.top-1 { background: #ef4444; color: white; }
+.tp-rank.top-2 { background: #f97316; color: white; }
+.tp-rank.top-3 { background: #eab308; color: white; }
+
+.tp-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.tp-name {
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: var(--text-color);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: block;
+}
+
+.tp-sales {
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    margin-top: 2px;
+}
+
+.tp-value {
+    font-weight: 600;
+    color: var(--text-color);
+}
+
+/* Recent Orders Minimal Table */
+.recent-orders-minimal {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 12px;
+}
+
+.recent-orders-minimal th {
+    text-align: left;
+    padding: 8px 12px;
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    font-weight: 500;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.recent-orders-minimal td {
+    padding: 12px;
+    font-size: 0.9rem;
+    color: var(--text-color);
+    border-bottom: 1px solid var(--border-color);
+}
+
+.recent-orders-minimal tr:last-child td {
+    border-bottom: none;
+}
+
+.ro-id {
+    font-weight: 500;
+    color: var(--primary-color);
+}
+
+/* Responsive */
+@media (max-width: 1024px) {
+    .analytics-layout {
+        flex-direction: column;
+    }
+    
+    .analytics-stats {
+        flex: auto;
+        grid-template-columns: repeat(4, 1fr);
+    }
+
+    .analytics-chart-area {
+        height: 250px;
+    }
+    
+    .insights-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 768px) {
+    .todo-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    
+    .analytics-stats {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}

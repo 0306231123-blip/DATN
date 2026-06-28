@@ -11,7 +11,9 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware) {
-        //
+        $middleware->encryptCookies(except: [
+            'token',
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {
         //
