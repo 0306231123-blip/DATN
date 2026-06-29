@@ -1,6 +1,7 @@
 const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
+const verifyToken = require('./middleware/authMiddleware');
 require('dotenv').config();
 
 const sequelize = require('./config/database');
@@ -35,8 +36,8 @@ app.get('/', (req, res) => {
 });
 
 app.use('/api/auth', authRoutes);
-app.use('/api/cart', cartRoutes);
-app.use('/api/order', myOrderRoutes);
+app.use('/api/cart',verifyToken, cartRoutes);
+app.use('/api/order',verifyToken, myOrderRoutes);
 app.use('/api/dashboard', dashboardRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/reviews', reviewRoutes);
