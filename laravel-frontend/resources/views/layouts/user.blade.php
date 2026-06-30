@@ -7,6 +7,8 @@
     <title>@yield('title', 'Trang chủ - Hệ thống Mỹ Phẩm')</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css" />
     <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="{{ asset('css/user.css') }}">
+    @yield('styles')
 </head>
 <body class="bg-white flex flex-col min-h-screen">
 

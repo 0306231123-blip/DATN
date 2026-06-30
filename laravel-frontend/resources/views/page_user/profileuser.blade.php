@@ -1,56 +1,64 @@
 @extends('layouts.user')
 @section('title', 'Trang cá nhân')
+
+@section('styles')
+<link rel="stylesheet" href="{{ asset('css/user-profile.css') }}">
+@endsection
+
 @section('content')
-<section class="bg-[#fcfdf2] py-12 px-8 min-h-screen">
-    <div class="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-10">
+<section class="user-section">
+    <div class="profile-grid">
         
-        <div class="col-span-1 flex flex-col items-center space-y-6">
-            <div class="w-32 h-32 bg-transparent border-4 border-gray-800 rounded-full flex flex-col items-center justify-end overflow-hidden">
-                <div class="w-12 h-12 bg-gray-800 rounded-full mb-1"></div>
-                <div class="w-24 h-12 bg-gray-800 rounded-t-full"></div>
+        {{-- Sidebar --}}
+        <div class="profile-sidebar">
+            <div class="profile-avatar">
+                <div class="profile-avatar__head"></div>
+                <div class="profile-avatar__body"></div>
             </div>
 
-            <div id="sidebar-name" class="bg-white px-8 py-3 rounded-xl shadow-sm text-center font-bold text-gray-700 w-full">Đang tải...</div>
+            <div id="sidebar-name" class="profile-name">Đang tải...</div>
             
-            <button id="btn-info" onclick="switchTab('info')" class="tab-btn border-2 border-gray-800 bg-white hover:bg-gray-50 px-8 py-3 rounded-xl shadow-sm text-center font-bold text-gray-700 w-full transition">
+            <button id="btn-info" onclick="switchTab('info')" class="tab-btn profile-tab-btn profile-tab-btn--active">
                 Quản lý thông tin
             </button>
             
-            <button id="btn-history" onclick="switchTab('history')" class="tab-btn border-2 border-transparent bg-white hover:bg-gray-50 px-8 py-3 rounded-xl shadow-sm text-center font-bold text-gray-700 w-full transition">
+            <button id="btn-history" onclick="switchTab('history')" class="tab-btn profile-tab-btn">
                 Lịch sử mua hàng
             </button>
             
-            <button id="btn-orders" onclick="switchTab('orders')" class="tab-btn border-2 border-transparent bg-white hover:bg-gray-50 px-8 py-3 rounded-xl shadow-sm text-center font-bold text-gray-700 w-full transition">
+            <button id="btn-orders" onclick="switchTab('orders')" class="tab-btn profile-tab-btn">
                 Quản lý đơn hàng
             </button>
         </div>
 
-        <div class="col-span-2 bg-gray-200 rounded-3xl shadow-inner min-h-[500px] p-8 relative">
+        {{-- Content Area --}}
+        <div class="profile-content">
             
-            <div id="tab-info" class="tab-content block">
-                <h2 class="text-2xl font-black text-gray-800 mb-6 border-b-2 border-gray-300 pb-4 uppercase tracking-wider">Cập nhật thông tin</h2>
+            {{-- Tab: Thông tin --}}
+            <div id="tab-info" class="tab-content profile-tab profile-tab--active">
+                <h2 class="profile-tab__title">Cập nhật thông tin</h2>
                 
-                <form id="update-profile-form" class="bg-white p-8 rounded-2xl shadow-sm space-y-5 text-gray-700">
+                <form id="update-profile-form" class="profile-form">
                     
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div class="flex flex-col">
-                            <label class="font-bold mb-2">Họ và tên</label>
-                            <input type="text" id="input-name" class="px-4 py-2 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-800" required>
+                    <div class="profile-form__grid">
+                        <div class="profile-form__group">
+                            <label class="profile-form__label">Họ và tên</label>
+                            <input type="text" id="input-name" class="profile-form__input" required>
                         </div>
 
-                        <div class="flex flex-col">
-                            <label class="font-bold mb-2">Email</label>
-                            <input type="email" id="input-email" class="px-4 py-2 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-800 bg-gray-50 text-gray-500 cursor-not-allowed" readonly title="Email không thể thay đổi">
+                        <div class="profile-form__group">
+                            <label class="profile-form__label">Email</label>
+                            <input type="email" id="input-email" class="profile-form__input profile-form__input--readonly" readonly title="Email không thể thay đổi">
                         </div>
 
-                        <div class="flex flex-col">
-                            <label class="font-bold mb-2">Số điện thoại</label>
-                            <input type="text" id="input-phone" class="px-4 py-2 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-800" placeholder="VD: 0912345678">
+                        <div class="profile-form__group">
+                            <label class="profile-form__label">Số điện thoại</label>
+                            <input type="text" id="input-phone" class="profile-form__input" placeholder="VD: 0912345678">
                         </div>
 
-                        <div class="flex flex-col">
-                            <label class="font-bold mb-2 text-pink-600">Loại da của bạn</label>
-                            <select id="input-skin-type" class="px-4 py-2 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-pink-500 text-gray-700">
+                        <div class="profile-form__group">
+                            <label class="profile-form__label profile-form__label--pink">Loại da của bạn</label>
+                            <select id="input-skin-type" class="profile-form__select profile-form__input--pink-focus">
                                 <option value="">-- Chưa xác định --</option>
                                 <option value="da_dau">Da dầu</option>
                                 <option value="da_kho">Da khô</option>
@@ -61,56 +69,58 @@
                         </div>
                     </div>
 
-                    <div class="flex flex-col">
-                        <label class="font-bold mb-2">Địa chỉ giao hàng</label>
-                        <input type="text" id="input-address" class="px-4 py-2 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-800" placeholder="Số nhà, Tên đường, Phường/Xã...">
+                    <div class="profile-form__group">
+                        <label class="profile-form__label">Địa chỉ giao hàng</label>
+                        <input type="text" id="input-address" class="profile-form__input" placeholder="Số nhà, Tên đường, Phường/Xã...">
                     </div>
 
-                    <div class="pt-6 mt-6 border-t border-gray-200">
-                        <h3 class="text-lg font-bold text-gray-800 mb-4 flex items-center">
-                            <span class="mr-2 text-2xl">💳</span> Thông tin nhận tiền hoàn
+                    <div class="profile-bank-section">
+                        <h3 class="profile-bank-section__title">
+                            <span class="profile-bank-section__title-icon">💳</span> Thông tin nhận tiền hoàn
                         </h3>
-                        <p class="text-sm text-gray-500 mb-4">Cập nhật sẵn tài khoản ngân hàng để quá trình hoàn tiền (nếu có) diễn ra nhanh chóng.</p>
+                        <p class="profile-bank-section__hint">Cập nhật sẵn tài khoản ngân hàng để quá trình hoàn tiền (nếu có) diễn ra nhanh chóng.</p>
                         
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <div class="flex flex-col">
-                                <label class="font-bold mb-2">Ngân hàng</label>
-                                <input type="text" id="input-bank-name" class="px-4 py-2 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-800" placeholder="VD: Vietcombank, MB Bank...">
+                        <div class="profile-form__grid">
+                            <div class="profile-form__group">
+                                <label class="profile-form__label">Ngân hàng</label>
+                                <input type="text" id="input-bank-name" class="profile-form__input" placeholder="VD: Vietcombank, MB Bank...">
                             </div>
-                            <div class="flex flex-col">
-                                <label class="font-bold mb-2">Số tài khoản</label>
-                                <input type="text" id="input-bank-account" class="px-4 py-2 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-800" placeholder="Nhập số tài khoản">
+                            <div class="profile-form__group">
+                                <label class="profile-form__label">Số tài khoản</label>
+                                <input type="text" id="input-bank-account" class="profile-form__input" placeholder="Nhập số tài khoản">
                             </div>
-                            <div class="flex flex-col md:col-span-2">
-                                <label class="font-bold mb-2">Tên chủ tài khoản</label>
-                                <input type="text" id="input-bank-owner" class="px-4 py-2 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-800 uppercase" placeholder="VD: NGUYEN VAN A">
+                            <div class="profile-form__group profile-form__group--full">
+                                <label class="profile-form__label">Tên chủ tài khoản</label>
+                                <input type="text" id="input-bank-owner" class="profile-form__input" style="text-transform: uppercase;" placeholder="VD: NGUYEN VAN A">
                             </div>
                         </div>
                     </div>
 
-                    <div class="flex flex-col pt-6 border-t border-gray-100">
-                        <label class="font-bold mb-2">Mật khẩu mới <span class="text-xs font-normal text-gray-400">(Bỏ trống nếu không muốn đổi)</span></label>
-                        <input type="password" id="input-password" class="px-4 py-2 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-800" placeholder="Nhập mật khẩu mới...">
+                    <div class="profile-password-section">
+                        <label class="profile-form__label">Mật khẩu mới <span class="profile-password-section__hint">(Bỏ trống nếu không muốn đổi)</span></label>
+                        <input type="password" id="input-password" class="profile-form__input" placeholder="Nhập mật khẩu mới...">
                     </div>
 
-                    <div class="pt-4 flex justify-end">
-                        <button type="submit" id="btn-save-profile" class="bg-gray-800 hover:bg-black text-white font-bold py-3 px-8 rounded-xl shadow transition w-full md:w-auto">
+                    <div class="profile-form__actions">
+                        <button type="submit" id="btn-save-profile" class="profile-form__save-btn">
                             Lưu thay đổi
                         </button>
                     </div>
                 </form>
             </div>
 
-            <div id="tab-history" class="tab-content hidden">
-                <h2 class="text-2xl font-black text-gray-800 mb-6 border-b-2 border-gray-300 pb-4 uppercase tracking-wider">Lịch sử mua hàng</h2>
-                <div id="history-container" class="bg-white p-8 rounded-2xl shadow-sm text-center text-gray-500 font-medium">
+            {{-- Tab: Lịch sử --}}
+            <div id="tab-history" class="tab-content profile-tab">
+                <h2 class="profile-tab__title">Lịch sử mua hàng</h2>
+                <div id="history-container" class="profile-orders-empty">
                     Chưa có dữ liệu lịch sử mua hàng.
                 </div>
             </div>
 
-            <div id="tab-orders" class="tab-content hidden">
-                <h2 class="text-2xl font-black text-gray-800 mb-6 border-b-2 border-gray-300 pb-4 uppercase tracking-wider">Quản lý đơn hàng</h2>
-                <div id="orders-container" class="bg-white p-8 rounded-2xl shadow-sm text-center text-gray-500 font-medium">
+            {{-- Tab: Đơn hàng --}}
+            <div id="tab-orders" class="tab-content profile-tab">
+                <h2 class="profile-tab__title">Quản lý đơn hàng</h2>
+                <div id="orders-container" class="profile-orders-empty">
                     Bạn chưa có đơn hàng nào đang được xử lý.
                 </div>
             </div>
@@ -125,19 +135,15 @@
     // 1. CHỨC NĂNG CHUYỂN TAB GIAO DIỆN
     function switchTab(tabName) {
         document.querySelectorAll('.tab-content').forEach(content => {
-            content.classList.remove('block');
-            content.classList.add('hidden');
+            content.classList.remove('profile-tab--active');
         });
 
         document.querySelectorAll('.tab-btn').forEach(btn => {
-            btn.classList.remove('border-gray-800');
-            btn.classList.add('border-transparent');
+            btn.classList.remove('profile-tab-btn--active');
         });
 
-        document.getElementById('tab-' + tabName).classList.remove('hidden');
-        document.getElementById('tab-' + tabName).classList.add('block');
-        document.getElementById('btn-' + tabName).classList.remove('border-transparent');
-        document.getElementById('btn-' + tabName).classList.add('border-gray-800');
+        document.getElementById('tab-' + tabName).classList.add('profile-tab--active');
+        document.getElementById('btn-' + tabName).classList.add('profile-tab-btn--active');
     }
 
     // 2. LẤY DỮ LIỆU ĐỔ VÀO FORM KHI MỞ TRANG
@@ -241,7 +247,7 @@
         window.location.href = '/login';
     }
 
-    // 5. TẢI VÀ HIỂN THỊ ĐƠN HÀNG (Giữ nguyên logic cũ của ông)
+    // 5. TẢI VÀ HIỂN THỊ ĐƠN HÀNG
     async function loadMyOrders() {
         const token = localStorage.getItem('token');
         const ordersContainer = document.getElementById('orders-container');
@@ -276,12 +282,12 @@
                         `;
                     }
                     
-                    let productsHtml = '<div class="mt-4 pt-4 border-t border-gray-100 space-y-3">';
+                    let productsHtml = '<div class="profile-order-card__products">';
                     if (order.chi_tiet && order.chi_tiet.length > 0) {
                         order.chi_tiet.forEach(item => {
                             const itemPrice = parseInt(item.don_gia).toLocaleString() + ' đ';
                             productsHtml += `
-                                <div class="flex justify-between text-sm text-gray-600">
+                                <div class="profile-order-card__product-row">
                                     <span><span class="font-bold text-gray-800">${item.so_luong}x</span> ${item.ten_san_pham}</span>
                                     <span class="font-bold text-gray-800">${itemPrice}</span>
                                 </div>
@@ -334,20 +340,20 @@
                         }
 
                         htmlHistory += `
-                            <div class="border border-gray-200 p-6 rounded-2xl flex flex-col bg-white shadow-sm mb-4">
-                                <div class="flex justify-between items-start mb-2">
+                            <div class="profile-order-card">
+                                <div class="profile-order-card__header">
                                     <div>
-                                        <p class="font-black text-gray-800 text-lg">Đơn hàng #${order.ma_don_hang}</p>
-                                        <p class="text-sm text-gray-500">Ngày đặt: ${date}</p>
+                                        <p class="profile-order-card__id">Đơn hàng #${order.ma_don_hang}</p>
+                                        <p class="profile-order-card__date">Ngày đặt: ${date}</p>
                                     </div>
-                                    <span class="px-4 py-1 text-sm font-bold rounded-full ${statusColor}">${statusText}</span>
+                                    <span class="profile-order-card__status ${statusColor}">${statusText}</span>
                                 </div>
                                 ${productsHtml}
-                                <div class="mt-4 pt-4 border-t border-gray-100 flex flex-col justify-end items-end space-y-2">
+                                <div class="profile-order-card__footer">
                                     ${voucherHtml}
-                                    <div class="flex justify-between items-center w-full">
-                                        <span class="font-bold text-gray-700">Tổng thanh toán:</span>
-                                        <span class="font-black text-pink-600 text-xl">${tongThanhToan.toLocaleString()} đ</span>
+                                    <div class="profile-order-card__total-row">
+                                        <span class="profile-order-card__total-label">Tổng thanh toán:</span>
+                                        <span class="profile-order-card__total-value">${tongThanhToan.toLocaleString()} đ</span>
                                     </div>
                                     <div class="w-full">${actionBtnHtml}</div>
                                 </div>
@@ -383,17 +389,17 @@
                             actionBtnHtml = `<div class="mt-4 text-sm text-left text-red-600 bg-red-50 p-3 rounded-lg w-full border border-red-200">Yêu cầu trả hàng của bạn đã bị từ chối vì lý do sai quy định hoàn trả.</div>`;
                         }
                             htmlOrders += `
-                            <div class="border border-gray-200 p-6 rounded-2xl flex flex-col bg-white shadow-sm mb-4">
-                                <div class="flex justify-between items-center mb-4">
-                                    <p class="font-black text-gray-800 text-lg">Đơn hàng #${order.ma_don_hang}</p>
-                                    <span class="px-4 py-1 text-sm font-bold rounded-full ${activeStatusColor}">${activeStatusText}</span>
+                            <div class="profile-order-card">
+                                <div class="profile-order-card__header" style="align-items: center; margin-bottom: 1rem;">
+                                    <p class="profile-order-card__id">Đơn hàng #${order.ma_don_hang}</p>
+                                    <span class="profile-order-card__status ${activeStatusColor}">${activeStatusText}</span>
                                 </div>
                                 ${productsHtml}
-                                <div class="mt-4 pt-4 border-t border-gray-100 flex flex-col justify-end items-end space-y-2">
+                                <div class="profile-order-card__footer">
                                     ${voucherHtml}
-                                    <div class="flex justify-between items-center w-full">
-                                        <span class="font-bold text-gray-700">Tổng thanh toán:</span>
-                                        <span class="font-black text-pink-600 text-xl">${tongThanhToan.toLocaleString()} đ</span>
+                                    <div class="profile-order-card__total-row">
+                                        <span class="profile-order-card__total-label">Tổng thanh toán:</span>
+                                        <span class="profile-order-card__total-value">${tongThanhToan.toLocaleString()} đ</span>
                                     </div>
                                     <div class="w-full">${actionBtnHtml}</div>
                                 </div>
@@ -406,11 +412,11 @@
                 
                 if (hasOrders) {
                     ordersContainer.innerHTML = htmlOrders;
-                    ordersContainer.classList.remove('text-center', 'text-gray-500', 'font-medium', 'p-8');
+                    ordersContainer.classList.remove('profile-orders-empty');
                 }
                 if (hasHistory) {
                     historyContainer.innerHTML = htmlHistory;
-                    historyContainer.classList.remove('text-center', 'text-gray-500', 'font-medium', 'p-8');
+                    historyContainer.classList.remove('profile-orders-empty');
                 }
             }
         } catch (error) {
@@ -506,47 +512,49 @@ async function callUpdateStatusAPI(maDonHang, trangThaiMoi, lyDoTra, lyDoHuy, ng
     }
 }
 </script>
-<div id="refund-modal" class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center z-50 transition-opacity">
-    <div class="bg-white rounded-2xl w-full max-w-md p-6 shadow-2xl relative transform transition-all">
-        <h3 class="text-xl font-black text-gray-800 mb-2 border-b pb-3 uppercase">Yêu cầu hoàn trả</h3>
-        <p class="text-xs text-red-500 mb-4 font-semibold italic">* Vui lòng nhập thông tin để Admin đối chiếu với hồ sơ gốc nhằm bảo vệ tài sản của bạn.</p>
+
+{{-- Refund Modal --}}
+<div id="refund-modal" class="refund-modal-overlay hidden">
+    <div class="refund-modal">
+        <h3 class="refund-modal__title">Yêu cầu hoàn trả</h3>
+        <p class="refund-modal__warning">* Vui lòng nhập thông tin để Admin đối chiếu với hồ sơ gốc nhằm bảo vệ tài sản của bạn.</p>
 
         <input type="hidden" id="refund-order-id">
 
-        <div class="space-y-3">
+        <div class="refund-modal__fields">
             <div>
-                <label class="text-sm font-bold text-gray-700">Ngân hàng & Số tài khoản:</label>
-                <div class="flex space-x-2 mt-1">
-                    <input type="text" id="refund-bank" class="w-1/3 border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-pink-500 focus:outline-none" placeholder="Ngân hàng">
-                    <input type="number" id="refund-account" class="w-2/3 border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-pink-500 focus:outline-none" placeholder="Số tài khoản">
+                <label class="refund-modal__label">Ngân hàng & Số tài khoản:</label>
+                <div class="refund-modal__input-group">
+                    <input type="text" id="refund-bank" class="refund-modal__input refund-modal__input--1-3" placeholder="Ngân hàng">
+                    <input type="number" id="refund-account" class="refund-modal__input refund-modal__input--2-3" placeholder="Số tài khoản">
                 </div>
             </div>
             <div>
-                <label class="text-sm font-bold text-gray-700">Chủ tài khoản:</label>
-                <input type="text" id="refund-owner" class="w-full border border-gray-300 rounded-lg px-3 py-2 mt-1 focus:ring-2 focus:ring-pink-500 focus:outline-none uppercase" placeholder="NGUYEN VAN A">
+                <label class="refund-modal__label">Chủ tài khoản:</label>
+                <input type="text" id="refund-owner" class="refund-modal__input" style="text-transform: uppercase;" placeholder="NGUYEN VAN A">
             </div>
             <div>
-                <label class="text-sm font-bold text-gray-700">Lý do trả hàng:</label>
-                <textarea id="refund-reason" class="w-full border border-gray-300 rounded-lg px-3 py-2 mt-1 focus:ring-2 focus:ring-pink-500 focus:outline-none" rows="2" placeholder="Ví dụ: Sản phẩm bị tràn, vỡ..."></textarea>
+                <label class="refund-modal__label">Lý do trả hàng:</label>
+                <textarea id="refund-reason" class="refund-modal__textarea" rows="2" placeholder="Ví dụ: Sản phẩm bị tràn, vỡ..."></textarea>
             </div>
 
-            <div class="bg-red-50 border border-red-100 rounded-lg p-3 mt-4 text-sm text-gray-700 shadow-inner">
-                <p class="font-black text-red-600 mb-1">📜 QUY ĐỊNH ĐỔI TRẢ CỦA SHOP:</p>
-                <ul class="list-disc pl-5 space-y-1 text-xs text-red-800 font-medium">
+            <div class="refund-modal__policy">
+                <p class="refund-modal__policy-title">📜 QUY ĐỊNH ĐỔI TRẢ CỦA SHOP:</p>
+                <ul class="refund-modal__policy-list">
                     <li>Sản phẩm còn nguyên tem mác, hộp, chưa qua sử dụng.</li>
                     <li>Yêu cầu tạo trong vòng 3 ngày kể từ khi nhận hàng.</li>
                     <li><b>Shop có quyền từ chối</b> nếu không đáp ứng các điều kiện trên!</li>
                 </ul>
-                <label class="flex items-center mt-3 cursor-pointer">
-                    <input type="checkbox" id="refund-agree" class="w-4 h-4 text-pink-600 focus:ring-pink-500 border-red-300 rounded">
-                    <span class="ml-2 text-xs font-bold text-red-600 uppercase">Tôi đã đọc và cam kết đáp ứng đủ điều kiện</span>
+                <label class="refund-modal__agree-label">
+                    <input type="checkbox" id="refund-agree" class="refund-modal__agree-checkbox">
+                    <span class="refund-modal__agree-text">Tôi đã đọc và cam kết đáp ứng đủ điều kiện</span>
                 </label>
             </div>
         </div>
 
-        <div class="mt-6 flex justify-end space-x-3">
-            <button onclick="closeRefundModal()" class="px-5 py-2 bg-gray-200 text-gray-700 font-bold rounded-xl hover:bg-gray-300 transition">Hủy</button>
-            <button onclick="submitRefundRequest()" class="px-5 py-2 bg-pink-600 text-white font-bold rounded-xl hover:bg-pink-700 transition shadow-md">Xác nhận gửi</button>
+        <div class="refund-modal__actions">
+            <button onclick="closeRefundModal()" class="refund-modal__btn-cancel">Hủy</button>
+            <button onclick="submitRefundRequest()" class="refund-modal__btn-submit">Xác nhận gửi</button>
         </div>
     </div>
 </div>

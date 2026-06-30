@@ -1,18 +1,23 @@
 @extends('layouts.user')
 @section('title', 'Giỏ hàng')
+
+@section('styles')
+<link rel="stylesheet" href="{{ asset('css/user-cart.css') }}">
+@endsection
+
 @section('content')
-<section class="bg-[#fcfdf2] py-12 px-8 min-h-screen">
-    <div class="max-w-6xl mx-auto">
+<section class="user-section">
+    <div class="user-container--sm">
         
-        <div id="cart-items" class="space-y-4">
+        <div id="cart-items" class="cart-items-list">
         </div>
 
-        <div class="flex justify-between items-end mt-12">
-            <div class="flex items-center space-x-4">
-                <span class="bg-white px-6 py-3 rounded-xl font-bold text-gray-700 shadow-sm">Tổng tiền</span>
-                <div id="total-price" class="bg-white px-6 py-3 rounded-xl shadow-sm font-bold text-pink-600">0 đ</div>
+        <div class="cart-footer">
+            <div class="cart-footer__total-wrap">
+                <span class="cart-footer__total-label">Tổng tiền</span>
+                <div id="total-price" class="cart-footer__total-value">0 đ</div>
             </div>
-            <a href="/user/checkout" class="bg-pink-500 hover:bg-pink-600 text-white px-8 py-3 rounded-xl font-bold shadow-md transition">
+            <a href="/user/checkout" class="btn-pink">
                 Thanh toán
             </a>
         </div>
@@ -75,20 +80,19 @@
                     total += gia * item.so_luong;
 
                     cartContainer.innerHTML += `
-                        <div class="bg-gray-200 p-4 rounded-2xl flex items-center justify-between shadow-sm">
-                            <div class="flex items-center space-x-4 w-1/2">
+                        <div class="cart-item">
+                            <div class="cart-item__left">
                                 <img src="${linkAnh}" 
                                      alt="${sanPham.ten_san_pham}" 
-                                     style="width: 60px; height: 60px; object-fit: cover;" 
-                                     class="rounded-lg flex-shrink-0">
+                                     class="cart-item__img">
                                      
-                                <div class="bg-white px-4 py-2 rounded-lg text-gray-700 font-bold flex-1 truncate">${sanPham.ten_san_pham}</div>
+                                <div class="cart-item__name">${sanPham.ten_san_pham}</div>
                             </div>
-                            <div class="bg-white px-4 py-2 rounded-lg text-gray-700 font-bold">${gia.toLocaleString()} đ</div>
-                            <div class="bg-white px-4 py-2 rounded-lg text-gray-700 font-bold">${item.so_luong}</div>
-                            <div class="flex items-center space-x-2">
-                                <button onclick="updateQuantity(${item.ma_san_pham}, 1)" class="bg-white w-8 h-8 rounded-lg font-bold hover:bg-gray-100">+</button>
-                                <button onclick="updateQuantity(${item.ma_san_pham}, -1)" class="bg-white w-8 h-8 rounded-lg font-bold hover:bg-gray-100">-</button>
+                            <div class="cart-item__info-box">${gia.toLocaleString()} đ</div>
+                            <div class="cart-item__info-box">${item.so_luong}</div>
+                            <div class="cart-item__actions">
+                                <button onclick="updateQuantity(${item.ma_san_pham}, 1)" class="cart-item__btn">+</button>
+                                <button onclick="updateQuantity(${item.ma_san_pham}, -1)" class="cart-item__btn">-</button>
                             </div>
                         </div>
                     `;

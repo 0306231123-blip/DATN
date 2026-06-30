@@ -1,0 +1,112 @@
+/* ============================================================
+   USER CART CSS - CSS riêng cho trang giỏ hàng
+   ============================================================ */
+
+/* === Cart Item === */
+.cart-item {
+    background-color: var(--user-gray-200);
+    padding: 1rem;
+    border-radius: var(--user-radius-2xl);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    box-shadow: var(--user-shadow-sm);
+}
+
+.cart-item__left {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    width: 50%;
+}
+
+.cart-item__img {
+    width: 60px;
+    height: 60px;
+    object-fit: cover;
+    border-radius: var(--user-radius-lg);
+    flex-shrink: 0;
+}
+
+.cart-item__name {
+    background-color: var(--user-white);
+    padding: 0.5rem 1rem;
+    border-radius: var(--user-radius-lg);
+    color: var(--user-gray-700);
+    font-weight: 700;
+    flex: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.cart-item__info-box {
+    background-color: var(--user-white);
+    padding: 0.5rem 1rem;
+    border-radius: var(--user-radius-lg);
+    color: var(--user-gray-700);
+    font-weight: 700;
+}
+
+.cart-item__actions {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.cart-item__btn {
+    background-color: var(--user-white);
+    width: 2rem;
+    height: 2rem;
+    border-radius: var(--user-radius-lg);
+    font-weight: 700;
+    border: none;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.cart-item__btn:hover {
+    background-color: var(--user-gray-100);
+}
+
+/* === Cart Footer === */
+.cart-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    margin-top: 3rem;
+}
+
+.cart-footer__total-wrap {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.cart-footer__total-label {
+    background-color: var(--user-white);
+    padding: 0.75rem 1.5rem;
+    border-radius: var(--user-radius-xl);
+    font-weight: 700;
+    color: var(--user-gray-700);
+    box-shadow: var(--user-shadow-sm);
+}
+
+.cart-footer__total-value {
+    background-color: var(--user-white);
+    padding: 0.75rem 1.5rem;
+    border-radius: var(--user-radius-xl);
+    box-shadow: var(--user-shadow-sm);
+    font-weight: 700;
+    color: var(--user-pink-600);
+}
+
+/* === Cart Items Container === */
+.cart-items-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}

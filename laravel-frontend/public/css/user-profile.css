@@ -1,0 +1,520 @@
+/* ============================================================
+   USER PROFILE CSS - CSS riêng cho trang cá nhân
+   ============================================================ */
+
+/* === Profile Layout === */
+.profile-grid {
+    max-width: 72rem;
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: repeat(1, minmax(0, 1fr));
+    gap: 2.5rem;
+}
+
+@media (min-width: 768px) {
+    .profile-grid {
+        grid-template-columns: 1fr 2fr;
+    }
+}
+
+/* === Profile Sidebar === */
+.profile-sidebar {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1.5rem;
+}
+
+.profile-avatar {
+    width: 8rem;
+    height: 8rem;
+    background-color: transparent;
+    border: 4px solid var(--user-gray-800);
+    border-radius: 9999px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-end;
+    overflow: hidden;
+}
+
+.profile-avatar__head {
+    width: 3rem;
+    height: 3rem;
+    background-color: var(--user-gray-800);
+    border-radius: 9999px;
+    margin-bottom: 0.25rem;
+}
+
+.profile-avatar__body {
+    width: 6rem;
+    height: 3rem;
+    background-color: var(--user-gray-800);
+    border-radius: 9999px 9999px 0 0;
+}
+
+.profile-name {
+    background-color: var(--user-white);
+    padding: 0.75rem 2rem;
+    border-radius: var(--user-radius-xl);
+    box-shadow: var(--user-shadow-sm);
+    text-align: center;
+    font-weight: 700;
+    color: var(--user-gray-700);
+    width: 100%;
+}
+
+.profile-tab-btn {
+    border: 2px solid transparent;
+    background-color: var(--user-white);
+    padding: 0.75rem 2rem;
+    border-radius: var(--user-radius-xl);
+    box-shadow: var(--user-shadow-sm);
+    text-align: center;
+    font-weight: 700;
+    color: var(--user-gray-700);
+    width: 100%;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.profile-tab-btn:hover {
+    background-color: var(--user-gray-50);
+}
+
+.profile-tab-btn--active {
+    border-color: var(--user-gray-800);
+}
+
+/* === Profile Content Area === */
+.profile-content {
+    background-color: var(--user-gray-200);
+    border-radius: var(--user-radius-3xl);
+    box-shadow: inset 0 2px 4px 0 rgb(0 0 0 / 0.06);
+    min-height: 500px;
+    padding: 2rem;
+    position: relative;
+}
+
+/* === Tab Content === */
+.profile-tab {
+    display: none;
+}
+
+.profile-tab--active {
+    display: block;
+}
+
+.profile-tab__title {
+    font-size: 1.5rem;
+    font-weight: 900;
+    color: var(--user-gray-800);
+    margin-bottom: 1.5rem;
+    border-bottom: 2px solid var(--user-gray-300);
+    padding-bottom: 1rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+/* === Profile Form === */
+.profile-form {
+    background-color: var(--user-white);
+    padding: 2rem;
+    border-radius: var(--user-radius-2xl);
+    box-shadow: var(--user-shadow-sm);
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+    color: var(--user-gray-700);
+}
+
+.profile-form__grid {
+    display: grid;
+    grid-template-columns: repeat(1, minmax(0, 1fr));
+    gap: 1.5rem;
+}
+
+@media (min-width: 768px) {
+    .profile-form__grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+.profile-form__group {
+    display: flex;
+    flex-direction: column;
+}
+
+.profile-form__group--full {
+    grid-column: 1 / -1;
+}
+
+.profile-form__label {
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+}
+
+.profile-form__label--pink {
+    color: var(--user-pink-600);
+}
+
+.profile-form__input,
+.profile-form__select,
+.profile-form__textarea {
+    padding: 0.5rem 1rem;
+    border-radius: var(--user-radius-xl);
+    border: 1px solid var(--user-gray-300);
+    transition: box-shadow 0.3s ease;
+}
+
+.profile-form__input:focus,
+.profile-form__select:focus,
+.profile-form__textarea:focus {
+    outline: none;
+    box-shadow: 0 0 0 2px var(--user-gray-800);
+}
+
+.profile-form__input--readonly {
+    background-color: var(--user-gray-50);
+    color: var(--user-gray-500);
+    cursor: not-allowed;
+}
+
+.profile-form__input--pink-focus:focus {
+    box-shadow: 0 0 0 2px var(--user-pink-500);
+}
+
+/* === Bank Info Section === */
+.profile-bank-section {
+    padding-top: 1.5rem;
+    margin-top: 1.5rem;
+    border-top: 1px solid var(--user-gray-200);
+}
+
+.profile-bank-section__title {
+    font-size: 1.125rem;
+    font-weight: 700;
+    color: var(--user-gray-800);
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+}
+
+.profile-bank-section__title-icon {
+    margin-right: 0.5rem;
+    font-size: 1.5rem;
+}
+
+.profile-bank-section__hint {
+    font-size: 0.875rem;
+    color: var(--user-gray-500);
+    margin-bottom: 1rem;
+}
+
+/* === Password Section === */
+.profile-password-section {
+    display: flex;
+    flex-direction: column;
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--user-gray-100);
+}
+
+.profile-password-section__hint {
+    font-size: 0.75rem;
+    font-weight: 400;
+    color: var(--user-gray-400);
+}
+
+/* === Form Actions === */
+.profile-form__actions {
+    padding-top: 1rem;
+    display: flex;
+    justify-content: flex-end;
+}
+
+.profile-form__save-btn {
+    background-color: var(--user-gray-800);
+    color: var(--user-white);
+    font-weight: 700;
+    padding: 0.75rem 2rem;
+    border-radius: var(--user-radius-xl);
+    box-shadow: var(--user-shadow-sm);
+    border: none;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+    width: 100%;
+}
+
+@media (min-width: 768px) {
+    .profile-form__save-btn {
+        width: auto;
+    }
+}
+
+.profile-form__save-btn:hover {
+    background-color: #111827;
+}
+
+/* === Order Cards === */
+.profile-orders-empty {
+    background-color: var(--user-white);
+    padding: 2rem;
+    border-radius: var(--user-radius-2xl);
+    box-shadow: var(--user-shadow-sm);
+    text-align: center;
+    color: var(--user-gray-500);
+    font-weight: 500;
+}
+
+.profile-order-card {
+    border: 1px solid var(--user-gray-200);
+    padding: 1.5rem;
+    border-radius: var(--user-radius-2xl);
+    display: flex;
+    flex-direction: column;
+    background-color: var(--user-white);
+    box-shadow: var(--user-shadow-sm);
+    margin-bottom: 1rem;
+}
+
+.profile-order-card__header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 0.5rem;
+}
+
+.profile-order-card__id {
+    font-weight: 900;
+    color: var(--user-gray-800);
+    font-size: 1.125rem;
+}
+
+.profile-order-card__date {
+    font-size: 0.875rem;
+    color: var(--user-gray-500);
+}
+
+.profile-order-card__status {
+    padding: 0.25rem 1rem;
+    font-size: 0.875rem;
+    font-weight: 700;
+    border-radius: 9999px;
+}
+
+.profile-order-card__products {
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--user-gray-100);
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.profile-order-card__product-row {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.875rem;
+    color: var(--user-gray-600);
+}
+
+.profile-order-card__footer {
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--user-gray-100);
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    align-items: flex-end;
+    gap: 0.5rem;
+}
+
+.profile-order-card__total-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+}
+
+.profile-order-card__total-label {
+    font-weight: 700;
+    color: var(--user-gray-700);
+}
+
+.profile-order-card__total-value {
+    font-weight: 900;
+    color: var(--user-pink-600);
+    font-size: 1.25rem;
+}
+
+/* === Refund Modal === */
+.refund-modal-overlay {
+    position: fixed;
+    inset: 0;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 50;
+    transition: opacity 0.3s ease;
+}
+
+.refund-modal {
+    background-color: var(--user-white);
+    border-radius: var(--user-radius-2xl);
+    width: 100%;
+    max-width: 28rem;
+    padding: 1.5rem;
+    box-shadow: 0 25px 50px -12px rgb(0 0 0 / 0.25);
+    position: relative;
+    transform: scale(1);
+    transition: all 0.3s ease;
+}
+
+.refund-modal__title {
+    font-size: 1.25rem;
+    font-weight: 900;
+    color: var(--user-gray-800);
+    margin-bottom: 0.5rem;
+    border-bottom: 1px solid var(--user-gray-200);
+    padding-bottom: 0.75rem;
+    text-transform: uppercase;
+}
+
+.refund-modal__warning {
+    font-size: 0.75rem;
+    color: var(--user-red-500);
+    margin-bottom: 1rem;
+    font-weight: 600;
+    font-style: italic;
+}
+
+.refund-modal__fields {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.refund-modal__label {
+    font-size: 0.875rem;
+    font-weight: 700;
+    color: var(--user-gray-700);
+}
+
+.refund-modal__input-group {
+    display: flex;
+    gap: 0.5rem;
+    margin-top: 0.25rem;
+}
+
+.refund-modal__input,
+.refund-modal__textarea {
+    width: 100%;
+    border: 1px solid var(--user-gray-300);
+    border-radius: var(--user-radius-lg);
+    padding: 0.5rem 0.75rem;
+    transition: box-shadow 0.3s ease;
+}
+
+.refund-modal__input:focus,
+.refund-modal__textarea:focus {
+    outline: none;
+    box-shadow: 0 0 0 2px var(--user-pink-500);
+}
+
+.refund-modal__input--1-3 {
+    width: 33.333%;
+}
+
+.refund-modal__input--2-3 {
+    width: 66.666%;
+}
+
+.refund-modal__policy {
+    background-color: #fef2f2;
+    border: 1px solid #fecaca;
+    border-radius: var(--user-radius-lg);
+    padding: 0.75rem;
+    margin-top: 1rem;
+    font-size: 0.875rem;
+    color: var(--user-gray-700);
+    box-shadow: inset 0 2px 4px 0 rgb(0 0 0 / 0.06);
+}
+
+.refund-modal__policy-title {
+    font-weight: 900;
+    color: var(--user-red-600);
+    margin-bottom: 0.25rem;
+}
+
+.refund-modal__policy-list {
+    list-style: disc;
+    padding-left: 1.25rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    font-size: 0.75rem;
+    color: #991b1b;
+    font-weight: 500;
+}
+
+.refund-modal__agree-label {
+    display: flex;
+    align-items: center;
+    margin-top: 0.75rem;
+    cursor: pointer;
+}
+
+.refund-modal__agree-checkbox {
+    width: 1rem;
+    height: 1rem;
+    accent-color: var(--user-pink-600);
+    border-color: #fca5a5;
+    border-radius: 0.25rem;
+}
+
+.refund-modal__agree-text {
+    margin-left: 0.5rem;
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: var(--user-red-600);
+    text-transform: uppercase;
+}
+
+.refund-modal__actions {
+    margin-top: 1.5rem;
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.75rem;
+}
+
+.refund-modal__btn-cancel {
+    padding: 0.5rem 1.25rem;
+    background-color: var(--user-gray-200);
+    color: var(--user-gray-700);
+    font-weight: 700;
+    border-radius: var(--user-radius-xl);
+    border: none;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.refund-modal__btn-cancel:hover {
+    background-color: var(--user-gray-300);
+}
+
+.refund-modal__btn-submit {
+    padding: 0.5rem 1.25rem;
+    background-color: var(--user-pink-600);
+    color: var(--user-white);
+    font-weight: 700;
+    border-radius: var(--user-radius-xl);
+    border: none;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+    box-shadow: var(--user-shadow-md);
+}
+
+.refund-modal__btn-submit:hover {
+    background-color: var(--user-pink-700);
+}
