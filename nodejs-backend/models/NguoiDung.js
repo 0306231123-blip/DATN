@@ -14,7 +14,7 @@ const NguoiDung = sequelize.define('nguoi_dung', {
   email: {
     type: DataTypes.STRING(150),
     allowNull: false,
-    unique: true,
+    unique: 'unique_email_index',
   },
   mat_khau: {
     type: DataTypes.STRING(255),
