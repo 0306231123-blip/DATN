@@ -5,8 +5,8 @@
 
 /* === CSS Variables === */
 :root {
-    --user-bg: #fcfdf2;
-    --user-white: #ffffff;
+    --user-bg: #fdfaf6;
+    --user-white: #fefcf8;
     --user-pink-50: #fdf2f8;
     --user-pink-100: #fce7f3;
     --user-pink-200: #fbcfe8;
@@ -40,13 +40,13 @@
 
 /* === Section Layout === */
 .user-section {
-    background-color: var(--user-bg);
+    background-color: transparent;
     padding: 3rem 2rem;
     min-height: 100vh;
 }
 
 .user-section--no-min-h {
-    background-color: var(--user-bg);
+    background-color: transparent;
     padding: 2rem;
 }
 
@@ -163,7 +163,7 @@
     overflow: hidden;
     display: flex;
     flex-direction: column;
-    border: 1px solid var(--user-gray-100);
+    border: 1px solid var(--user-pink-100);
     position: relative;
     transition: all 0.3s ease;
     text-decoration: none;
@@ -181,7 +181,7 @@
 
 .product-card__image-wrap {
     aspect-ratio: 1 / 1;
-    background-color: var(--user-gray-50);
+    background-color: var(--user-white);
     overflow: hidden;
     position: relative;
     display: flex;
@@ -305,7 +305,7 @@
     color: var(--user-white);
     font-weight: 700;
     padding: 0.75rem 2rem;
-    border-radius: var(--user-radius-xl);
+    border-radius: 9999px;
     box-shadow: var(--user-shadow-md);
     transition: all 0.3s ease;
     border: none;
@@ -330,7 +330,7 @@
     color: var(--user-white);
     font-weight: 700;
     padding: 0.75rem 2rem;
-    border-radius: var(--user-radius-xl);
+    border-radius: 9999px;
     box-shadow: var(--user-shadow-md);
     transition: all 0.3s ease;
     border: none;

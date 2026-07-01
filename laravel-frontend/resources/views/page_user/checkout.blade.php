@@ -7,6 +7,14 @@
 
 @section('content')
 <section class="user-section" style="position: relative;">
+    <div class="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div class="mb-4">
+        <a href="/user/cart" class="inline-flex items-center text-gray-500 hover:text-pink-600 font-bold transition">
+            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
+            Quay lại Giỏ hàng
+        </a>
+    </div>
+    
     <div class="checkout-grid">
         
         {{-- Left Column --}}
@@ -31,7 +39,13 @@
                 </div>
 
                 <div class="checkout-voucher">
-                    <label class="checkout-voucher__label">Mã khuyến mãi (Voucher)</label>
+                    <div class="flex justify-between items-center mb-2">
+                        <label class="checkout-voucher__label mb-0">Mã khuyến mãi (Voucher)</label>
+                        <button id="btn-show-vouchers" class="text-pink-500 text-sm font-bold hover:text-pink-600 transition flex items-center">
+                            <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z"></path></svg>
+                            Chọn Voucher
+                        </button>
+                    </div>
                     <div class="checkout-voucher__input-group">
                         <input type="text" id="voucher-code" class="checkout-voucher__input" placeholder="Nhập mã giảm giá...">
                         <button id="btn-apply-voucher" class="checkout-voucher__btn">
@@ -80,6 +94,10 @@
                     <span class="checkout-payment-option__label">Momo</span>
                     <input type="radio" name="payment" value="momo" class="checkout-payment-option__radio">
                 </label>
+                <label class="checkout-payment-option">
+                    <span class="checkout-payment-option__label">Thanh toán khi nhận hàng (COD)</span>
+                    <input type="radio" name="payment" value="cod" class="checkout-payment-option__radio">
+                </label>
             </div>
 
             <div class="checkout-qr">
@@ -106,12 +124,34 @@
             </div>
             <h3 class="checkout-success-popup__title">Thành công!</h3>
             <p class="checkout-success-popup__desc">Cảm ơn bạn. Đơn hàng của bạn đã được thanh toán và đang được xử lý.</p>
-            <a href="/user/profileuser" class="btn-dark" style="width: 100%; text-align: center; text-transform: uppercase; letter-spacing: 0.05em;">
+            <a href="/user/profileuser?tab=orders" class="btn-dark" style="width: 100%; text-align: center; text-transform: uppercase; letter-spacing: 0.05em;">
                 Xem lịch sử đơn hàng
             </a>
         </div>
     </div>
+
+    {{-- Voucher List Modal --}}
+    <div id="voucher-modal" class="fixed inset-0 bg-black/40 backdrop-blur-sm z-[100] hidden items-center justify-center p-4 transition-opacity duration-300">
+        <div class="bg-white rounded-3xl w-full max-w-md p-6 shadow-2xl transform transition-transform scale-100">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-xl font-black text-gray-800 uppercase tracking-wide">🎁 Chọn Voucher</h3>
+                <button id="close-voucher-modal" class="text-gray-400 hover:text-pink-500 bg-gray-50 hover:bg-pink-50 p-2 rounded-full transition">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                </button>
+            </div>
+            <div id="voucher-list-container" class="space-y-4 max-h-[60vh] overflow-y-auto pr-2 custom-scrollbar">
+                <p class="text-center text-gray-500 py-4 font-medium">Đang tải...</p>
+            </div>
+        </div>
+    </div>
 </section>
+
+<style>
+    .custom-scrollbar::-webkit-scrollbar { width: 6px; }
+    .custom-scrollbar::-webkit-scrollbar-track { background: #fdf2f8; border-radius: 10px; }
+    .custom-scrollbar::-webkit-scrollbar-thumb { background: #fbcfe8; border-radius: 10px; }
+    .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #f472b6; }
+</style>
 
 <script>
     document.addEventListener('DOMContentLoaded', async function() {
@@ -141,6 +181,11 @@
         const provinceSelect = document.getElementById('province');
         const wardSelect = document.getElementById('ward');
         const streetInput = document.getElementById('street');
+
+        // Lấy danh sách ID sản phẩm được chọn từ URL (chuyển từ giỏ hàng sang)
+        const urlParams = new URLSearchParams(window.location.search);
+        const itemsStr = urlParams.get('items');
+        const selectedItems = itemsStr ? itemsStr.split(',').map(Number) : [];
 
         // 1. TẢI API TỈNH/THÀNH PHỐ
         fetch('https://provinces.open-api.vn/api/v2/p/')
@@ -183,10 +228,21 @@
 
                 if (result.success && result.data.length > 0) {
                     baseTotal = 0;
+                    let hasValidItems = false;
                     result.data.forEach(item => {
-                        const gia = item.san_pham.gia_khuyen_mai || item.san_pham.gia;
-                        baseTotal += gia * item.so_luong;
+                        // Chỉ tính những sản phẩm được check ở giỏ hàng (hoặc tính hết nếu URL không có items)
+                        if (selectedItems.length === 0 || selectedItems.includes(item.ma_san_pham)) {
+                            const gia = item.san_pham.gia_khuyen_mai || item.san_pham.gia;
+                            baseTotal += gia * item.so_luong;
+                            hasValidItems = true;
+                        }
                     });
+                    
+                    if (!hasValidItems) {
+                        alert('Không có sản phẩm nào được chọn hợp lệ!');
+                        window.location.href = '/user/cart';
+                        return;
+                    }
                     
                     // Cập nhật giao diện
                     subTotalEl.textContent = baseTotal.toLocaleString() + ' VNĐ';
@@ -284,7 +340,98 @@
         }
 
         // ==========================================
-        // 4. KIỂM TRA BẮT BUỘC & THANH TOÁN
+        // 3.5. XỬ LÝ MODAL CHỌN VOUCHER
+        // ==========================================
+        const btnShowVouchers = document.getElementById('btn-show-vouchers');
+        const voucherModal = document.getElementById('voucher-modal');
+        const closeVoucherModal = document.getElementById('close-voucher-modal');
+        const voucherListContainer = document.getElementById('voucher-list-container');
+
+        btnShowVouchers.addEventListener('click', async () => {
+            voucherModal.classList.remove('hidden');
+            voucherModal.classList.add('flex');
+            
+            try {
+                const res = await fetch('http://localhost:3000/api/voucher/active');
+                const result = await res.json();
+                
+                if (result.success && result.data.length > 0) {
+                    let html = '';
+                    result.data.forEach(v => {
+                        let desc = v.loai_giam === 'tien_mat' ? 
+                                   `Giảm ${v.gia_tri.toLocaleString()}đ` : 
+                                   `Giảm ${v.gia_tri}% (Tối đa ${(v.giam_toi_da||0).toLocaleString()}đ)`;
+                        
+                        let minOrder = `Đơn tối thiểu: ${v.don_toi_thieu.toLocaleString()}đ`;
+                        let isEligible = baseTotal >= v.don_toi_thieu;
+                        
+                        let btnClass = isEligible ? 'bg-pink-500 hover:bg-pink-600 text-white shadow-sm' : 'bg-gray-100 text-gray-400 cursor-not-allowed';
+                        let btnAction = isEligible ? `onclick="window.selectVoucher('${v.ma_code}')"` : 'disabled';
+                        let borderClass = isEligible ? 'border-pink-200' : 'border-gray-200 opacity-70';
+                        
+                        html += `
+                        <div class="border ${borderClass} rounded-2xl p-4 flex flex-col gap-3 bg-white hover:shadow-md transition relative overflow-hidden group">
+                            <div class="absolute -right-4 -top-4 w-12 h-12 bg-pink-50 rounded-full group-hover:scale-150 transition duration-500 z-0"></div>
+                            <div class="relative z-10 flex justify-between items-center">
+                                <div>
+                                    <div class="font-black text-pink-600 text-xl tracking-tight leading-none mb-1">${v.ma_code}</div>
+                                    <div class="text-gray-800 font-bold text-sm">${desc}</div>
+                                    <div class="text-gray-500 text-xs font-medium mt-1">${minOrder}</div>
+                                </div>
+                                <button ${btnAction} class="px-5 py-2 rounded-full font-bold text-sm transition ${btnClass}">
+                                    ${isEligible ? 'Dùng ngay' : 'Chưa đủ đ/k'}
+                                </button>
+                            </div>
+                        </div>
+                        `;
+                    });
+                    voucherListContainer.innerHTML = html;
+                } else {
+                    voucherListContainer.innerHTML = '<p class="text-center text-gray-500 py-8 font-medium">Hiện không có mã giảm giá nào phù hợp.</p>';
+                }
+            } catch (err) {
+                voucherListContainer.innerHTML = '<p class="text-center text-red-500 py-4">Lỗi tải danh sách voucher.</p>';
+            }
+        });
+
+        closeVoucherModal.addEventListener('click', () => {
+            voucherModal.classList.remove('flex');
+            voucherModal.classList.add('hidden');
+        });
+        
+        window.selectVoucher = function(code) {
+            voucherInput.value = code;
+            voucherModal.classList.remove('flex');
+            voucherModal.classList.add('hidden');
+            btnApplyVoucher.click();
+        };
+
+        // ==========================================
+        // 4. CHUYỂN ĐỔI PHƯƠNG THỨC THANH TOÁN
+        // ==========================================
+        const paymentRadios = document.querySelectorAll('input[name="payment"]');
+        const qrImg = document.querySelector('.checkout-qr__img');
+        const qrText = document.querySelector('.checkout-qr__text');
+        
+        paymentRadios.forEach(radio => {
+            radio.addEventListener('change', function() {
+                document.querySelectorAll('.checkout-payment-option__label').forEach(lbl => lbl.classList.remove('checkout-payment-option__label--active'));
+                this.previousElementSibling.classList.add('checkout-payment-option__label--active');
+                
+                if (this.value === 'cod') {
+                    qrImg.classList.add('hidden');
+                    qrText.classList.add('hidden');
+                    btnText.textContent = 'Xác nhận đặt hàng';
+                } else {
+                    qrImg.classList.remove('hidden');
+                    qrText.classList.remove('hidden');
+                    btnText.textContent = 'Tôi đã chuyển khoản';
+                }
+            });
+        });
+
+        // ==========================================
+        // 5. KIỂM TRA BẮT BUỘC & THANH TOÁN
         // ==========================================
         btnPay.addEventListener('click', async function() {
             const provinceOption = provinceSelect.options[provinceSelect.selectedIndex];
@@ -312,11 +459,13 @@
                         'Content-Type': 'application/json',
                         'Authorization': 'Bearer ' + token 
                     },
-                    // GỬI KÈM CẢ ID VOUCHER VÀ SỐ TIỀN GIẢM LÊN SERVER
+                    // GỬI KÈM CẢ ID VOUCHER VÀ SỐ TIỀN GIẢM LÊN SERVER VÀ DANH SÁCH SẢN PHẨM ĐƯỢC CHỌN
                     body: JSON.stringify({ 
                         dia_chi: fullAddress,
                         ma_khuyen_mai: appliedVoucherId,
-                        so_tien_giam: currentDiscount
+                        so_tien_giam: currentDiscount,
+                        selected_items: selectedItems,
+                        phuong_thuc_thanh_toan: document.querySelector('input[name="payment"]:checked').value
                     })
                 });
 
@@ -341,7 +490,8 @@
         function resetButton() {
             btnPay.disabled = false;
             btnPay.classList.remove('checkout-qr__btn--disabled');
-            btnText.textContent = 'Tôi đã chuyển khoản';
+            const selectedPayment = document.querySelector('input[name="payment"]:checked').value;
+            btnText.textContent = selectedPayment === 'cod' ? 'Xác nhận đặt hàng' : 'Tôi đã chuyển khoản';
             loadingIcon.classList.add('hidden');
         }
     });

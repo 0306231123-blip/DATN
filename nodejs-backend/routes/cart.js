@@ -66,14 +66,18 @@ router.get('/', async (req, res) => {
 // 3. API Cập nhật số lượng
 router.post('/update', async (req, res) => {
     try {
-        const { ma_san_pham, thay_doi } = req.body; 
+        const { ma_san_pham, thay_doi, so_luong } = req.body; 
 
         let item = await GioHang.findOne({ 
             where: { ma_nguoi_dung: req.user.ma_nguoi_dung, ma_san_pham } 
         });
 
         if (item) {
-            item.so_luong += thay_doi;
+            if (so_luong !== undefined) {
+                item.so_luong = so_luong;
+            } else if (thay_doi !== undefined) {
+                item.so_luong += thay_doi;
+            }
             if (item.so_luong <= 0) await item.destroy(); 
             else await item.save();
             res.json({ success: true });
@@ -85,5 +89,31 @@ router.post('/update', async (req, res) => {
     }
 });
 
+// API Xóa sản phẩm khỏi giỏ hàng
+router.post('/remove', verifyToken, async (req, res) => {
+    try {
+        // Lấy mã người dùng từ token (middleware verifyToken truyền sang)
+        const ma_nguoi_dung = req.user.ma_nguoi_dung; // hoặc req.user.id tùy ông đặt
+        const { ma_san_pham } = req.body;
+
+        if (!ma_san_pham) {
+            return res.status(400).json({ success: false, message: 'Thiếu mã sản phẩm' });
+        }
+
+        // Gọi lệnh xóa trong CSDL
+        // (Lưu ý: Thay GioHang bằng biến model của ông nếu ông đặt tên khác)
+        await GioHang.destroy({
+            where: {
+                ma_nguoi_dung: ma_nguoi_dung,
+                ma_san_pham: ma_san_pham
+            }
+        });
+
+        res.json({ success: true, message: 'Đã xóa sản phẩm khỏi giỏ hàng' });
+    } catch (error) {
+        console.error("Lỗi xóa giỏ hàng:", error);
+        res.status(500).json({ success: false, message: 'Lỗi server' });
+    }
+});
 // Dòng này LUÔN LUÔN nằm cuối cùng
 module.exports = router;

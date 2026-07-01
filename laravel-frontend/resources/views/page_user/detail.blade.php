@@ -108,7 +108,7 @@
         <div class="detail-reviews">
             <h3 class="detail-reviews__title">Đánh giá sản phẩm</h3>
 
-            <div class="detail-review-form">
+            <div class="detail-review-form hidden" id="review-form-container">
                 <h4 class="detail-review-form__title">Gửi đánh giá của bạn</h4>
                 <form id="form-danh-gia">
                     <div class="detail-review-form__stars" id="star-rating-container">
@@ -127,6 +127,10 @@
                         Gửi đánh giá
                     </button>
                 </form>
+            </div>
+            
+            <div id="review-ineligible-message" class="bg-gray-50 border border-gray-100 rounded-2xl p-6 text-center text-gray-500 mb-8">
+                Bạn chỉ có thể đánh giá sau khi đã mua và nhận được sản phẩm này.
             </div>
 
             <div id="danh-sach-danh-gia" class="detail-review-list">
@@ -170,8 +174,27 @@
         }
     }
 
-    // 2. HIỆU ỨNG CHỌN SAO & GỬI ĐÁNH GIÁ
-    document.addEventListener('DOMContentLoaded', function() {
+    document.addEventListener('DOMContentLoaded', async function() {
+        const maSanPham = {{ $sanPham->ma_san_pham }};
+        const token = localStorage.getItem('token');
+        
+        // KIỂM TRA QUYỀN ĐÁNH GIÁ (Chỉ hiện form nếu đã mua và đơn hàng hoàn thành)
+        if (token) {
+            try {
+                const checkRes = await fetch(`${API_URL}/reviews/check-eligibility/${maSanPham}`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const checkData = await checkRes.json();
+                
+                if (checkData.success && checkData.eligible) {
+                    document.getElementById('review-form-container').classList.remove('hidden');
+                    document.getElementById('review-ineligible-message').classList.add('hidden');
+                }
+            } catch (error) {
+                console.error('Lỗi kiểm tra quyền đánh giá:', error);
+            }
+        }
+        
         const stars = document.querySelectorAll('.star-icon');
         const ratingInput = document.getElementById('so_sao_input');
         const formDanhGia = document.getElementById('form-danh-gia');
@@ -241,11 +264,11 @@
                         ratingInput.value = 0;
                         highlightStars(0);
                     } else {
-                        alert('Lỗi: ' + result.message);
+                        alert(result.message || 'Lỗi server');
                     }
                 } catch (error) {
                     console.error('Lỗi khi gửi đánh giá:', error);
-                    alert('Không thể kết nối đến server Node.js!');
+                    alert('Bạn chưa mua sản phẩm này hoặc phiên đăng nhập đã hết hạn!');
                 }
             });
         }

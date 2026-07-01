@@ -1,107 +1,61 @@
 /* ============================================================
-   USER HOME CSS - CSS riêng cho trang chủ
+   USER HOME CSS - CSS tinh gọn cho trang chủ (Đã xóa màu nền thừa)
    ============================================================ */
 
-/* === Swiper Banner === */
-.home-banner {
-    padding-top: 3rem;
-    padding-bottom: 1rem;
-    padding-left: 2rem;
-    padding-right: 2rem;
-    background-color: var(--user-bg);
-}
-
-.home-banner__container {
-    max-width: 80rem;
-    margin: 0 auto;
-    padding: 0 1rem;
-    margin-top: 1rem;
-    margin-bottom: 2rem;
-}
-
-@media (min-width: 640px) {
-    .home-banner__container {
-        padding: 0 1.5rem;
-    }
-}
-
-@media (min-width: 1024px) {
-    .home-banner__container {
-        padding: 0 2rem;
-    }
-}
+/* === Bỏ các class định dạng nền vì Tailwind đã lo hết ở HTML === */
 
 .home-banner__swiper {
-    padding: 0 0.5rem;
-    padding-bottom: 3rem;
     position: relative;
-}
-
-.home-banner__img {
-    width: 100%;
-    height: 220px;
-    object-fit: cover;
-    border-radius: var(--user-radius-2xl);
-    box-shadow: var(--user-shadow-sm);
-    transition: box-shadow 0.3s ease;
-}
-
-.home-banner__img:hover {
-    box-shadow: var(--user-shadow-md);
-}
-
-@media (min-width: 768px) {
-    .home-banner__img {
-        height: 320px;
-    }
+    padding-bottom: 2rem; /* Tạo khoảng trống cho các dấu chấm Swiper */
 }
 
 /* === Voucher Section === */
-.home-voucher {
-    background-color: var(--user-bg);
-    padding-bottom: 2rem;
-    padding-left: 2rem;
-    padding-right: 2rem;
-}
-
-.voucher-grid {
-    display: grid;
-    grid-template-columns: repeat(1, minmax(0, 1fr));
-    gap: 1.5rem;
-}
-
-@media (min-width: 768px) {
-    .voucher-grid {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-    }
-}
-
-@media (min-width: 1024px) {
-    .voucher-grid {
-        grid-template-columns: repeat(3, minmax(0, 1fr));
-    }
-}
-
 .voucher-card {
     display: flex;
-    background-color: var(--user-white);
-    border-radius: var(--user-radius-xl);
-    box-shadow: var(--user-shadow-sm);
-    border: 1px solid var(--user-pink-100);
+    background-color: #ffffff; /* Trắng tinh */
+    border-radius: 1rem; /* rounded-2xl */
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    border: 1px solid #fce7f3; /* pink-100 */
     overflow: hidden;
     position: relative;
+    transition: box-shadow 0.3s ease;
+}
+
+.voucher-card:hover {
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
 }
 
 .voucher-card__left {
     width: 6rem;
-    background-color: var(--user-pink-500);
-    color: var(--user-white);
+    background-color: #d15a8c; /* Chuyển từ pink-500 sang tông hồng trầm hơn */
+    color: #ffffff;
     display: flex;
     flex-direction: column;
     justify-content: center;
     align-items: center;
     padding: 0.5rem;
-    border-right: 2px dashed var(--user-pink-200);
+    position: relative;
+    border-right: 2px dashed #f9c2d9; /* Giảm độ gắt của đường gạch */
+}
+
+.voucher-card__left::before,
+.voucher-card__left::after {
+    content: '';
+    position: absolute;
+    right: -8px;
+    width: 16px;
+    height: 16px;
+    /* DÙNG MÃ MÀU NÀY CHO TẤT CẢ CÁC NỀN TRANG ĐỂ TRÁNH BỊ LỆCH MÀU */
+    background-color: #fdfaf6; 
+    border-radius: 50%;
+}
+
+.voucher-card__left::before {
+    top: -8px;
+}
+
+.voucher-card__left::after {
+    bottom: -8px;
 }
 
 .voucher-card__label {
@@ -126,19 +80,19 @@
 
 .voucher-card__code {
     font-weight: 700;
-    color: var(--user-gray-800);
+    color: #374151; /* Chuyển từ gray-800 sang xám đậm vừa phải */
     font-size: 1.125rem;
 }
 
 .voucher-card__min {
     font-size: 0.75rem;
-    color: var(--user-gray-500);
+    color: #6b7280; /* gray-500 */
     margin-top: 0.25rem;
 }
 
 .voucher-card__remaining {
     font-size: 0.75rem;
-    color: var(--user-red-500);
+    color: #b91c1c; /* Chuyển từ red-500 sang đỏ trầm (red-700) để dịu hơn */
     margin-top: 0.25rem;
     font-weight: 500;
 }
@@ -149,8 +103,8 @@
 }
 
 .voucher-card__copy-btn {
-    background-color: var(--user-pink-100);
-    color: var(--user-pink-600);
+    background-color: #fce7f3; /* pink-100 */
+    color: #db2777; /* pink-600 */
     font-size: 0.75rem;
     font-weight: 700;
     padding: 0.375rem 1rem;
@@ -161,117 +115,22 @@
 }
 
 .voucher-card__copy-btn:hover {
-    background-color: var(--user-pink-200);
+    background-color: #fbcfe8; /* pink-200 */
 }
 
-/* === AI Section === */
-.home-ai {
-    background-color: var(--user-bg);
-    padding: 1rem 2rem;
+/* Tăng độ bo góc cho các khối để nhìn hiện đại hơn */
+.voucher-card, .ai-guest-card, .ai-recommend-card {
+    border-radius: 1.25rem !important; /* bo tròn 20px */
 }
 
-.ai-guest-card {
-    background-color: var(--user-white);
-    border-radius: var(--user-radius-3xl);
-    padding: 2.5rem;
-    text-align: center;
-    border: 1px solid var(--user-pink-100);
-    box-shadow: var(--user-shadow-sm);
-    position: relative;
-    overflow: hidden;
+/* Hiệu ứng trượt nhẹ khi hover vào banner */
+.home-banner__img {
+    transition: transform 0.5s ease;
 }
-
-.ai-guest-card__bar {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 0.5rem;
-    background: linear-gradient(to right, var(--user-pink-300), #c084fc);
+.home-banner__img:hover {
+    transform: scale(1.02);
 }
-
-.ai-guest-card__icon {
-    font-size: 3rem;
-    margin-bottom: 1rem;
-    display: block;
-}
-
-.ai-guest-card__title {
-    font-size: 1.5rem;
-    font-weight: 700;
-    color: var(--user-gray-800);
-    margin-bottom: 0.75rem;
-}
-
-.ai-guest-card__desc {
-    color: var(--user-gray-600);
-    margin-bottom: 1.5rem;
-    max-width: 42rem;
-    margin-left: auto;
-    margin-right: auto;
-}
-
-/* AI Recommendation */
-.ai-recommend-card {
-    background: linear-gradient(to right, var(--user-pink-50), var(--user-white));
-    border-radius: var(--user-radius-3xl);
-    padding: 2rem;
-    border: 1px solid var(--user-pink-100);
-    box-shadow: var(--user-shadow-sm);
-    position: relative;
-    overflow: hidden;
-}
-
-.ai-recommend-card__glow {
-    position: absolute;
-    top: 0;
-    right: 0;
-    margin-top: -1rem;
-    margin-right: -1rem;
-    width: 8rem;
-    height: 8rem;
-    background-color: var(--user-pink-200);
-    border-radius: 9999px;
-    opacity: 0.4;
-    filter: blur(40px);
-}
-
-.ai-recommend-card__header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    margin-bottom: 2rem;
-    position: relative;
-    z-index: 10;
-}
-
-.ai-recommend-card__title {
-    font-size: 1.5rem;
-    font-weight: 900;
-    color: var(--user-gray-800);
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    display: flex;
-    align-items: center;
-}
-
-.ai-recommend-card__title-icon {
-    font-size: 1.875rem;
-    margin-right: 0.75rem;
-}
-
-/* === Featured Products === */
-.home-featured {
-    background-color: var(--user-bg);
-    padding: 2rem;
-}
-
-.home-featured__title {
-    text-align: center;
-    font-weight: 900;
-    font-size: 1.5rem;
-    color: var(--user-gray-800);
-    margin-bottom: 2rem;
-    text-transform: uppercase;
-    letter-spacing: 0.1em;
+.voucher-card, .ai-guest-card, .ai-recommend-card {
+    border: 1px solid #efeae6; /* Dùng border màu kem đậm thay vì màu hồng */
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05); /* Bóng đổ nhẹ và mờ hơn */
 }

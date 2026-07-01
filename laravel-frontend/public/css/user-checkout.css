@@ -26,11 +26,11 @@
 /* === Payment Summary Card === */
 .checkout-summary {
     background-color: var(--user-white);
-    padding: 1.5rem;
-    border-radius: var(--user-radius-xl);
+    padding: 2rem;
+    border-radius: var(--user-radius-3xl);
     box-shadow: var(--user-shadow-sm);
     width: 100%;
-    border: 1px solid var(--user-gray-100);
+    border: 1px solid var(--user-pink-100);
 }
 
 .checkout-summary__title {
@@ -118,7 +118,7 @@
     color: var(--user-white);
     font-weight: 700;
     padding: 0.75rem 1.5rem;
-    border-radius: var(--user-radius-lg);
+    border-radius: 9999px;
     border: none;
     cursor: pointer;
     transition: background-color 0.3s ease;
@@ -146,11 +146,11 @@
 /* === Address Form === */
 .checkout-address {
     background-color: var(--user-white);
-    padding: 1.5rem;
-    border-radius: var(--user-radius-xl);
+    padding: 2rem;
+    border-radius: var(--user-radius-3xl);
     box-shadow: var(--user-shadow-sm);
     width: 100%;
-    border: 2px solid transparent;
+    border: 2px solid var(--user-pink-100);
     transition: border-color 0.3s ease;
 }
 
@@ -206,13 +206,14 @@
 /* === Payment Method === */
 .checkout-payment-title {
     background-color: var(--user-white);
-    padding: 1rem;
-    border-radius: var(--user-radius-xl);
+    padding: 1.5rem;
+    border-radius: var(--user-radius-2xl);
     box-shadow: var(--user-shadow-sm);
     text-align: center;
     font-weight: 700;
     color: var(--user-gray-700);
     width: 100%;
+    border: 1px solid var(--user-pink-100);
 }
 
 .checkout-payment-methods {
@@ -220,6 +221,7 @@
     gap: 2rem;
     width: 100%;
     justify-content: center;
+    align-items: stretch;
 }
 
 .checkout-payment-option {
@@ -239,6 +241,11 @@
     color: var(--user-gray-600);
     border: 2px solid var(--user-gray-100);
     transition: border-color 0.3s ease;
+    flex-grow: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
 }
 
 .checkout-payment-option__label:hover {
@@ -259,15 +266,15 @@
 .checkout-qr {
     background-color: var(--user-white);
     width: 100%;
-    border-radius: var(--user-radius-2xl);
+    border-radius: var(--user-radius-3xl);
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
     box-shadow: var(--user-shadow-sm);
     margin-top: 1rem;
-    padding: 2rem;
-    border: 1px solid var(--user-gray-100);
+    padding: 2.5rem;
+    border: 1px solid var(--user-pink-100);
 }
 
 .checkout-qr__text {
@@ -291,7 +298,7 @@
     color: var(--user-white);
     font-weight: 700;
     padding: 1rem 2rem;
-    border-radius: var(--user-radius-xl);
+    border-radius: 9999px;
     box-shadow: var(--user-shadow-md);
     transition: background-color 0.3s ease;
     border: none;

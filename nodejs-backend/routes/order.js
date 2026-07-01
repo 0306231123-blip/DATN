@@ -22,7 +22,7 @@ router.post('/create', async (req, res) => {
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
         
         // 1. Lấy dữ liệu từ Frontend gửi lên
-        const { dia_chi, so_dien_thoai, ma_khuyen_mai, so_tien_giam } = req.body; 
+        const { dia_chi, so_dien_thoai, ma_khuyen_mai, so_tien_giam, phuong_thuc_thanh_toan } = req.body; 
         
         if (!dia_chi || dia_chi.trim() === '' || dia_chi.trim().startsWith(',')) {
             await t.rollback();
@@ -31,15 +31,21 @@ router.post('/create', async (req, res) => {
 
         const maNguoiDung = decoded.ma_nguoi_dung;
         const user = await NguoiDung.findByPk(maNguoiDung);
+        const { Op } = require('sequelize');
+
+        let whereCondition = { ma_nguoi_dung: maNguoiDung };
+        if (req.body.selected_items && Array.isArray(req.body.selected_items) && req.body.selected_items.length > 0) {
+            whereCondition.ma_san_pham = { [Op.in]: req.body.selected_items };
+        }
 
         const items = await GioHang.findAll({
-            where: { ma_nguoi_dung: maNguoiDung },
+            where: whereCondition,
             include: [{ model: SanPham, as: 'san_pham' }]
         });
 
         if (!items || items.length === 0) {
             await t.rollback();
-            return res.status(400).json({ success: false, message: 'Giỏ hàng trống' });
+            return res.status(400).json({ success: false, message: 'Giỏ hàng trống hoặc không có sản phẩm được chọn' });
         }
 
         // 2. Tính TỔNG TIỀN HÀNG từ các món trong giỏ
@@ -65,8 +71,8 @@ router.post('/create', async (req, res) => {
             ma_khuyen_mai: ma_khuyen_mai || null,
             so_tien_giam: tienGiam,
             trang_thai_don: 'cho_xac_nhan', 
-            phuong_thuc_thanh_toan: 'chuyen_khoan', 
-            trang_thai_thanh_toan: 'da_thanh_toan'
+            phuong_thuc_thanh_toan: phuong_thuc_thanh_toan || 'chuyen_khoan', 
+            trang_thai_thanh_toan: phuong_thuc_thanh_toan === 'cod' ? 'chua_thanh_toan' : 'da_thanh_toan'
         }, { transaction: t });
 
         // 5. TRỪ LƯỢT SỬ DỤNG VOUCHER (Nếu có áp dụng mã)
@@ -90,8 +96,12 @@ router.post('/create', async (req, res) => {
             }, { transaction: t });
         }
 
-        // 7. Xóa giỏ hàng và lưu Transaction
-        await GioHang.destroy({ where: { ma_nguoi_dung: maNguoiDung }, transaction: t });
+        // 7. Xóa các sản phẩm đã đặt khỏi giỏ hàng và lưu Transaction
+        let destroyWhere = { ma_nguoi_dung: maNguoiDung };
+        if (req.body.selected_items && Array.isArray(req.body.selected_items) && req.body.selected_items.length > 0) {
+            destroyWhere.ma_san_pham = { [Op.in]: req.body.selected_items };
+        }
+        await GioHang.destroy({ where: destroyWhere, transaction: t });
         await t.commit();
         
         res.json({ success: true, message: 'Đặt hàng thành công!' });
@@ -129,9 +139,17 @@ router.post('/update-status', async (req, res) => {
 
         // CASE 1: HỦY ĐƠN
         if (trang_thai === 'da_huy') {
-            if (donHang.trang_thai_don !== 'cho_xac_nhan' && donHang.trang_thai_don !== 'cho_xu_ly') {
+            if (donHang.trang_thai_don !== 'cho_xac_nhan' && donHang.trang_thai_don !== 'cho_xu_ly' && donHang.trang_thai_don !== 'da_xac_nhan') {
                 await t.rollback();
-                return res.status(400).json({ success: false, message: 'Đơn đã xác nhận hoặc đang giao, không hủy được!' });
+                return res.status(400).json({ success: false, message: 'Đơn đang giao hoặc đã hoàn thành, không hủy được!' });
+            }
+            
+            // QUY TẮC: Chỉ cho phép hủy trong vòng 30 phút kể từ khi đặt hàng
+            const orderDate = new Date(donHang.ngay_dat);
+            const diffMinutes = Math.floor((new Date() - orderDate) / (1000 * 60));
+            if (diffMinutes > 30) {
+                await t.rollback();
+                return res.status(400).json({ success: false, message: 'Đã quá 30 phút kể từ lúc đặt hàng, bạn không thể tự hủy đơn! Vui lòng liên hệ Hotline để được hỗ trợ.' });
             }
             
             const soDonHuyTruocDo = await DonHang.count({

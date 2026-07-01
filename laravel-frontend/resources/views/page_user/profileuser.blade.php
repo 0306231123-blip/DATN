@@ -144,6 +144,11 @@
 
         document.getElementById('tab-' + tabName).classList.add('profile-tab--active');
         document.getElementById('btn-' + tabName).classList.add('profile-tab-btn--active');
+        
+        // Cập nhật URL để khi F5 không bị mất tab
+        const url = new URL(window.location);
+        url.searchParams.set('tab', tabName);
+        window.history.replaceState({}, '', url);
     }
 
     // 2. LẤY DỮ LIỆU ĐỔ VÀO FORM KHI MỞ TRANG
@@ -180,6 +185,13 @@
                 document.getElementById('input-bank-owner').value = user.chu_tai_khoan || '';
 
                 loadMyOrders();
+
+                // Kiểm tra xem có yêu cầu mở tab cụ thể từ URL không
+                const urlParams = new URLSearchParams(window.location.search);
+                const requestedTab = urlParams.get('tab');
+                if (requestedTab) {
+                    switchTab(requestedTab);
+                }
             } else {
                 logout();
             }
@@ -266,7 +278,10 @@
                 let hasHistory = false;
                 
                 result.data.forEach(order => {
-                    const date = new Date(order.ngay_dat).toLocaleDateString('vi-VN');
+                    const orderDateFull = new Date(order.ngay_dat);
+                    const timeString = orderDateFull.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
+                    const dateString = orderDateFull.toLocaleDateString('vi-VN');
+                    const date = `${timeString} - ${dateString}`;
                     
                     const tongTienHang = parseInt(order.tong_tien_hang);
                     const soTienGiam = parseInt(order.so_tien_giam || 0); 
@@ -340,7 +355,7 @@
                         }
 
                         htmlHistory += `
-                            <div class="profile-order-card">
+                            <div class="profile-order-card" id="order-${order.ma_don_hang}">
                                 <div class="profile-order-card__header">
                                     <div>
                                         <p class="profile-order-card__id">Đơn hàng #${order.ma_don_hang}</p>
@@ -366,17 +381,29 @@
                         let activeStatusColor = 'bg-yellow-100 text-yellow-700';
                         let actionBtnHtml = '';
 
-                        if (order.trang_thai_don === 'cho_xac_nhan') {
-                            actionBtnHtml = `
-                                <button onclick="updateOrderStatus(${order.ma_don_hang}, 'da_huy')" class="mt-4 w-full bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded-lg transition text-sm shadow">
-                                    Hủy đơn hàng
-                                </button>`;
+                        if (order.trang_thai_don === 'cho_xac_nhan' || order.trang_thai_don === 'da_xac_nhan') {
+                            const orderDateObj = new Date(order.ngay_dat);
+                            const diffMinutes = Math.floor((new Date() - orderDateObj) / (1000 * 60));
+                            
+                            if (order.trang_thai_don === 'da_xac_nhan') {
+                                activeStatusText = 'Đã xác nhận';
+                                activeStatusColor = 'bg-purple-100 text-purple-700';
+                            }
+                            
+                            if (diffMinutes <= 30) {
+                                actionBtnHtml = `
+                                    <button onclick="updateOrderStatus(${order.ma_don_hang}, 'da_huy')" class="mt-4 w-full bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded-lg transition text-sm shadow">
+                                        Hủy đơn hàng
+                                    </button>
+                                    <p class="text-xs text-center text-gray-400 mt-2">Bạn có thể hủy đơn trong vòng 30 phút (còn lại ${30 - diffMinutes} phút)</p>`;
+                            } else {
+                                if (order.trang_thai_don === 'cho_xac_nhan') {
+                                    actionBtnHtml = `<div class="mt-4 text-sm text-center text-gray-500 bg-gray-50 border border-gray-200 py-2 rounded-lg w-full">Đã quá 30 phút kể từ lúc đặt hàng, không thể tự hủy đơn.</div>`;
+                                }
+                            }
                         } else if (order.trang_thai_don === 'dang_giao') {
                             activeStatusText = 'Đang giao hàng';
                             activeStatusColor = 'bg-blue-100 text-blue-700';
-                        } else if (order.trang_thai_don === 'da_xac_nhan') {
-                            activeStatusText = 'Đã xác nhận';
-                            activeStatusColor = 'bg-purple-100 text-purple-700';
                         } else if (order.trang_thai_don === 'dang_tra_hang' || order.trang_thai_don === 'tra_hang_hoan_tien') {
                             activeStatusText = 'Đang xử lý trả hàng';
                             activeStatusColor = 'bg-orange-100 text-orange-700 border border-orange-300'; 
@@ -389,7 +416,7 @@
                             actionBtnHtml = `<div class="mt-4 text-sm text-left text-red-600 bg-red-50 p-3 rounded-lg w-full border border-red-200">Yêu cầu trả hàng của bạn đã bị từ chối vì lý do sai quy định hoàn trả.</div>`;
                         }
                             htmlOrders += `
-                            <div class="profile-order-card">
+                            <div class="profile-order-card" id="order-${order.ma_don_hang}">
                                 <div class="profile-order-card__header" style="align-items: center; margin-bottom: 1rem;">
                                     <p class="profile-order-card__id">Đơn hàng #${order.ma_don_hang}</p>
                                     <span class="profile-order-card__status ${activeStatusColor}">${activeStatusText}</span>
@@ -417,6 +444,20 @@
                 if (hasHistory) {
                     historyContainer.innerHTML = htmlHistory;
                     historyContainer.classList.remove('profile-orders-empty');
+                }
+                
+                // Cuộn đến đơn hàng nếu có hash trên URL
+                if (window.location.hash) {
+                    setTimeout(() => {
+                        const target = document.querySelector(window.location.hash);
+                        if (target) {
+                            target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                            target.style.boxShadow = '0 0 0 2px #f472b6'; // pink-400 highlight
+                            setTimeout(() => {
+                                target.style.boxShadow = '';
+                            }, 2000);
+                        }
+                    }, 300);
                 }
             }
         } catch (error) {

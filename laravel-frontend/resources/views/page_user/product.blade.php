@@ -1,5 +1,10 @@
 @extends('layouts.user')
 @section('title', 'Tất cả Sản phẩm')
+
+@section('styles')
+<link rel="stylesheet" href="{{ asset('css/user-home.css') }}">
+@endsection
+
 @section('content')
 
 <section class="user-section">

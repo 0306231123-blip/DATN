@@ -8,5 +8,8 @@ const { verifyToken } = require('../middleware/verifyToken');
 
 // Tạo API thêm đánh giá
 router.post('/add', verifyToken, reviewController.addReview);
+// Kiểm tra quyền đánh giá (đã mua & đơn hàng hoàn thành)
+router.get('/check-eligibility/:ma_san_pham', verifyToken, reviewController.checkEligibility);
+
 router.get('/:ma_san_pham', reviewController.getReviews);
 module.exports = router;
