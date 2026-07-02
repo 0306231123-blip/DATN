@@ -7,11 +7,22 @@
     display: grid;
     grid-template-columns: repeat(1, minmax(0, 1fr));
     gap: 2.5rem;
+    background-color: var(--user-white);
+    border-radius: var(--user-radius-3xl);
+    padding: 2.5rem;
+    box-shadow: var(--user-shadow-sm);
+    border: 1px solid var(--user-pink-100);
 }
 
 @media (min-width: 768px) {
     .detail-grid {
         grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@media (min-width: 1024px) {
+    .detail-grid {
+        grid-template-columns: 4fr 6fr;
     }
 }
 
@@ -108,6 +119,42 @@
     background-color: var(--user-pink-600);
 }
 
+/* === Action Column (Col 3) === */
+.detail-action__box {
+    background-color: var(--user-white);
+    padding: 2rem;
+    border-radius: var(--user-radius-3xl);
+    box-shadow: var(--user-shadow-sm);
+    border: 1px solid var(--user-pink-100);
+    position: sticky;
+    top: 2rem;
+}
+
+.detail-action__title {
+    font-weight: 900;
+    font-size: 1.25rem;
+    color: var(--user-gray-800);
+    margin-bottom: 1.5rem;
+    border-bottom: 1px solid var(--user-gray-100);
+    padding-bottom: 0.75rem;
+}
+
+.detail-action__benefits {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    font-size: 0.875rem;
+    color: var(--user-gray-700);
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.detail-action__benefits li {
+    display: flex;
+    align-items: center;
+}
+
 /* === Info Column === */
 .detail-info {
     display: flex;
@@ -183,17 +230,17 @@
 /* === Description & Specs === */
 .detail-content-row {
     display: flex;
+    flex-direction: column;
     gap: 1.5rem;
 }
 
 .detail-description {
     flex: 1;
     background-color: var(--user-white);
-    padding: 2rem;
+    padding: 1.5rem;
     border-radius: var(--user-radius-3xl);
     box-shadow: var(--user-shadow-sm);
     border: 1px solid var(--user-pink-100);
-    min-height: 300px;
 }
 
 .detail-description__label {
@@ -210,12 +257,13 @@
 
 .detail-specs {
     display: flex;
-    flex-direction: column;
+    flex-wrap: wrap;
     gap: 0.75rem;
-    width: 33.333%;
+    width: 100%;
 }
 
 .detail-specs__item {
+    flex: 1 1 calc(50% - 0.75rem);
     background-color: var(--user-white);
     padding: 0.5rem 0.75rem;
     border-radius: var(--user-radius-lg);

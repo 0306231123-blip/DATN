@@ -187,8 +187,14 @@
                     const tienGiam = parseInt(v.gia_tri).toLocaleString() + (v.loai_giam === 'tien_mat' ? 'đ' : '%');
                     const donToiThieu = parseInt(v.don_toi_thieu).toLocaleString() + 'đ';
                     
+                    const outOfStock = v.so_luong <= 0;
+                    const cardClass = outOfStock ? 'opacity-50 grayscale' : 'hover:shadow-md';
+                    const btnHtml = outOfStock 
+                        ? `<button disabled class="bg-gray-100 text-gray-500 font-bold text-xs py-1.5 px-4 rounded-full cursor-not-allowed">Hết lượt</button>`
+                        : `<button onclick="copyVoucher('${v.ma_code}')" class="bg-pink-50 text-pink-600 hover:bg-pink-100 font-bold text-xs py-1.5 px-4 rounded-full transition">Copy Mã</button>`;
+
                     html += `
-                        <div class="bg-[#fefcf8] rounded-2xl border border-pink-50 shadow-sm overflow-hidden flex hover:shadow-md transition">
+                        <div class="bg-[#fefcf8] rounded-2xl border border-pink-50 shadow-sm overflow-hidden flex transition ${cardClass}">
                             <div class="bg-pink-500 w-24 flex flex-col justify-center items-center p-2 text-white text-center relative">
                                 <div class="w-4 h-4 bg-white rounded-full absolute -top-2 -right-2"></div>
                                 <div class="w-4 h-4 bg-white rounded-full absolute -bottom-2 -right-2"></div>
@@ -199,12 +205,10 @@
                                 <div>
                                     <h4 class="font-bold text-gray-800 text-lg mb-1">${v.ma_code}</h4>
                                     <p class="text-xs text-gray-500 mb-1">Đơn tối thiểu ${donToiThieu}</p>
-                                    <p class="text-xs text-pink-500 font-medium">Còn lại: ${v.so_luong} lượt</p>
+                                    <p class="text-xs text-pink-500 font-medium">Còn lại: ${Math.max(0, v.so_luong)} lượt</p>
                                 </div>
                                 <div class="mt-3 text-right">
-                                    <button onclick="copyVoucher('${v.ma_code}')" class="bg-pink-50 text-pink-600 hover:bg-pink-100 font-bold text-xs py-1.5 px-4 rounded-full transition">
-                                        Copy Mã
-                                    </button>
+                                    ${btnHtml}
                                 </div>
                             </div>
                         </div>

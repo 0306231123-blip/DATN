@@ -15,7 +15,6 @@ const SanPham = sequelize.define('san_pham', {
   sku: {
     type: DataTypes.STRING(100),
     allowNull: true,
-    unique: true,
   },
   co_bien_the: {
     type: DataTypes.BOOLEAN,
@@ -95,9 +94,7 @@ const SanPham = sequelize.define('san_pham', {
   },
 }, {
   timestamps: false,
-  freezeTableName: true,
+  freezeTableName: true
 });
-
-
 
 module.exports = SanPham;

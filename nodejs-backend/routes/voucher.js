@@ -115,7 +115,6 @@ router.get('/active', async (req, res) => {
         const vouchers = await KhuyenMai.findAll({
             where: {
                 trang_thai: 'hoat_dong',
-                so_luong: { [Op.gt]: 0 }, // Số lượng phải lớn hơn 0
                 ngay_ket_thuc: { [Op.gt]: new Date() } // Chưa tới hạn kết thúc
             },
             order: [['gia_tri', 'DESC']] // Mã giảm giá trị cao xếp trên

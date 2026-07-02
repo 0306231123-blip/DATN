@@ -32,6 +32,10 @@
                         <span>Mã giảm giá (<span id="applied-voucher-name"></span>):</span>
                         <span id="discount-amount">-0 VNĐ</span>
                     </div>
+                    <div class="checkout-summary__row">
+                        <span>Phí giao hàng:</span>
+                        <span id="shipping-fee">Chưa tính</span>
+                    </div>
                     <div class="checkout-summary__row checkout-summary__row--total">
                         <span class="checkout-summary__total-label">Cần thanh toán:</span>
                         <span id="final-price" class="checkout-summary__total-value">Đang tính...</span>
@@ -166,6 +170,7 @@
         let baseTotal = 0;          // Tổng tiền hàng gốc
         let currentDiscount = 0;    // Số tiền được giảm
         let appliedVoucherId = null;// ID của voucher đã áp dụng
+        let currentShippingFee = 0; // Phí giao hàng
 
         const subTotalEl = document.getElementById('sub-total-price');
         const finalPriceEl = document.getElementById('final-price');
@@ -202,6 +207,21 @@
 
         provinceSelect.addEventListener('change', function() {
             const provinceId = this.value;
+            
+            // Tính phí giao hàng
+            const provinceOption = provinceSelect.options[provinceSelect.selectedIndex];
+            const provinceName = provinceOption ? provinceOption.getAttribute('data-name') : '';
+            
+            if (baseTotal >= 1999000) {
+                currentShippingFee = 0;
+            } else if (provinceName.includes('Hồ Chí Minh') || provinceName.includes('Ho Chi Minh')) {
+                currentShippingFee = 20000;
+            } else {
+                currentShippingFee = 35000;
+            }
+            document.getElementById('shipping-fee').textContent = currentShippingFee > 0 ? '+ ' + currentShippingFee.toLocaleString() + ' VNĐ' : 'Miễn phí';
+            updateFinalPrice();
+
             wardSelect.innerHTML = '<option value="" disabled selected>2. Chọn Phường / Xã</option>';
             fetch(`https://provinces.open-api.vn/api/v2/p/${provinceId}?depth=2`)
                 .then(res => res.json())
@@ -246,7 +266,13 @@
                     
                     // Cập nhật giao diện
                     subTotalEl.textContent = baseTotal.toLocaleString() + ' VNĐ';
-                    updateFinalPrice();
+                    
+                    // Cập nhật lại phí ship nếu đang chọn tỉnh
+                    if (provinceSelect.value) {
+                        provinceSelect.dispatchEvent(new Event('change'));
+                    } else {
+                        updateFinalPrice();
+                    }
                 } else {
                     alert('Giỏ hàng của bạn đang trống!');
                     window.location.href = '/user/cart';
@@ -258,7 +284,7 @@
         }
         
         function updateFinalPrice() {
-            let final = baseTotal - currentDiscount;
+            let final = baseTotal + currentShippingFee - currentDiscount;
             if (final < 0) final = 0; // Không để âm tiền
             finalPriceEl.textContent = final.toLocaleString() + ' VNĐ';
         }
@@ -362,12 +388,14 @@
                                    `Giảm ${v.gia_tri.toLocaleString()}đ` : 
                                    `Giảm ${v.gia_tri}% (Tối đa ${(v.giam_toi_da||0).toLocaleString()}đ)`;
                         
+                        let outOfStock = v.so_luong <= 0;
                         let minOrder = `Đơn tối thiểu: ${v.don_toi_thieu.toLocaleString()}đ`;
-                        let isEligible = baseTotal >= v.don_toi_thieu;
+                        let isEligible = baseTotal >= v.don_toi_thieu && !outOfStock;
                         
                         let btnClass = isEligible ? 'bg-pink-500 hover:bg-pink-600 text-white shadow-sm' : 'bg-gray-100 text-gray-400 cursor-not-allowed';
                         let btnAction = isEligible ? `onclick="window.selectVoucher('${v.ma_code}')"` : 'disabled';
-                        let borderClass = isEligible ? 'border-pink-200' : 'border-gray-200 opacity-70';
+                        let borderClass = isEligible ? 'border-pink-200' : 'border-gray-200 opacity-70 grayscale';
+                        let btnText = outOfStock ? 'Hết lượt' : (isEligible ? 'Dùng ngay' : 'Chưa đủ đ/k');
                         
                         html += `
                         <div class="border ${borderClass} rounded-2xl p-4 flex flex-col gap-3 bg-white hover:shadow-md transition relative overflow-hidden group">
@@ -376,10 +404,10 @@
                                 <div>
                                     <div class="font-black text-pink-600 text-xl tracking-tight leading-none mb-1">${v.ma_code}</div>
                                     <div class="text-gray-800 font-bold text-sm">${desc}</div>
-                                    <div class="text-gray-500 text-xs font-medium mt-1">${minOrder}</div>
+                                    <div class="text-gray-500 text-xs font-medium mt-1">${minOrder} | Còn: ${Math.max(0, v.so_luong)}</div>
                                 </div>
                                 <button ${btnAction} class="px-5 py-2 rounded-full font-bold text-sm transition ${btnClass}">
-                                    ${isEligible ? 'Dùng ngay' : 'Chưa đủ đ/k'}
+                                    ${btnText}
                                 </button>
                             </div>
                         </div>
@@ -459,11 +487,12 @@
                         'Content-Type': 'application/json',
                         'Authorization': 'Bearer ' + token 
                     },
-                    // GỬI KÈM CẢ ID VOUCHER VÀ SỐ TIỀN GIẢM LÊN SERVER VÀ DANH SÁCH SẢN PHẨM ĐƯỢC CHỌN
+                    // GỬI KÈM TIỀN SHIP, VOUCHER, SP CHỌN...
                     body: JSON.stringify({ 
                         dia_chi: fullAddress,
                         ma_khuyen_mai: appliedVoucherId,
                         so_tien_giam: currentDiscount,
+                        phi_van_chuyen: currentShippingFee,
                         selected_items: selectedItems,
                         phuong_thuc_thanh_toan: document.querySelector('input[name="payment"]:checked').value
                     })

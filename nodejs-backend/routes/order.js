@@ -22,7 +22,7 @@ router.post('/create', async (req, res) => {
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
         
         // 1. Lấy dữ liệu từ Frontend gửi lên
-        const { dia_chi, so_dien_thoai, ma_khuyen_mai, so_tien_giam, phuong_thuc_thanh_toan } = req.body; 
+        const { dia_chi, so_dien_thoai, ma_khuyen_mai, so_tien_giam, phi_van_chuyen, phuong_thuc_thanh_toan } = req.body; 
         
         if (!dia_chi || dia_chi.trim() === '' || dia_chi.trim().startsWith(',')) {
             await t.rollback();
@@ -55,9 +55,10 @@ router.post('/create', async (req, res) => {
             tong_tien += (item.san_pham.gia_khuyen_mai || item.san_pham.gia) * item.so_luong;
         }
 
-        // 3. Xử lý tính toán VOUCHER
+        // 3. Xử lý tính toán VOUCHER VÀ SHIP
         const tienGiam = so_tien_giam || 0;
-        let tongThanhToan = tong_tien - tienGiam;
+        const tienShip = phi_van_chuyen || 0;
+        let tongThanhToan = tong_tien + tienShip - tienGiam;
         if (tongThanhToan < 0) tongThanhToan = 0; // Chống lỗi âm tiền
 
         // 4. Lệnh tạo đơn hàng (Đã sửa lại biến user cho chuẩn)
@@ -67,7 +68,8 @@ router.post('/create', async (req, res) => {
             so_dien_thoai_nhan: so_dien_thoai || (user ? user.so_dien_thoai : '0123456789'), 
             dia_chi_giao: dia_chi, 
             tong_tien_hang: tong_tien,          // Giá gốc
-            tong_thanh_toan: tongThanhToan,     // Giá đã trừ voucher
+            phi_van_chuyen: tienShip,
+            tong_thanh_toan: tongThanhToan,     // Giá đã tính ship & voucher
             ma_khuyen_mai: ma_khuyen_mai || null,
             so_tien_giam: tienGiam,
             trang_thai_don: 'cho_xac_nhan', 

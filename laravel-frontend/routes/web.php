@@ -67,6 +67,10 @@ Route::prefix('admin')->group(function () {
     Route::get('/statistics', function () {
         return view('admin.statistics');
     })->name('admin.statistics');
+
+    Route::get('/chat', function () {
+        return view('admin.chat');
+    })->name('admin.chat');
 });
 
 

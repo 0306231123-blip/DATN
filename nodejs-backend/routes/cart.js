@@ -17,24 +17,43 @@ router.post('/add', async (req, res) => {
         console.log("Body:", req.body); 
 
         const { ma_san_pham, so_luong } = req.body;
+        const soLuongThem = parseInt(so_luong) || 1;
 
         // Kiểm tra dữ liệu đầu vào
         if (!ma_san_pham) {
             return res.status(400).json({ success: false, message: 'Thiếu mã sản phẩm!' });
         }
 
+        // Lấy thông tin sản phẩm để kiểm tra số lượng tồn
+        const sanPham = await SanPham.findByPk(ma_san_pham);
+        if (!sanPham) {
+            return res.status(404).json({ success: false, message: 'Sản phẩm không tồn tại!' });
+        }
+
         let item = await GioHang.findOne({ 
             where: { ma_nguoi_dung: req.user.ma_nguoi_dung, ma_san_pham } 
         });
 
+        let soLuongHienTaiTrongGio = item ? parseInt(item.so_luong) : 0;
+        if (soLuongHienTaiTrongGio + soLuongThem > sanPham.so_luong_ton) {
+            let maxThem = sanPham.so_luong_ton - soLuongHienTaiTrongGio;
+            if (maxThem <= 0) {
+                return res.status(400).json({ success: false, message: `Bạn đã thêm tối đa số lượng sản phẩm này vào giỏ hàng rồi!` });
+            }
+            return res.status(400).json({ 
+                success: false, 
+                message: `Trong giỏ hàng của bạn đã có ${soLuongHienTaiTrongGio} sản phẩm. Bạn chỉ có thể thêm tối đa ${maxThem} sản phẩm nữa!` 
+            });
+        }
+
         if (item) {
-            item.so_luong = (parseInt(item.so_luong) || 0) + (parseInt(so_luong) || 1);
+            item.so_luong = soLuongHienTaiTrongGio + soLuongThem;
             await item.save();
         } else {
             await GioHang.create({
                 ma_nguoi_dung: req.user.ma_nguoi_dung,
                 ma_san_pham,
-                so_luong: parseInt(so_luong) || 1
+                so_luong: soLuongThem
             });
         }
         res.json({ success: true, message: 'Đã thêm vào giỏ hàng!' });
@@ -68,16 +87,29 @@ router.post('/update', async (req, res) => {
     try {
         const { ma_san_pham, thay_doi, so_luong } = req.body; 
 
+        // Lấy thông tin sản phẩm để kiểm tra số lượng tồn
+        const sanPham = await SanPham.findByPk(ma_san_pham);
+        if (!sanPham) {
+            return res.status(404).json({ success: false, message: 'Sản phẩm không tồn tại!' });
+        }
+
         let item = await GioHang.findOne({ 
             where: { ma_nguoi_dung: req.user.ma_nguoi_dung, ma_san_pham } 
         });
 
         if (item) {
+            let newSoLuong = item.so_luong;
             if (so_luong !== undefined) {
-                item.so_luong = so_luong;
+                newSoLuong = parseInt(so_luong);
             } else if (thay_doi !== undefined) {
-                item.so_luong += thay_doi;
+                newSoLuong += parseInt(thay_doi);
             }
+
+            if (newSoLuong > sanPham.so_luong_ton) {
+                return res.status(400).json({ success: false, message: `Vượt quá số lượng tồn! Sản phẩm chỉ còn ${sanPham.so_luong_ton} cái.` });
+            }
+
+            item.so_luong = newSoLuong;
             if (item.so_luong <= 0) await item.destroy(); 
             else await item.save();
             res.json({ success: true });

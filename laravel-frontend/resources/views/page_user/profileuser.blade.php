@@ -317,20 +317,28 @@
                         let statusColor, statusText, actionBtnHtml = '';
 
                         if (order.trang_thai_don === 'giao_thanh_cong') {
+                            const orderDateObj = new Date(order.ngay_cap_nhat || order.ngay_dat);
+                            const diffDays = Math.floor((new Date() - orderDateObj) / (1000 * 60 * 60 * 24));
+
                             statusColor = 'bg-green-100 text-green-700';
                             statusText = 'Giao thành công (Chờ xác nhận)';
-                            actionBtnHtml = `
-                                <div class="flex space-x-3 mt-4 w-full">
-                                    <button onclick="updateOrderStatus(${order.ma_don_hang}, 'hoan_thanh')" class="w-1/2 bg-gray-800 hover:bg-black text-white font-bold py-2 px-4 rounded-lg transition text-sm shadow">
-                                        Đã nhận được hàng
-                                    </button>
-                                    <button onclick="updateOrderStatus(${order.ma_don_hang}, 'tra_hang_hoan_tien')" class="w-1/2 bg-white border-2 border-gray-200 hover:border-yellow-500 hover:text-yellow-600 text-gray-600 font-bold py-2 px-4 rounded-lg transition text-sm">
-                                        Yêu cầu Trả hàng
-                                    </button>
-                                </div>
-                                <p class="text-xs text-gray-400 mt-2 text-center w-full">Đơn hàng sẽ tự động hoàn thành sau 7 ngày</p>
-                            `;
-                        } 
+                            
+                            if (diffDays <= 3) {
+                                actionBtnHtml = `
+                                    <div class="flex space-x-3 mt-4 w-full">
+                                        <button onclick="updateOrderStatus(${order.ma_don_hang}, 'hoan_thanh')" class="w-1/2 bg-gray-800 hover:bg-black text-white font-bold py-2 px-4 rounded-lg transition text-sm shadow">
+                                            Đã nhận được hàng
+                                        </button>
+                                        <button onclick="updateOrderStatus(${order.ma_don_hang}, 'tra_hang_hoan_tien')" class="w-1/2 bg-white border-2 border-gray-200 hover:border-yellow-500 hover:text-yellow-600 text-gray-600 font-bold py-2 px-4 rounded-lg transition text-sm">
+                                            Yêu cầu Trả hàng
+                                        </button>
+                                    </div>
+                                    <p class="text-xs text-gray-400 mt-2 text-center w-full">Đơn hàng sẽ tự động hoàn thành sau 3 ngày (còn lại ${3 - diffDays} ngày)</p>
+                                `;
+                            } else {
+                                actionBtnHtml = `<div class="mt-4 text-center text-gray-500 font-medium w-full bg-gray-50 py-2 rounded-lg border border-gray-200">Đã hết hạn 3 ngày đổi trả. Hệ thống đang tự động hoàn thành.</div>`;
+                            }
+                        }
                         else if (order.trang_thai_don === 'da_huy') {
                             statusColor = 'bg-red-100 text-red-700';
                             statusText = 'Đã hủy';
@@ -581,10 +589,12 @@ async function callUpdateStatusAPI(maDonHang, trangThaiMoi, lyDoTra, lyDoHuy, ng
 
             <div class="refund-modal__policy">
                 <p class="refund-modal__policy-title">📜 QUY ĐỊNH ĐỔI TRẢ CỦA SHOP:</p>
-                <ul class="refund-modal__policy-list">
-                    <li>Sản phẩm còn nguyên tem mác, hộp, chưa qua sử dụng.</li>
+                <ul class="refund-modal__policy-list" style="margin-bottom: 15px;">
+                    <li>Sản phẩm còn nguyên bao bì, chưa qua sử dụng.</li>
+                    <li>Không bị nứt vỡ do khách hàng.</li>
+                    <li>Chỉ đổi trả nếu lỗi do NSX hoặc giao sai.</li>
                     <li>Yêu cầu tạo trong vòng 3 ngày kể từ khi nhận hàng.</li>
-                    <li><b>Shop có quyền từ chối</b> nếu không đáp ứng các điều kiện trên!</li>
+                    <li><b>Shop có quyền từ chối</b> nếu sai điều kiện!</li>
                 </ul>
                 <label class="refund-modal__agree-label">
                     <input type="checkbox" id="refund-agree" class="refund-modal__agree-checkbox">

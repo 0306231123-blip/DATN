@@ -99,6 +99,10 @@
                         <i data-lucide="users" class="nav-icon"></i>
                         <span>Người dùng</span>
                     </a>
+                    <a href="{{ url('/admin/chat') }}" class="nav-item {{ request()->is('admin/chat') ? 'active' : '' }}" id="nav-chat">
+                        <i data-lucide="message-circle" class="nav-icon"></i>
+                        <span>Hỗ trợ KH</span>
+                    </a>
                 </div>
 
                 <div class="nav-group">

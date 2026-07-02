@@ -17,6 +17,7 @@ const BienTheSanPham = require('./BienTheSanPham');
 const NhaCungCap = require('./NhaCungCap');
 const LichSuKho = require('./LichSuKho');
 const YeuCauTraHang = require('./YeuCauTraHang');
+const TinNhan = require('./TinNhan');
 
 // ========== User ↔ Order ==========
 // User has many Orders
@@ -27,6 +28,17 @@ NguoiDung.hasMany(DonHang, {
 
 // Order belongs to User
 DonHang.belongsTo(NguoiDung, {
+  foreignKey: 'ma_nguoi_dung',
+  as: 'nguoi_dung',
+});
+
+// ========== User ↔ TinNhan ==========
+NguoiDung.hasMany(TinNhan, {
+  foreignKey: 'ma_nguoi_dung',
+  as: 'tin_nhan',
+});
+
+TinNhan.belongsTo(NguoiDung, {
   foreignKey: 'ma_nguoi_dung',
   as: 'nguoi_dung',
 });
