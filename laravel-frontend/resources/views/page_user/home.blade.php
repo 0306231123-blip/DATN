@@ -28,6 +28,44 @@
     </div>  
 </section>
 
+{{-- Danh Muc Section --}}
+<section class="home-category mb-12">
+    <div class="w-full">
+        <div class="flex items-center mb-6">
+            <span class="text-3xl mr-3">📂</span>
+            <h2 class="text-2xl font-black text-gray-800 uppercase tracking-widest">Danh Mục Sản Phẩm</h2>
+        </div>
+        <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+            <div class="grid grid-cols-4 md:grid-cols-6 lg:grid-cols-8 text-center divide-x divide-y divide-gray-100">
+            @foreach($danhMucs as $dm)
+                <a href="/user/product?danh_muc={{ $dm->ma_danh_muc }}" 
+                   @if($dm->so_luong_sp == 0)
+                   onclick="alert('Hiện tại danh mục {{ $dm->ten_danh_muc }} chưa có sản phẩm nào. Bạn vui lòng thêm sản phẩm vào danh mục này sau nhé!'); return false;"
+                   @endif
+                   class="flex flex-col items-center justify-start p-4 hover:bg-gray-50 transition-colors group">
+                    <div class="w-16 h-16 rounded-full bg-pink-50 flex items-center justify-center mb-3 group-hover:-translate-y-1 transition-transform shadow-sm relative">
+                        <span class="text-3xl">
+                            @php
+                                $name = mb_strtolower($dm->ten_danh_muc);
+                                if(str_contains($name, 'son') || str_contains($name, 'môi')) echo '💄';
+                                elseif(str_contains($name, 'da') || str_contains($name, 'skin') || str_contains($name, 'mặt') || str_contains($name, 'rửa')) echo '🧴';
+                                elseif(str_contains($name, 'tẩy trang')) echo '💧';
+                                elseif(str_contains($name, 'chống nắng')) echo '☀️';
+                                elseif(str_contains($name, 'trang điểm') || str_contains($name, 'makeup') || str_contains($name, 'nền') || str_contains($name, 'phấn')) echo '🎨';
+                                elseif(str_contains($name, 'mắt') || str_contains($name, 'mascara')) echo '👁️';
+                                elseif(str_contains($name, 'tóc') || str_contains($name, 'dưỡng tóc')) echo '💇‍♀️';
+                                elseif(str_contains($name, 'toàn thân') || str_contains($name, 'body')) echo '🛀';
+                                else echo '🛍️';
+                            @endphp
+                        </span>
+                    </div>
+                    <span class="text-sm text-gray-700 font-medium group-hover:text-pink-500 transition-colors line-clamp-2 leading-snug">{{ $dm->ten_danh_muc }}</span>
+                </a>
+            @endforeach
+        </div>
+    </div>
+</section>
+
 {{-- Voucher Section --}}
 <section class="home-voucher mb-12">
     <div class="w-full">

@@ -9,14 +9,33 @@ use Illuminate\Support\Facades\DB;
 class ProductController extends Controller
 {
     // 1. Hàm hiển thị trang TẤT CẢ SẢN PHẨM
-    public function index()
+    public function index(Request $request)
     {
-        // Đã sửa: Dùng paginate(12) để tự động chia 12 sản phẩm/trang
-        $danhSachSanPham = SanPham::where('trang_thai', 'dang_ban')
-                                  ->orderBy('ngay_tao', 'desc')
-                                  ->paginate(12);
+        $query = SanPham::where('trang_thai', 'dang_ban');
+
+        // Lọc theo danh mục
+        if ($request->has('danh_muc') && $request->get('danh_muc') != '') {
+            $dmArray = explode(',', $request->get('danh_muc'));
+            
+            // Hỗ trợ danh mục 2 cấp: Lấy cả ID của các danh mục con nếu chọn danh mục cha
+            $allCategoryIds = DB::table('danh_muc')
+                                ->whereIn('ma_danh_muc', $dmArray)
+                                ->orWhereIn('ma_danh_muc_cha', $dmArray)
+                                ->pluck('ma_danh_muc')
+                                ->toArray();
+
+            $query->whereIn('ma_danh_muc', $allCategoryIds);
+        }
+
+        $danhSachSanPham = $query->orderBy('ngay_tao', 'desc')->paginate(12);
+
+        // Nối thêm parameter vào pagination link để giữ nguyên query lọc khi chuyển trang
+        $danhSachSanPham->appends($request->all());
         
-        return view('page_user.product', compact('danhSachSanPham'));
+        // Lấy danh sách danh mục để hiển thị checkbox filter
+        $danhMucs = DB::table('danh_muc')->orderBy('thu_tu_hien_thi', 'asc')->get();
+        
+        return view('page_user.product', compact('danhSachSanPham', 'danhMucs'));
     }
 
     // 2. Hàm hiển thị trang CHI TIẾT SẢN PHẨM
@@ -69,7 +88,18 @@ class ProductController extends Controller
                                 ->take(6) // Lấy đúng 6 sản phẩm thôi để xếp 2 hàng ngang cho đẹp
                                 ->get();
                                 
-        return view('page_user.home', compact('sanPhamNoiBat'));
+        // Lấy danh sách danh mục để hiển thị ra trang chủ
+        $danhMucs = DB::table('danh_muc')->orderBy('thu_tu_hien_thi', 'asc')->get();
+        foreach($danhMucs as $dm) {
+            $childIds = DB::table('danh_muc')->where('ma_danh_muc_cha', $dm->ma_danh_muc)->pluck('ma_danh_muc')->toArray();
+            $allIds = array_merge([$dm->ma_danh_muc], $childIds);
+            $dm->so_luong_sp = DB::table('san_pham')
+                ->whereIn('ma_danh_muc', $allIds)
+                ->where('trang_thai', 'dang_ban')
+                ->count();
+        }
+                                
+        return view('page_user.home', compact('sanPhamNoiBat', 'danhMucs'));
     }
 
     /**

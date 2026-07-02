@@ -3,12 +3,72 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>@yield('title', 'Trang chủ - Hệ thống Mỹ Phẩm')</title>
+    <meta name="csrf-token" content="wSIPVS1TTlWCZwECD0aI8R6Rq8wXhdf3jjJweh55">
+    <title>Tất cả Sản phẩm</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css" />
     <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="{{ asset('css/user.css') }}">
-    @yield('styles')
+    <link rel="stylesheet" href="http://127.0.0.1:8000/css/user.css">
+    <link rel="stylesheet" href="http://127.0.0.1:8000/css/user-home.css">
+<style>
+    .product-layout {
+        display: flex;
+        gap: 30px;
+        align-items: flex-start;
+    }
+    .filter-sidebar {
+        width: 250px;
+        flex-shrink: 0;
+        background: #fefcf8;
+        padding: 20px;
+        border-radius: 16px;
+        border: 1px solid #fce7f3;
+        position: sticky;
+        top: 20px;
+    }
+    .product-main {
+        flex-grow: 1;
+    }
+    .filter-title {
+        font-weight: 900;
+        color: #1f2937;
+        margin-bottom: 15px;
+        font-size: 1.1rem;
+        text-transform: uppercase;
+        border-bottom: 2px dashed #fce7f3;
+        padding-bottom: 10px;
+    }
+    .filter-item {
+        margin-bottom: 10px;
+    }
+    .filter-label {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        cursor: pointer;
+        color: #4b5563;
+        font-weight: 500;
+        transition: all 0.2s;
+    }
+    .filter-label:hover {
+        color: #ec4899;
+    }
+    .filter-checkbox {
+        width: 18px;
+        height: 18px;
+        border-radius: 4px;
+        accent-color: #ec4899;
+        cursor: pointer;
+    }
+    @media (max-width: 768px) {
+        .product-layout {
+            flex-direction: column;
+        }
+        .filter-sidebar {
+            width: 100%;
+            position: static;
+        }
+    }
+</style>
 </head>
 <body class="bg-[#fdf0e6] flex flex-col min-h-screen text-gray-800">
 
@@ -22,7 +82,7 @@
             </button>
 
             <a href="/user/home" class="flex items-center">
-                <img src="{{ asset('images/logo.jpg') }}" alt="Logo Trang Chủ" class="w-12 h-12 md:w-14 md:h-14 rounded-full object-cover shadow-sm border border-gray-200">
+                <img src="http://127.0.0.1:8000/images/logo.jpg" alt="Logo Trang Chủ" class="w-12 h-12 md:w-14 md:h-14 rounded-full object-cover shadow-sm border border-gray-200">
             </a>
 
             <nav class="hidden md:flex space-x-8">
@@ -100,7 +160,166 @@
     </header>
 
     <main class="flex-grow w-full max-w-[1440px] mx-auto px-4 md:px-8 lg:px-12 py-6">
-        @yield('content')
+        
+
+<section class="user-section">
+    <div class="user-container">
+        
+        <h2 class="user-section-title text-center mb-8">
+            Tất cả sản phẩm
+        </h2>
+        
+        <div class="product-layout">
+            <!-- Sidebar Lọc Danh Mục -->
+            <div class="filter-sidebar">
+                <h3 class="filter-title">Danh mục sản phẩm</h3>
+                <form id="filter-form" action="http://127.0.0.1:8000/user/product" method="GET">
+                    <div class="flex flex-col gap-3">
+                                                <div class="filter-item">
+                            <label class="filter-label">
+                                <input type="checkbox" name="danh_muc_cb[]" value="1" class="filter-checkbox" >
+                                Chăm sóc da
+                            </label>
+                        </div>
+                                                <div class="filter-item">
+                            <label class="filter-label">
+                                <input type="checkbox" name="danh_muc_cb[]" value="5" class="filter-checkbox" >
+                                Sữa rửa mặt
+                            </label>
+                        </div>
+                                                <div class="filter-item">
+                            <label class="filter-label">
+                                <input type="checkbox" name="danh_muc_cb[]" value="9" class="filter-checkbox" >
+                                Kem nền
+                            </label>
+                        </div>
+                                                <div class="filter-item">
+                            <label class="filter-label">
+                                <input type="checkbox" name="danh_muc_cb[]" value="2" class="filter-checkbox" >
+                                Trang điểm
+                            </label>
+                        </div>
+                                                <div class="filter-item">
+                            <label class="filter-label">
+                                <input type="checkbox" name="danh_muc_cb[]" value="6" class="filter-checkbox" >
+                                Toner
+                            </label>
+                        </div>
+                                                <div class="filter-item">
+                            <label class="filter-label">
+                                <input type="checkbox" name="danh_muc_cb[]" value="10" class="filter-checkbox" >
+                                Son môi
+                            </label>
+                        </div>
+                                                <div class="filter-item">
+                            <label class="filter-label">
+                                <input type="checkbox" name="danh_muc_cb[]" value="3" class="filter-checkbox" >
+                                Dưỡng tóc
+                            </label>
+                        </div>
+                                                <div class="filter-item">
+                            <label class="filter-label">
+                                <input type="checkbox" name="danh_muc_cb[]" value="7" class="filter-checkbox" >
+                                Serum
+                            </label>
+                        </div>
+                                                <div class="filter-item">
+                            <label class="filter-label">
+                                <input type="checkbox" name="danh_muc_cb[]" value="11" class="filter-checkbox" >
+                                Mascara
+                            </label>
+                        </div>
+                                                <div class="filter-item">
+                            <label class="filter-label">
+                                <input type="checkbox" name="danh_muc_cb[]" value="4" class="filter-checkbox" checked>
+                                Chống nắng
+                            </label>
+                        </div>
+                                                <div class="filter-item">
+                            <label class="filter-label">
+                                <input type="checkbox" name="danh_muc_cb[]" value="8" class="filter-checkbox" >
+                                Kem dưỡng ẩm
+                            </label>
+                        </div>
+                                            </div>
+                    <input type="hidden" name="danh_muc" id="danh_muc_input" value="4">
+                    <button type="submit" class="mt-5 w-full bg-pink-500 hover:bg-pink-600 text-white font-bold py-2 px-4 rounded-xl transition shadow-md">
+                        Lọc Sản Phẩm
+                    </button>
+                </form>
+            </div>
+
+            <!-- Danh sách sản phẩm -->
+            <div class="product-main">
+                <div class="product-grid">
+                                            <a href="/user/detail/12" class="product-card">
+    <div class="product-card__image-wrap">
+        
+                    <img src="/images/roche.jpg" alt="Kem chống nắng La Roche-Posay Anthelios XL Anti-Shine" class="product-card__img">
+        
+            </div>
+
+    <div class="product-card__body">
+        <div class="product-card__name">
+            Kem chống nắng La Roche-Posay Anthelios XL Anti-Shine
+        </div>
+
+        <div class="star-rating">
+    <div class="star-rating__stars">
+                                    <svg class="star-rating__icon star-rating__icon--empty" viewBox="0 0 24 24" fill="currentColor"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>
+                                                <svg class="star-rating__icon star-rating__icon--empty" viewBox="0 0 24 24" fill="currentColor"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>
+                                                <svg class="star-rating__icon star-rating__icon--empty" viewBox="0 0 24 24" fill="currentColor"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>
+                                                <svg class="star-rating__icon star-rating__icon--empty" viewBox="0 0 24 24" fill="currentColor"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>
+                                                <svg class="star-rating__icon star-rating__icon--empty" viewBox="0 0 24 24" fill="currentColor"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>
+                        </div>
+    <span class="star-rating__count">(Chưa có)</span>
+</div>
+
+        <div class="price-wrap">
+                            <span class="price-current">420.000 đ</span>
+                <span class="price-original">475.000 đ</span>
+                    </div>
+    </div>
+</a>
+                                            <a href="/user/detail/5" class="product-card">
+    <div class="product-card__image-wrap">
+        
+                    <img src="/images/anessa.jpg" alt="Kem chống nắng Anessa Perfect UV SPF50+" class="product-card__img">
+        
+            </div>
+
+    <div class="product-card__body">
+        <div class="product-card__name">
+            Kem chống nắng Anessa Perfect UV SPF50+
+        </div>
+
+        <div class="star-rating">
+    <div class="star-rating__stars">
+                                    <svg class="star-rating__icon star-rating__icon--empty" viewBox="0 0 24 24" fill="currentColor"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>
+                                                <svg class="star-rating__icon star-rating__icon--empty" viewBox="0 0 24 24" fill="currentColor"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>
+                                                <svg class="star-rating__icon star-rating__icon--empty" viewBox="0 0 24 24" fill="currentColor"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>
+                                                <svg class="star-rating__icon star-rating__icon--empty" viewBox="0 0 24 24" fill="currentColor"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>
+                                                <svg class="star-rating__icon star-rating__icon--empty" viewBox="0 0 24 24" fill="currentColor"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>
+                        </div>
+    <span class="star-rating__count">(Chưa có)</span>
+</div>
+
+        <div class="price-wrap">
+                            <span class="price-current">520.000 đ</span>
+                    </div>
+    </div>
+</a>
+                                    </div>
+
+                <div class="mt-12 flex justify-center w-full">
+                    
+                </div>
+            </div>
+        </div>
+
+    </div>
+</section>
+
     </main>
 
     <footer class="bg-[#ffe1e8] text-gray-700 py-10 mt-10 border-t border-pink-100">
@@ -159,7 +378,6 @@
                     <li>Chỉ hỗ trợ đổi trả đối với sản phẩm bị lỗi do nhà sản xuất hoặc giao sai phân loại.</li>
                     <li>Yêu cầu đổi/trả phải được tạo trong vòng <strong>3 ngày</strong> kể từ khi nhận hàng.</li>
                     <li class="text-red-500 font-medium">Shop có quyền từ chối nếu không đáp ứng các điều kiện trên!</li>
-                    <li style="color: #d81b60; font-weight: bold;">Lưu ý: Chúng tôi chỉ hoàn trả tiền bằng hình thức bank và không hoàn trả bằng tiền mặt</li>
                 </ul>
                 
                 <div class="mt-5 pt-4 border-t border-gray-100">
@@ -902,7 +1120,5 @@
             </div>
         </div>
     </div>
-
-    @yield('scripts')
 </body>
 </html>

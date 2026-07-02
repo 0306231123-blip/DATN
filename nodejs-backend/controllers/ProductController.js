@@ -718,7 +718,8 @@ exports.getAIRecommendation = async (req, res) => {
 
       // Gọi sang cổng 5000 của Python
       const pythonResponse = await axios.post('http://localhost:5000/api/recommend', {
-          loai_da: loaiDaUser
+          loai_da: loaiDaUser,
+          ma_nguoi_dung: decoded.ma_nguoi_dung
       });
 
       // ... (Phần code bên dưới giữ nguyên y hệt như cũ) ...

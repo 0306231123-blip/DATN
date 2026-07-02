@@ -239,6 +239,7 @@ router.put('/update-profile', async (req, res) => {
         so_dien_thoai, 
         dia_chi, 
         loai_da, 
+        mat_khau_cu,
         mat_khau_moi,
         ngan_hang,
         so_tai_khoan,
@@ -267,6 +268,28 @@ router.put('/update-profile', async (req, res) => {
 
     // 5. Nếu người dùng có nhập mật khẩu mới -> Mã hóa nó rồi mới lưu
     if (mat_khau_moi) {
+      if (!mat_khau_cu) {
+        return res.status(400).json({
+          success: false,
+          message: 'Vui lòng nhập mật khẩu cũ để xác nhận.',
+        });
+      }
+      
+      if (mat_khau_moi === mat_khau_cu) {
+        return res.status(400).json({
+          success: false,
+          message: 'Mật khẩu mới không được trùng với mật khẩu cũ.',
+        });
+      }
+      
+      const isMatch = await bcrypt.compare(mat_khau_cu, nguoiDung.mat_khau);
+      if (!isMatch) {
+        return res.status(400).json({
+          success: false,
+          message: 'Mật khẩu cũ không chính xác.',
+        });
+      }
+
       const salt = await bcrypt.genSalt(10);
       nguoiDung.mat_khau = await bcrypt.hash(mat_khau_moi, salt);
     }

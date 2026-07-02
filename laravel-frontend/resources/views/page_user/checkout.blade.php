@@ -453,7 +453,15 @@
                 } else {
                     qrImg.classList.remove('hidden');
                     qrText.classList.remove('hidden');
-                    btnText.textContent = 'Tôi đã chuyển khoản';
+                    btnText.textContent = 'Tôi đã thanh toán';
+                    
+                    if (this.value === 'momo') {
+                        qrText.textContent = 'Quét mã QR Momo để thanh toán';
+                        qrImg.src = 'https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=ThanhToanMomo123456';
+                    } else if (this.value === 'banking') {
+                        qrText.textContent = 'Quét mã QR Ngân hàng để thanh toán';
+                        qrImg.src = 'https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=ThanhToanNganHang123456';
+                    }
                 }
             });
         });

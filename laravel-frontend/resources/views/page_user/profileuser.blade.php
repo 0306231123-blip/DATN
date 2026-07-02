@@ -83,7 +83,7 @@
                         <div class="profile-form__grid">
                             <div class="profile-form__group">
                                 <label class="profile-form__label">Ngân hàng</label>
-                                <input type="text" id="input-bank-name" class="profile-form__input" placeholder="VD: Vietcombank, MB Bank...">
+                                <input type="text" id="input-bank-name" list="bank-list" class="profile-form__input" placeholder="VD: Vietcombank, MB Bank...">
                             </div>
                             <div class="profile-form__group">
                                 <label class="profile-form__label">Số tài khoản</label>
@@ -94,6 +94,11 @@
                                 <input type="text" id="input-bank-owner" class="profile-form__input" style="text-transform: uppercase;" placeholder="VD: NGUYEN VAN A">
                             </div>
                         </div>
+                    </div>
+
+                    <div class="profile-password-section" style="margin-bottom: 1rem;">
+                        <label class="profile-form__label">Mật khẩu cũ <span class="profile-password-section__hint">(Bắt buộc nếu muốn đổi mật khẩu)</span></label>
+                        <input type="password" id="input-old-password" class="profile-form__input" placeholder="Nhập mật khẩu cũ...">
                     </div>
 
                     <div class="profile-password-section">
@@ -219,8 +224,29 @@
             chu_tai_khoan: document.getElementById('input-bank-owner').value
         };
 
+        const oldPassword = document.getElementById('input-old-password').value;
         const newPassword = document.getElementById('input-password').value;
-        if (newPassword) {
+        
+        if (newPassword || oldPassword) {
+            if (!oldPassword) {
+                alert('Vui lòng nhập mật khẩu cũ để xác nhận việc đổi mật khẩu mới!');
+                btn.textContent = 'Lưu thay đổi';
+                btn.disabled = false;
+                return;
+            }
+            if (!newPassword) {
+                alert('Vui lòng nhập mật khẩu mới!');
+                btn.textContent = 'Lưu thay đổi';
+                btn.disabled = false;
+                return;
+            }
+            if (newPassword === oldPassword) {
+                alert('Mật khẩu mới không được trùng với mật khẩu cũ!');
+                btn.textContent = 'Lưu thay đổi';
+                btn.disabled = false;
+                return;
+            }
+            updateData.mat_khau_cu = oldPassword;
             updateData.mat_khau_moi = newPassword;
         }
 
@@ -239,6 +265,7 @@
             if (result.success) {
                 alert('Cập nhật thông tin thành công!');
                 document.getElementById('sidebar-name').textContent = updateData.ho_ten;
+                document.getElementById('input-old-password').value = ''; 
                 document.getElementById('input-password').value = ''; 
             } else {
                 alert(result.message || 'Có lỗi xảy ra khi cập nhật.');
@@ -277,11 +304,19 @@
                 let hasOrders = false;
                 let hasHistory = false;
                 
-                result.data.forEach(order => {
+                result.data.forEach((order, index) => {
                     const orderDateFull = new Date(order.ngay_dat);
                     const timeString = orderDateFull.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
                     const dateString = orderDateFull.toLocaleDateString('vi-VN');
                     const date = `${timeString} - ${dateString}`;
+                    
+                    let paymentMethodText = 'Thanh toán khi nhận hàng (COD)';
+                    switch(order.phuong_thuc_thanh_toan) {
+                        case 'tien_mat': paymentMethodText = 'Thanh toán khi nhận hàng (COD)'; break;
+                        case 'chuyen_khoan': paymentMethodText = 'Chuyển khoản Ngân hàng'; break;
+                        case 'vi_dien_tu': paymentMethodText = 'Ví điện tử (Momo)'; break;
+                        case 'the_tin_dung': paymentMethodText = 'Thẻ tín dụng / Ghi nợ'; break;
+                    }
                     
                     const tongTienHang = parseInt(order.tong_tien_hang);
                     const soTienGiam = parseInt(order.so_tien_giam || 0); 
@@ -362,12 +397,15 @@
                             actionBtnHtml = `<div class="mt-4 text-center text-red-600 font-bold w-full bg-red-50 py-2 rounded-lg">Yêu cầu trả hàng của bạn bị từ chối vì sai quy định hoàn trả.</div>`;
                         }
 
+                        const userOrderNumber = result.data.length - index;
+
                         htmlHistory += `
                             <div class="profile-order-card" id="order-${order.ma_don_hang}">
                                 <div class="profile-order-card__header">
                                     <div>
-                                        <p class="profile-order-card__id">Đơn hàng #${order.ma_don_hang}</p>
+                                        <p class="profile-order-card__id">Đơn hàng #${userOrderNumber}</p>
                                         <p class="profile-order-card__date">Ngày đặt: ${date}</p>
+                                        <p class="profile-order-card__date mt-1 text-pink-600">Thanh toán: <span class="font-medium">${paymentMethodText}</span></p>
                                     </div>
                                     <span class="profile-order-card__status ${statusColor}">${statusText}</span>
                                 </div>
@@ -423,10 +461,15 @@
                             activeStatusColor = 'bg-red-100 text-red-700 border border-red-300';
                             actionBtnHtml = `<div class="mt-4 text-sm text-left text-red-600 bg-red-50 p-3 rounded-lg w-full border border-red-200">Yêu cầu trả hàng của bạn đã bị từ chối vì lý do sai quy định hoàn trả.</div>`;
                         }
+                        const userOrderNumber = result.data.length - index;
+                        
                             htmlOrders += `
                             <div class="profile-order-card" id="order-${order.ma_don_hang}">
                                 <div class="profile-order-card__header" style="align-items: center; margin-bottom: 1rem;">
-                                    <p class="profile-order-card__id">Đơn hàng #${order.ma_don_hang}</p>
+                                    <div>
+                                        <p class="profile-order-card__id">Đơn hàng #${userOrderNumber}</p>
+                                        <p class="profile-order-card__date mt-1 text-pink-600">Thanh toán: <span class="font-medium">${paymentMethodText}</span></p>
+                                    </div>
                                     <span class="profile-order-card__status ${activeStatusColor}">${activeStatusText}</span>
                                 </div>
                                 ${productsHtml}
@@ -574,7 +617,7 @@ async function callUpdateStatusAPI(maDonHang, trangThaiMoi, lyDoTra, lyDoHuy, ng
             <div>
                 <label class="refund-modal__label">Ngân hàng & Số tài khoản:</label>
                 <div class="refund-modal__input-group">
-                    <input type="text" id="refund-bank" class="refund-modal__input refund-modal__input--1-3" placeholder="Ngân hàng">
+                    <input type="text" id="refund-bank" list="bank-list" class="refund-modal__input refund-modal__input--1-3" placeholder="Ngân hàng">
                     <input type="number" id="refund-account" class="refund-modal__input refund-modal__input--2-3" placeholder="Số tài khoản">
                 </div>
             </div>
@@ -595,6 +638,7 @@ async function callUpdateStatusAPI(maDonHang, trangThaiMoi, lyDoTra, lyDoHuy, ng
                     <li>Chỉ đổi trả nếu lỗi do NSX hoặc giao sai.</li>
                     <li>Yêu cầu tạo trong vòng 3 ngày kể từ khi nhận hàng.</li>
                     <li><b>Shop có quyền từ chối</b> nếu sai điều kiện!</li>
+                    <li style="color: #d81b60; font-weight: bold;">Lưu ý: Chúng tôi chỉ hoàn trả tiền bằng hình thức bank và không hoàn trả bằng tiền mặt</li>
                 </ul>
                 <label class="refund-modal__agree-label">
                     <input type="checkbox" id="refund-agree" class="refund-modal__agree-checkbox">
@@ -602,6 +646,22 @@ async function callUpdateStatusAPI(maDonHang, trangThaiMoi, lyDoTra, lyDoHuy, ng
                 </label>
             </div>
         </div>
+        
+        <datalist id="bank-list">
+            <option value="Vietcombank (Ngân hàng TMCP Ngoại thương)"></option>
+            <option value="VietinBank (Ngân hàng TMCP Công Thương)"></option>
+            <option value="BIDV (Ngân hàng Đầu tư và Phát triển)"></option>
+            <option value="Agribank (Ngân hàng NN & PTNT)"></option>
+            <option value="Techcombank (Ngân hàng Kỹ thương)"></option>
+            <option value="MB Bank (Ngân hàng Quân đội)"></option>
+            <option value="VPBank (Ngân hàng Việt Nam Thịnh Vượng)"></option>
+            <option value="ACB (Ngân hàng Á Châu)"></option>
+            <option value="Sacombank (Ngân hàng Sài Gòn Thương Tín)"></option>
+            <option value="TPBank (Ngân hàng Tiên Phong)"></option>
+            <option value="VIB (Ngân hàng Quốc tế)"></option>
+            <option value="HDBank (Ngân hàng Phát triển TPHCM)"></option>
+            <option value="SHB (Ngân hàng Sài Gòn - Hà Nội)"></option>
+        </datalist>
 
         <div class="refund-modal__actions">
             <button onclick="closeRefundModal()" class="refund-modal__btn-cancel">Hủy</button>

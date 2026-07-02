@@ -8,11 +8,11 @@ from sklearn.metrics.pairwise import cosine_similarity
 app = Flask(__name__)
 CORS(app)
 
-# TỪ ĐIỂN AI: Dạy cho AI biết mỗi loại da cần những từ khóa gì
+# TỪ ĐIỂN AI: Dạy cho AI biết mỗi loại da cần những từ khóa gì (Đã thêm oil-free)
 skin_keywords = {
-    "da_dau": "kiềm dầu, mụn, lỗ chân lông to, bã nhờn, làm sạch sâu, salicylic acid, nha đam",
-    "da_kho": "cấp ẩm, dưỡng ẩm, axit hyaluronic, bong tróc, phục hồi, ceramides, HA",
-    "da_nhay_cam": "dịu nhẹ, không cồn, không hương liệu, mẩn đỏ, phục hồi da, hoa cúc",
+    "da_dau": "kiềm dầu, mụn, lỗ chân lông to, bã nhờn, làm sạch sâu, salicylic acid, nha đam, oil-free, không chứa dầu",
+    "da_kho": "cấp ẩm, dưỡng ẩm, axit hyaluronic, bong tróc, phục hồi, ceramides, HA, cấp nước",
+    "da_nhay_cam": "dịu nhẹ, không cồn, không hương liệu, mẩn đỏ, phục hồi da, hoa cúc, an toàn",
     "da_hon_hop": "cân bằng ẩm, vùng chữ T, kiềm dầu, cấp nước, niacinamide",
     "da_thuong": "duy trì độ ẩm, bảo vệ da, mịn màng, tươi sáng, vitamin C"
 }
@@ -37,11 +37,26 @@ def recommend():
         data = request.json
         # Lấy loại da từ Node.js gửi sang, không có thì mặc định là da thường
         loai_da_user = data.get('loai_da', 'da_thuong')
+        ma_nguoi_dung = data.get('ma_nguoi_dung', None)
 
         # 1. Kết nối Database lấy tất cả sản phẩm đang bán
         conn = get_db_connection()
-        query = "SELECT ma_san_pham, ten_san_pham, mo_ta, loai_da_phu_hop FROM san_pham WHERE trang_thai = 'dang_ban'"
+        query = "SELECT ma_san_pham, ten_san_pham, mo_ta, loai_da_phu_hop, ma_danh_muc FROM san_pham WHERE trang_thai = 'dang_ban'"
         df = pd.read_sql(query, conn)
+        
+        # 1.1 Lấy lịch sử mua hàng của user (nếu có)
+        purchased_categories = []
+        if ma_nguoi_dung:
+            hist_query = f"""
+                SELECT DISTINCT sp.ma_danh_muc 
+                FROM chi_tiet_don_hang ct 
+                JOIN don_hang dh ON ct.ma_don_hang = dh.ma_don_hang 
+                JOIN san_pham sp ON ct.ma_san_pham = sp.ma_san_pham
+                WHERE dh.ma_nguoi_dung = {ma_nguoi_dung}
+            """
+            hist_df = pd.read_sql(hist_query, conn)
+            purchased_categories = hist_df['ma_danh_muc'].tolist()
+            
         conn.close()
 
         if df.empty:
@@ -66,12 +81,16 @@ def recommend():
         # Gán điểm số AI vừa chấm được
         df['ai_score'] = cosine_sim
 
-        # 3. Cộng thêm điểm ưu tiên nếu sản phẩm đó thiết kế ĐÚNG cho loại da đó
+        # 3. Rule-based recommendation: Cộng thêm điểm ưu tiên nếu sản phẩm thiết kế ĐÚNG cho loại da đó
         df.loc[df['loai_da_phu_hop'] == loai_da_user, 'ai_score'] += 0.5
         df.loc[df['loai_da_phu_hop'] == 'tat_ca', 'ai_score'] += 0.2
 
-        # Sắp xếp và lấy 4 sản phẩm có điểm AI cao nhất
-        top_products = df.sort_values(by='ai_score', ascending=False).head(4)
+        # 4. Học từ hành vi người dùng: Cộng điểm cho các sản phẩm cùng danh mục mà user từng mua
+        if purchased_categories:
+            df.loc[df['ma_danh_muc'].isin(purchased_categories), 'ai_score'] += 0.3
+
+        # Sắp xếp và lấy 5 sản phẩm có điểm AI cao nhất
+        top_products = df.sort_values(by='ai_score', ascending=False).head(5)
         recommended_ids = top_products['ma_san_pham'].tolist()
 
         return jsonify({
