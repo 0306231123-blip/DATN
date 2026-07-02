@@ -21,6 +21,15 @@
     <link rel="stylesheet" href="{{ asset('css/admin.css') }}">
     <link rel="stylesheet" href="{{ asset('css/admin-components.css') }}">
     <link rel="stylesheet" href="{{ asset('css/admin-dashboard.css') }}">
+    <style>
+        .preload * {
+            -webkit-transition: none !important;
+            -moz-transition: none !important;
+            -ms-transition: none !important;
+            -o-transition: none !important;
+            transition: none !important;
+        }
+    </style>
     @yield('styles')
 
     <!-- Kiểm tra quyền truy cập Admin -->
@@ -59,9 +68,28 @@
             }
             return adminFetch(resource, options);
         };
+
+        // --- Global Settings Logic ---
+        window.getGlobalSettings = function() {
+            const defaultSettings = {
+                lowStockThreshold: 20,
+                perPage: 15,
+                autoRefresh: 1, // 1 = ON, 0 = OFF
+                sidebar: 'expanded'
+            };
+            try {
+                const saved = localStorage.getItem('global_settings');
+                if (saved) {
+                    return { ...defaultSettings, ...JSON.parse(saved) };
+                }
+            } catch (e) {
+                console.error('Error loading settings', e);
+            }
+            return defaultSettings;
+        };
     </script>
 </head>
-<body>
+<body class="preload">
     <div class="admin-wrapper">
         <!-- Sidebar -->
         <aside class="sidebar" id="sidebar">
@@ -86,6 +114,7 @@
                     <a href="{{ url('/admin/products') }}" class="nav-item {{ request()->is('admin/products') ? 'active' : '' }}" id="nav-products">
                         <i data-lucide="package" class="nav-icon"></i>
                         <span>Sản phẩm</span>
+                        <span class="nav-dot" id="dot-products" style="display: none;" title="Sản phẩm sắp hết hàng"></span>
                     </a>
                     <a href="{{ url('/admin/categories') }}" class="nav-item {{ request()->is('admin/categories') ? 'active' : '' }}" id="nav-categories">
                         <i data-lucide="layers" class="nav-icon"></i>
@@ -94,6 +123,7 @@
                     <a href="{{ url('/admin/orders') }}" class="nav-item {{ request()->is('admin/orders') ? 'active' : '' }}" id="nav-orders">
                         <i data-lucide="shopping-cart" class="nav-icon"></i>
                         <span>Đơn hàng</span>
+                        <span class="nav-dot" id="dot-orders" style="display: none;" title="Yêu cầu trả hàng"></span>
                     </a>
                     <a href="{{ url('/admin/users') }}" class="nav-item {{ request()->is('admin/users') ? 'active' : '' }}" id="nav-users">
                         <i data-lucide="users" class="nav-icon"></i>
@@ -102,6 +132,7 @@
                     <a href="{{ url('/admin/chat') }}" class="nav-item {{ request()->is('admin/chat') ? 'active' : '' }}" id="nav-chat">
                         <i data-lucide="message-circle" class="nav-icon"></i>
                         <span>Hỗ trợ KH</span>
+                        <span class="nav-dot" id="dot-chat" style="display: none;" title="Tin nhắn chưa đọc"></span>
                     </a>
                 </div>
 
@@ -136,6 +167,9 @@
                     </div>
                 </div>
                 <div class="header-right">
+                    <button class="header-icon-btn" id="btn-global-settings" aria-label="Global Settings" title="Cài đặt hệ thống">
+                        <i data-lucide="settings" class="icon-sm"></i>
+                    </button>
                     <button class="header-icon-btn" id="btn-theme-toggle" aria-label="Toggle Theme" title="Đổi giao diện">
                         <i data-lucide="moon" class="icon-sm" id="theme-icon"></i>
                     </button>
@@ -167,6 +201,67 @@
         </div>
     </div>
 
+    <!-- Global Settings Modal -->
+    <div class="modal" id="modal-global-settings" style="display: none; z-index: 10000;">
+        <div class="modal-content" style="max-width: 500px;">
+            <div class="modal-header">
+                <h2>Cài đặt Hệ thống</h2>
+                <button class="modal-close" id="btn-close-global-settings">&times;</button>
+            </div>
+            <div class="form-row" style="margin-top: 15px;">
+                <div class="form-group">
+                    <label for="setting-low-stock" style="display: flex; align-items: center; gap: 6px;">
+                        Mức cảnh báo sắp hết hàng (Kho)
+                        <span title="Sản phẩm có số lượng tồn kho thấp hơn mức này sẽ được hiển thị nhãn 'Sắp hết hàng'" style="cursor: help; display: inline-flex;"><i data-lucide="help-circle" class="icon-xs" style="color: var(--text-muted);"></i></span>
+                    </label>
+                    <input type="number" id="setting-low-stock" class="form-control" value="20" min="1">
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="setting-per-page" style="display: flex; align-items: center; gap: 6px;">
+                        Số dòng hiển thị mặc định
+                        <span title="Số lượng bản ghi tối đa được hiển thị trên mỗi trang trong các bảng dữ liệu" style="cursor: help; display: inline-flex;"><i data-lucide="help-circle" class="icon-xs" style="color: var(--text-muted);"></i></span>
+                    </label>
+                    <select id="setting-per-page" class="form-control">
+                        <option value="15">15 dòng</option>
+                        <option value="30">30 dòng</option>
+                        <option value="50">50 dòng</option>
+                        <option value="100">100 dòng</option>
+                    </select>
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="setting-auto-refresh" style="display: flex; align-items: center; gap: 6px;">
+                        Tự động làm mới khi có thay đổi dữ liệu
+                        <span title="Bật tính năng này, hệ thống sẽ tự động cập nhật lại bảng dữ liệu ngầm (không cần F5) mỗi khi có quản trị viên thao tác thêm/sửa/xóa." style="cursor: help; display: inline-flex;"><i data-lucide="help-circle" class="icon-xs" style="color: var(--text-muted);"></i></span>
+                    </label>
+                    <select id="setting-auto-refresh" class="form-control">
+                        <option value="1">Bật (Tự động tải lại)</option>
+                        <option value="0">Tắt</option>
+                    </select>
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="setting-sidebar" style="display: flex; align-items: center; gap: 6px;">
+                        Trạng thái thanh menu mặc định
+                        <span title="Lưu lại sở thích Thu gọn hoặc Mở rộng thanh menu bên trái mỗi khi bạn truy cập hệ thống" style="cursor: help; display: inline-flex;"><i data-lucide="help-circle" class="icon-xs" style="color: var(--text-muted);"></i></span>
+                    </label>
+                    <select id="setting-sidebar" class="form-control">
+                        <option value="expanded">Mở rộng</option>
+                        <option value="collapsed">Thu gọn</option>
+                    </select>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" id="btn-cancel-global-settings">Hủy</button>
+                <button type="button" class="btn btn-primary" id="btn-save-global-settings">Lưu Cài đặt</button>
+            </div>
+        </div>
+    </div>
+
     <!-- Custom Message Box Global -->
     <div class="modal" id="modal-confirm-global" style="display: none; max-width: 400px; z-index: 9999;">
         <div class="modal-content">
@@ -191,6 +286,13 @@
         // Initialize Lucide icons
         lucide.createIcons();
 
+        // Apply sidebar state before any paints (transitions are disabled by preload)
+        const currentSettings = window.getGlobalSettings();
+        if (currentSettings.sidebar === 'collapsed') {
+            document.getElementById('sidebar')?.classList.add('collapsed');
+            document.querySelector('.main-content')?.classList.add('expanded');
+        }
+
         // Sidebar toggle
         const menuToggle = document.getElementById('menu-toggle');
         const sidebar = document.getElementById('sidebar');
@@ -200,6 +302,11 @@
             menuToggle.addEventListener('click', () => {
                 sidebar.classList.toggle('collapsed');
                 mainContent.classList.toggle('expanded');
+                // Lưu trạng thái sidebar tạm thời
+                const isCollapsed = sidebar.classList.contains('collapsed');
+                const settings = window.getGlobalSettings();
+                settings.sidebar = isCollapsed ? 'collapsed' : 'expanded';
+                localStorage.setItem('global_settings', JSON.stringify(settings));
             });
         }
 
@@ -385,9 +492,151 @@
                     notiList.innerHTML = '<div style="padding: 15px; text-align: center; color: var(--text-red);">Lỗi kết nối máy chủ</div>';
                 }
             }
+
+            // Modal Settings Event Listeners
+            const btnSettings = document.getElementById('btn-global-settings');
+            const modalSettings = document.getElementById('modal-global-settings');
+            const overlayGlobal = document.getElementById('modal-overlay-global');
+            const btnCloseSettings = document.getElementById('btn-close-global-settings');
+            const btnCancelSettings = document.getElementById('btn-cancel-global-settings');
+            const btnSaveSettings = document.getElementById('btn-save-global-settings');
+
+            if (btnSettings) {
+                btnSettings.addEventListener('click', () => {
+                    const settings = window.getGlobalSettings();
+                    document.getElementById('setting-low-stock').value = settings.lowStockThreshold;
+                    document.getElementById('setting-per-page').value = settings.perPage;
+                    document.getElementById('setting-auto-refresh').value = settings.autoRefresh;
+                    document.getElementById('setting-sidebar').value = settings.sidebar;
+                    
+                    modalSettings.style.display = 'block';
+                    overlayGlobal.style.display = 'block';
+                    overlayGlobal.style.zIndex = '9999'; // ensure it's above other things but below settings modal
+                });
+            }
+
+            const hideSettingsModal = () => {
+                modalSettings.style.display = 'none';
+                overlayGlobal.style.display = 'none';
+                overlayGlobal.style.zIndex = '9998';
+            };
+
+            if (btnCloseSettings) btnCloseSettings.addEventListener('click', hideSettingsModal);
+            if (btnCancelSettings) btnCancelSettings.addEventListener('click', hideSettingsModal);
+
+            if (btnSaveSettings) {
+                btnSaveSettings.addEventListener('click', () => {
+                    const newSettings = {
+                        lowStockThreshold: parseInt(document.getElementById('setting-low-stock').value) || 20,
+                        perPage: parseInt(document.getElementById('setting-per-page').value) || 15,
+                        autoRefresh: parseInt(document.getElementById('setting-auto-refresh').value) || 0,
+                        sidebar: document.getElementById('setting-sidebar').value
+                    };
+                    localStorage.setItem('global_settings', JSON.stringify(newSettings));
+                    hideSettingsModal();
+                    
+                    // Apply sidebar manually
+                    if (newSettings.sidebar === 'collapsed') {
+                        document.getElementById('sidebar')?.classList.add('collapsed');
+                        document.querySelector('.main-content')?.classList.add('expanded');
+                    } else {
+                        document.getElementById('sidebar')?.classList.remove('collapsed');
+                        document.querySelector('.main-content')?.classList.remove('expanded');
+                    }
+                    
+                    // Reload data on page if functions exist (instead of reloading entire window)
+                    if (typeof loadProducts === 'function') loadProducts(document.getElementById('product-search-input')?.value, document.querySelector('.role-tab.active')?.getAttribute('data-status'));
+                    if (typeof loadCategories === 'function') loadCategories();
+                    if (typeof loadOrders === 'function') loadOrders();
+                    if (typeof loadUsers === 'function') loadUsers();
+                    
+                    showAlert('Lưu cài đặt thành công!', 'success');
+                });
+            }
+
+            // Sidebar Alerts Logic
+            async function fetchAlerts() {
+                try {
+                    const settings = window.getGlobalSettings();
+                    const token = localStorage.getItem('token');
+                    if(!token) return;
+                    const apiUrl = typeof API_BASE_URL !== 'undefined' ? `${API_BASE_URL}/alerts?lowStockThreshold=${settings.lowStockThreshold}` : `http://localhost:3000/api/alerts?lowStockThreshold=${settings.lowStockThreshold}`;
+                    const res = await fetch(apiUrl, {
+                        headers: { 'Authorization': `Bearer ${token}` }
+                    });
+                    const json = await res.json();
+                    if (json.status === 'success') {
+                        const { low_stock_count, return_requests_count, unread_messages_count } = json.data;
+                        
+                        // Sidebar Dots
+                        const dotProducts = document.getElementById('dot-products');
+                        const dotOrders = document.getElementById('dot-orders');
+                        const dotChat = document.getElementById('dot-chat');
+                        
+                        if(dotProducts) dotProducts.style.display = low_stock_count > 0 ? 'inline-block' : 'none';
+                        if(dotOrders) dotOrders.style.display = return_requests_count > 0 ? 'inline-block' : 'none';
+                        if(dotChat) dotChat.style.display = unread_messages_count > 0 ? 'inline-block' : 'none';
+
+                        // Sub-dot for inner Orders Page tab "Yêu cầu trả hàng"
+                        const dotReturnRequestInner = document.getElementById('dot-return-request-inner');
+                        if (dotReturnRequestInner) {
+                            dotReturnRequestInner.style.display = return_requests_count > 0 ? 'inline-block' : 'none';
+                        }
+                    }
+                } catch(e) {
+                    console.error('Failed to fetch alerts:', e);
+                }
+            }
+
+            // Fetch alerts immediately on load
+            fetchAlerts();
+
+            // Auto Refresh Background Poller
+            let lastLogTime = null;
+            setInterval(async () => {
+                const settings = window.getGlobalSettings();
+                if (settings.autoRefresh === 1) {
+                    try {
+                        const token = localStorage.getItem('token');
+                        const apiUrl = typeof API_BASE_URL !== 'undefined' ? `${API_BASE_URL}/notifications/recent` : 'http://localhost:3000/api/notifications/recent';
+                        const res = await fetch(apiUrl, {
+                            headers: { 'Authorization': `Bearer ${token}` }
+                        });
+                        const json = await res.json();
+                        if (json.status === 'success' && json.data.length > 0) {
+                            const newestLog = json.data[0];
+                            const newestTime = new Date(newestLog.thoi_gian).getTime();
+                            if (lastLogTime && newestTime > lastLogTime) {
+                                // Data has changed! Reload active tables silently
+                                if (typeof loadProducts === 'function') loadProducts(document.getElementById('product-search-input')?.value, document.querySelector('.role-tab.active')?.getAttribute('data-status'));
+                                if (typeof loadCategories === 'function') loadCategories();
+                                if (typeof loadOrders === 'function') loadOrders();
+                                if (typeof loadUsers === 'function') loadUsers();
+                                
+                                // Update bell dot
+                                document.getElementById('noti-dot').style.display = 'block';
+                            }
+                            lastLogTime = newestTime;
+                        }
+                    } catch (e) {
+                        // ignore poller errors
+                    }
+                }
+                // Always fetch alerts periodically (even if autoRefresh is off, or we can tie it to autoRefresh)
+                // Actually, let's refresh alerts periodically regardless, or tie it to settings?
+                // Tied to 10 seconds interval is good.
+                fetchAlerts();
+            }, 10000); // Check every 10 seconds
         });
     </script>
 
     @yield('scripts')
+    <script>
+        window.addEventListener('load', () => {
+            setTimeout(() => {
+                document.body.classList.remove('preload');
+            }, 50); // slight delay to ensure first paint happens without transition
+        });
+    </script>
 </body>
 </html>

@@ -149,6 +149,19 @@ router.get('/admin/:userId', verifyToken, async (req, res) => {
         }
 
         const { userId } = req.params;
+
+        // Đánh dấu tin nhắn của khách hàng này là đã đọc
+        await TinNhan.update(
+            { da_doc: true },
+            { 
+                where: { 
+                    ma_nguoi_dung: userId, 
+                    is_from_admin: false,
+                    da_doc: false 
+                } 
+            }
+        );
+
         const messages = await TinNhan.findAll({
             where: { ma_nguoi_dung: userId },
             order: [['ngay_gui', 'ASC']]

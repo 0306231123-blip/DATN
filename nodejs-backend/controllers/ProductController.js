@@ -32,6 +32,7 @@ exports.getAllProducts = async (req, res) => {
       sort_order = 'DESC',
       per_page = 15,
       page = 1,
+      low_stock_threshold = 20,
     } = req.query;
 
     // Validate pagination
@@ -57,7 +58,7 @@ exports.getAllProducts = async (req, res) => {
     // Filter by status
     if (trang_thai && trang_thai !== 'all') {
       if (trang_thai === 'sap_het_hang') {
-        where.so_luong_ton = { [Op.gt]: 0, [Op.lt]: 20 };
+        where.so_luong_ton = { [Op.gt]: 0, [Op.lt]: parseInt(low_stock_threshold) || 20 };
       } else if (['dang_ban', 'ngung_ban', 'het_hang'].includes(trang_thai)) {
         where.trang_thai = trang_thai;
       }
@@ -489,6 +490,7 @@ exports.deleteProduct = async (req, res) => {
  */
 exports.getStats = async (req, res) => {
   try {
+    const lowStockThreshold = parseInt(req.query.low_stock_threshold) || 20;
     const total = await SanPham.count();
 
     const dangBan = await SanPham.count({
@@ -505,7 +507,7 @@ exports.getStats = async (req, res) => {
 
     const sapHetHang = await SanPham.count({
       where: {
-        so_luong_ton: { [Op.gt]: 0, [Op.lt]: 20 },
+        so_luong_ton: { [Op.gt]: 0, [Op.lt]: lowStockThreshold },
       },
     });
 

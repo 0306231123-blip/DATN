@@ -450,7 +450,8 @@ function updateCategorySelects() {
 
 async function loadProducts(search = '', status = 'all') {
     try {
-        let url = `${API_BASE_URL}/products?per_page=100`;
+        const settings = window.getGlobalSettings ? window.getGlobalSettings() : { perPage: 15, lowStockThreshold: 20 };
+        let url = `${API_BASE_URL}/products?per_page=${settings.perPage}&low_stock_threshold=${settings.lowStockThreshold}`;
         if (search) url += `&search=${encodeURIComponent(search)}`;
         if (status && status !== 'all') url += `&trang_thai=${status}`;
 
@@ -483,12 +484,13 @@ function renderTable() {
         const catName = categories.find(c => c.ma_danh_muc === product.ma_danh_muc)?.ten_danh_muc || '--';
         const imgPath = product.anh_san_pham ? (product.anh_san_pham.startsWith('http') ? product.anh_san_pham : product.anh_san_pham) : '/images/logo.jpg';
 
+        const settings = window.getGlobalSettings ? window.getGlobalSettings() : { lowStockThreshold: 20 };
         let statusBadge = '';
         if (product.trang_thai === 'ngung_ban') {
             statusBadge = '<span class="status-badge status-badge--inactive">Ngừng bán</span>';
         } else if (product.so_luong_ton === 0) {
             statusBadge = '<span class="status-badge status-badge--danger">Hết hàng</span>';
-        } else if (product.so_luong_ton < 20) {
+        } else if (product.so_luong_ton < settings.lowStockThreshold) {
             statusBadge = '<span class="status-badge" style="background-color: #fff7ed; color: #c2410c;">Sắp hết hàng</span>';
         } else {
             statusBadge = '<span class="status-badge status-badge--active">Đang bán</span>';
@@ -533,7 +535,8 @@ function renderTable() {
 
 async function loadStats() {
     try {
-        const response = await fetch(`${API_BASE_URL}/products/stats`);
+        const settings = window.getGlobalSettings ? window.getGlobalSettings() : { lowStockThreshold: 20 };
+        const response = await fetch(`${API_BASE_URL}/products/stats?low_stock_threshold=${settings.lowStockThreshold}`);
         const result = await response.json();
         if (result.status === 'success' || result.success) {
             if(document.getElementById('stat-total')) document.getElementById('stat-total').textContent = result.data.total;

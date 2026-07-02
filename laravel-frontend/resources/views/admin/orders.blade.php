@@ -37,6 +37,7 @@
             </button>
             <button class="status-tab" data-status="dang_tra_hang" id="tab-returning">
                 <span>Yêu cầu trả</span>
+                <span class="nav-dot" id="dot-return-request-inner" style="display: none;" title="Có yêu cầu trả hàng mới"></span>
                 <span class="tab-count" id="count-dang_tra_hang">0</span>
             </button>
             <button class="status-tab" data-status="tu_choi_tra_hang" id="tab-rejected">

@@ -109,6 +109,26 @@ body {
     width: var(--sidebar-collapsed);
 }
 
+.sidebar.collapsed .logo-text,
+.sidebar.collapsed .nav-group-label,
+.sidebar.collapsed .nav-item span {
+    display: none;
+}
+
+.sidebar.collapsed .nav-item {
+    justify-content: center;
+    padding: 12px 0;
+}
+
+.sidebar.collapsed .nav-icon {
+    margin: 0;
+}
+
+.sidebar.collapsed .sidebar-logo {
+    justify-content: center;
+    padding: 0;
+}
+
 .sidebar-header {
     height: var(--header-height);
     display: flex;
@@ -234,14 +254,34 @@ body {
 .main-content {
     flex: 1;
     margin-left: var(--sidebar-width);
+    width: calc(100% - var(--sidebar-width));
     display: flex;
     flex-direction: column;
     min-height: 100vh;
-    transition: margin-left var(--transition-base);
+    transition: margin-left var(--transition-base), width var(--transition-base);
 }
 
 .main-content.expanded {
     margin-left: var(--sidebar-collapsed);
+    width: calc(100% - var(--sidebar-collapsed));
+}
+
+/* Nav Dot Alerts */
+.nav-dot {
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    background-color: var(--color-red);
+    border-radius: 50%;
+    margin-left: auto;
+    flex-shrink: 0;
+    box-shadow: 0 0 4px rgba(239, 68, 68, 0.4);
+}
+.sidebar.collapsed .nav-dot {
+    position: absolute;
+    top: 10px;
+    right: 18px;
+    margin: 0;
 }
 
 [data-theme="dark"] {

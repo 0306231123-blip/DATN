@@ -23,6 +23,10 @@ const TinNhan = sequelize.define('tin_nhan', {
     type: DataTypes.TEXT,
     allowNull: true,
   },
+  da_doc: {
+    type: DataTypes.BOOLEAN,
+    defaultValue: false,
+  },
   hinh_anh: {
     type: DataTypes.STRING(255),
     allowNull: true,

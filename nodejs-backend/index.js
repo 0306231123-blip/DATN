@@ -6,6 +6,7 @@ require('dotenv').config();
 
 const sequelize = require('./config/database');
 require('./models/associations'); // Setup model relationships
+const alertRoutes = require('./routes/alerts');
 const authRoutes = require('./routes/auth');
 const cartRoutes = require('./routes/cart');
 const myOrderRoutes = require('./routes/order');
@@ -35,6 +36,7 @@ app.get('/', (req, res) => {
   res.json({ message: 'Cosmetic Shop API running' });
 });
 
+app.use('/api/alerts', alertRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/cart',verifyToken, cartRoutes);
 app.use('/api/order',verifyToken, myOrderRoutes);
@@ -69,7 +71,7 @@ sequelize
     // Production: phải dùng migration thủ công để tránh mất dữ liệu
     if (NODE_ENV !== 'production') {
       try {
-        await sequelize.sync({ alter: true });
+        await sequelize.sync(); // Bỏ alter: true để tránh lỗi 64 keys index
         console.log('Database schema synchronized (development mode).');
       } catch (err) {
         console.error('Sync schema error:', err);
