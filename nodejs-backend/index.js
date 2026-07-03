@@ -73,6 +73,27 @@ sequelize
       try {
         await sequelize.sync(); // Bỏ alter: true để tránh lỗi 64 keys index
         console.log('Database schema synchronized (development mode).');
+        
+        // --- TEMPORARY MIGRATIONS ---
+        try { await sequelize.query('ALTER TABLE nguoi_dung ADD COLUMN so_lan_dang_nhap_sai INT DEFAULT 0'); console.log('Added so_lan_dang_nhap_sai'); } catch(e) {}
+        try { await sequelize.query('ALTER TABLE nguoi_dung ADD COLUMN thoi_gian_sai_cuoi DATETIME NULL'); console.log('Added thoi_gian_sai_cuoi'); } catch(e) {}
+        try { await sequelize.query('ALTER TABLE nguoi_dung ADD COLUMN thoi_gian_khoa_tam_thoi DATETIME NULL'); console.log('Added thoi_gian_khoa_tam_thoi'); } catch(e) {}
+        try { await sequelize.query('ALTER TABLE nguoi_dung ADD COLUMN khoa_mua_hang_den DATETIME NULL'); console.log('Added khoa_mua_hang_den'); } catch(e) {}
+        try { 
+            await sequelize.query(`
+                CREATE TABLE IF NOT EXISTS canh_bao_he_thong (
+                    ma_canh_bao INT AUTO_INCREMENT PRIMARY KEY,
+                    ma_nguoi_dung INT NULL,
+                    loai_canh_bao VARCHAR(50),
+                    noi_dung TEXT,
+                    da_doc BOOLEAN DEFAULT FALSE,
+                    ngay_tao DATETIME DEFAULT CURRENT_TIMESTAMP
+                )
+            `); 
+            console.log('Created canh_bao_he_thong'); 
+        } catch(e) {}
+        // --- END TEMPORARY MIGRATIONS ---
+
       } catch (err) {
         console.error('Sync schema error:', err);
       }

@@ -1,15 +1,16 @@
 const express = require('express');
 const router = express.Router();
-const reviewController = require('../controllers/reviewController');
+const ReviewController = require('../controllers/ReviewController');
 
-// Khai báo middleware xác thực token (Tôi thấy ông có thư mục middleware kìa)
-// Lưu ý: Đổi tên './auth' thành tên file middleware thực tế của ông nếu ông đặt khác nhé
+// Khai báo middleware xác thực token
 const { verifyToken } = require('../middleware/verifyToken'); 
 
 // Tạo API thêm đánh giá
-router.post('/add', verifyToken, reviewController.addReview);
-// Kiểm tra quyền đánh giá (đã mua & đơn hàng hoàn thành)
-router.get('/check-eligibility/:ma_san_pham', verifyToken, reviewController.checkEligibility);
+router.post('/add', verifyToken, ReviewController.addReview);
 
-router.get('/:ma_san_pham', reviewController.getReviews);
+// Kiểm tra quyền đánh giá (đã mua & đơn hàng hoàn thành)
+router.get('/check-eligibility/:ma_san_pham', verifyToken, ReviewController.checkEligibility);
+
+router.get('/:ma_san_pham', ReviewController.getReviews);
+
 module.exports = router;

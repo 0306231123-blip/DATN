@@ -262,6 +262,11 @@
                     result.data.forEach(item => {
                         // Chỉ tính những sản phẩm được check ở giỏ hàng (hoặc tính hết nếu URL không có items)
                         if (selectedItems.length === 0 || selectedItems.includes(item.ma_san_pham)) {
+                            // Bỏ qua sản phẩm đã bị xóa khỏi hệ thống (san_pham = null)
+                            if (!item.san_pham) {
+                                console.warn('Sản phẩm mã', item.ma_san_pham, 'không còn tồn tại, bỏ qua.');
+                                return;
+                            }
                             const gia = item.san_pham.gia_khuyen_mai || item.san_pham.gia;
                             baseTotal += gia * item.so_luong;
                             hasValidItems = true;
@@ -515,6 +520,10 @@
                         successIconWrap.classList.remove('hidden');
                         successTitle.textContent = 'Thành công!';
                         successDesc.textContent = 'Cảm ơn bạn. Đơn hàng của bạn đã được thanh toán và đang được xử lý.';
+                        
+                        // COD: hiện nút xem lịch sử, ẩn nút X
+                        document.getElementById('btn-view-history').classList.remove('hidden');
+                        document.getElementById('btn-cancel-qr').classList.add('hidden');
                     } else {
                         qrSection.classList.remove('hidden');
                         successIconWrap.classList.add('hidden');
@@ -533,10 +542,6 @@
 
                         // Gắn ma_don_hang vào nút X để gọi API hủy
                         document.getElementById('btn-cancel-qr').setAttribute('data-id', result.ma_don_hang);
-                    } else {
-                        // COD: hiện nút xem lịch sử, ẩn nút X
-                        document.getElementById('btn-view-history').classList.remove('hidden');
-                        document.getElementById('btn-cancel-qr').classList.add('hidden');
                     }
 
                     setTimeout(() => {

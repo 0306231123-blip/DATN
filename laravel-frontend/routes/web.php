@@ -71,6 +71,10 @@ Route::prefix('admin')->group(function () {
     Route::get('/chat', function () {
         return view('admin.chat');
     })->name('admin.chat');
+
+    Route::get('/system-alerts', function () {
+        return view('admin.system_alerts');
+    })->name('admin.system_alerts');
 });
 
 

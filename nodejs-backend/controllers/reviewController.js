@@ -1,9 +1,10 @@
 const DanhGia = require('../models/DanhGia');
 const sequelize = require('../config/database');
-exports.addReview = async (req, res) => {
+
+class ReviewController {
+  async addReview(req, res) {
     try {
-        // Lấy mã người dùng từ token (nhớ đảm bảo API này có dùng middleware verifyToken)
-        const ma_nguoi_dung = req.user.ma_nguoi_dung; 
+        const ma_nguoi_dung = req.user.ma_nguoi_dung || req.user.id; 
         const { ma_san_pham, diem_so, noi_dung } = req.body;
 
         // KIỂM TRA ĐIỀU KIỆN: Người dùng phải mua sản phẩm và đơn hàng phải 'hoan_thanh'
@@ -38,8 +39,9 @@ exports.addReview = async (req, res) => {
         console.error('Lỗi khi lưu đánh giá:', error);
         res.status(500).json({ success: false, message: 'Lỗi server Node.js' });
     }
-};
-exports.getReviews = async (req, res) => {
+  }
+
+  async getReviews(req, res) {
     try {
         const { ma_san_pham } = req.params;
 
@@ -62,11 +64,11 @@ exports.getReviews = async (req, res) => {
         console.error('Lỗi lấy danh giá:', error);
         res.status(500).json({ success: false, message: 'Lỗi server' });
     }
-};
+  }
 
-exports.checkEligibility = async (req, res) => {
+  async checkEligibility(req, res) {
     try {
-        const ma_nguoi_dung = req.user.ma_nguoi_dung;
+        const ma_nguoi_dung = req.user.ma_nguoi_dung || req.user.id;
         const { ma_san_pham } = req.params;
 
         const checkQuery = `
@@ -91,4 +93,7 @@ exports.checkEligibility = async (req, res) => {
         console.error('Lỗi kiểm tra quyền đánh giá:', error);
         res.status(500).json({ success: false, message: 'Lỗi server' });
     }
-};
+  }
+}
+
+module.exports = new ReviewController();

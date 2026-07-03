@@ -142,6 +142,11 @@
                         <i data-lucide="bar-chart-3" class="nav-icon"></i>
                         <span>Thống kê</span>
                     </a>
+                    <a href="{{ url('/admin/system-alerts') }}" class="nav-item {{ request()->is('admin/system-alerts') ? 'active' : '' }}" id="nav-alerts">
+                        <i data-lucide="alert-triangle" class="nav-icon"></i>
+                        <span>Cảnh báo hệ thống</span>
+                        <span class="nav-dot" id="dot-alerts" style="display: none;" title="Cảnh báo chưa đọc"></span>
+                    </a>
                 </div>
 
                 <div class="nav-group" style="margin-top: 30px; border-top: 1px solid #e2e8f0; padding-top: 20px;">
@@ -566,16 +571,18 @@
                     });
                     const json = await res.json();
                     if (json.status === 'success') {
-                        const { low_stock_count, return_requests_count, unread_messages_count } = json.data;
+                        const { low_stock_count, return_requests_count, unread_messages_count, unread_system_alerts_count } = json.data;
                         
                         // Sidebar Dots
                         const dotProducts = document.getElementById('dot-products');
                         const dotOrders = document.getElementById('dot-orders');
                         const dotChat = document.getElementById('dot-chat');
+                        const dotAlerts = document.getElementById('dot-alerts');
                         
                         if(dotProducts) dotProducts.style.display = low_stock_count > 0 ? 'inline-block' : 'none';
                         if(dotOrders) dotOrders.style.display = return_requests_count > 0 ? 'inline-block' : 'none';
                         if(dotChat) dotChat.style.display = unread_messages_count > 0 ? 'inline-block' : 'none';
+                        if(dotAlerts) dotAlerts.style.display = unread_system_alerts_count > 0 ? 'inline-block' : 'none';
 
                         // Sub-dot for inner Orders Page tab "Yêu cầu trả hàng"
                         const dotReturnRequestInner = document.getElementById('dot-return-request-inner');
