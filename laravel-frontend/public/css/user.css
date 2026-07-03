@@ -159,7 +159,7 @@
 .product-card {
     background-color: var(--user-white);
     border-radius: var(--user-radius-3xl);
-    box-shadow: var(--user-shadow-sm);
+    box-shadow: var(--user-shadow-md); /* Increased depth */
     overflow: hidden;
     display: flex;
     flex-direction: column;
@@ -171,8 +171,8 @@
 }
 
 .product-card:hover {
-    box-shadow: var(--user-shadow-xl);
-    transform: translateY(-0.5rem);
+    box-shadow: var(--user-shadow-xl), 0 10px 20px -5px rgba(236, 72, 153, 0.15); /* Pink tinted large shadow */
+    transform: translateY(-0.25rem); /* Softer translation */
 }
 
 .product-card--pink-border {

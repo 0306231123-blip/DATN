@@ -12,7 +12,7 @@
 </head>
 <body class="bg-[#fdf0e6] flex flex-col min-h-screen text-gray-800">
 
-    <header class="bg-[#ffe1e8] py-4 px-4 md:px-8 sticky top-0 z-50 border-b border-pink-100 shadow-sm transition-all duration-300">
+    <header class="bg-white/90 backdrop-blur-md py-4 px-4 md:px-8 sticky top-0 z-50 border-b-2 border-pink-500 shadow-sm transition-all duration-300">
         <div class="max-w-7xl mx-auto flex items-center justify-between">
             
             <button id="mobile-menu-btn" class="md:hidden text-gray-700 hover:text-pink-500 focus:outline-none">
@@ -25,7 +25,7 @@
                 <img src="{{ asset('images/logo.jpg') }}" alt="Logo Trang Chủ" class="w-12 h-12 md:w-14 md:h-14 rounded-full object-cover shadow-sm border border-gray-200">
             </a>
 
-            <nav class="hidden md:flex space-x-8">
+            <nav class="hidden md:flex space-x-4 lg:space-x-6">
                 <a href="/user/home" class="text-gray-700 font-bold hover:text-pink-500 transition">Trang chủ</a>
                 <a href="/user/product" class="text-gray-700 font-bold hover:text-pink-500 transition">Sản phẩm</a>
                 <a href="/user/sale" class="text-gray-700 font-bold hover:text-pink-500 transition">Khuyến mãi</a>
@@ -35,7 +35,7 @@
             <div class="flex items-center space-x-4 md:space-x-6">
                 
                 <div class="relative hidden lg:block">
-                    <input type="text" id="search-input" autocomplete="off" placeholder="Tìm kiếm..." class="pl-4 pr-10 py-1.5 rounded-full border-none focus:outline-none focus:ring-2 focus:ring-pink-400 w-64 shadow-inner text-gray-700">
+                    <input type="text" id="search-input" autocomplete="off" placeholder="Tìm kiếm tên sản phẩm, thương hiệu..." class="pl-4 pr-10 py-1.5 rounded-full border-none focus:outline-none focus:ring-2 focus:ring-pink-400 w-80 xl:w-[450px] transition-all shadow-inner text-gray-700">
                     <button class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500">
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" /></svg>
                     </button>
@@ -103,7 +103,7 @@
         @yield('content')
     </main>
 
-    <footer class="bg-[#ffe1e8] text-gray-700 py-10 mt-10 border-t border-pink-100">
+    <footer class="bg-white/90 backdrop-blur-md text-gray-700 py-10 mt-10 border-t-2 border-pink-500 shadow-inner">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 grid grid-cols-1 md:grid-cols-3 gap-8">
             <div>
                 <h3 class="text-lg font-bold text-gray-800 mb-4">Về chúng tôi</h3>
@@ -138,7 +138,7 @@
                 </ul>
             </div>
         </div>
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-8 pt-8 border-t border-pink-200 text-center text-sm text-gray-500">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-8 pt-8 border-t border-gray-100 text-center text-sm text-gray-500">
             &copy; 2026 Hệ thống Mỹ Phẩm. All rights reserved.
         </div>
     </footer>
@@ -844,6 +844,20 @@
                     selectedChatImage = null;
                     chatImageInput.value = '';
                     chatImagePreviewContainer.classList.add('hidden');
+                });
+            }
+
+            // XỬ LÝ TÌM KIẾM (ENTER)
+            const mainSearchInput = document.getElementById('search-input');
+            if (mainSearchInput) {
+                mainSearchInput.addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter') {
+                        e.preventDefault();
+                        const keyword = mainSearchInput.value.trim();
+                        if (keyword) {
+                            window.location.href = `/user/product?search=${encodeURIComponent(keyword)}`;
+                        }
+                    }
                 });
             }
 

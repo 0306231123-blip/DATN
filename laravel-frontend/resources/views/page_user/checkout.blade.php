@@ -104,31 +104,41 @@
                 </label>
             </div>
 
-            <div class="checkout-qr">
-                <span class="checkout-qr__text">Quét mã QR để thanh toán</span>
-                <img src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=ThanhToanDonHangGlowUp" alt="QR Code" class="checkout-qr__img">
-                
-                <button id="btn-confirm-pay" class="checkout-qr__btn">
-                    <span id="btn-text">Tôi đã chuyển khoản</span>
-                    <svg id="loading-icon" class="checkout-spinner hidden" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                    </svg>
-                </button>
+            <div class="checkout-qr hidden">
+                <img src="" class="checkout-qr__img">
+                <span class="checkout-qr__text"></span>
             </div>
+            
+            <button id="btn-confirm-pay" class="w-full bg-pink-500 hover:bg-pink-600 text-white font-bold py-4 rounded-xl transition shadow-lg mt-6 text-lg flex justify-center items-center">
+                <span id="btn-text">Xác nhận đặt hàng</span>
+                <svg id="loading-icon" class="checkout-spinner hidden ml-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" style="width: 20px; height: 20px;">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+            </button>
         </div>
 
     </div>
 
     {{-- Success Popup --}}
     <div id="success-popup" class="checkout-success-overlay hidden">
-        <div class="checkout-success-popup" id="popup-content">
-            <div class="checkout-success-popup__icon-wrap">
+        <div class="checkout-success-popup relative" id="popup-content">
+            <button id="btn-cancel-qr" class="absolute top-4 right-4 text-gray-400 hover:text-red-500 transition-colors hidden z-50">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+            </button>
+            <div class="checkout-success-popup__icon-wrap" id="success-icon-wrap">
                 <svg class="checkout-success-popup__icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>
             </div>
-            <h3 class="checkout-success-popup__title">Thành công!</h3>
-            <p class="checkout-success-popup__desc">Cảm ơn bạn. Đơn hàng của bạn đã được thanh toán và đang được xử lý.</p>
-            <a href="/user/profileuser?tab=orders" class="btn-dark" style="width: 100%; text-align: center; text-transform: uppercase; letter-spacing: 0.05em;">
+            <h3 class="checkout-success-popup__title" id="success-title">Thành công!</h3>
+            
+            <div id="qr-payment-section" class="hidden mt-4 flex flex-col items-center border-t border-b border-gray-100 py-4 mb-4">
+                <p id="qr-instruction" class="text-gray-800 font-bold mb-3 text-center">Vui lòng quét mã QR để thanh toán</p>
+                <img id="popup-qr-img" src="" class="w-48 h-48 rounded-xl shadow-sm border border-gray-100 mb-2">
+                <p class="text-xs text-red-500 font-medium text-center px-4">Đơn hàng sẽ tự động hủy nếu không nhận được thanh toán trong vòng 24h.</p>
+            </div>
+
+            <p class="checkout-success-popup__desc" id="success-desc">Cảm ơn bạn. Đơn hàng của bạn đã được thanh toán và đang được xử lý.</p>
+            <a href="/user/profileuser?tab=orders" id="btn-view-history" class="btn-dark mt-2" style="width: 100%; text-align: center; text-transform: uppercase; letter-spacing: 0.05em;">
                 Xem lịch sử đơn hàng
             </a>
         </div>
@@ -389,12 +399,14 @@
                                    `Giảm ${v.gia_tri}% (Tối đa ${(v.giam_toi_da||0).toLocaleString()}đ)`;
                         
                         let outOfStock = v.so_luong <= 0;
+                        let percentUsed = Math.round(Math.max(5, 100 - Math.sqrt(v.so_luong) * 3));
+                        if (outOfStock) percentUsed = 100;
                         let minOrder = `Đơn tối thiểu: ${v.don_toi_thieu.toLocaleString()}đ`;
                         let isEligible = baseTotal >= v.don_toi_thieu && !outOfStock;
                         
                         let btnClass = isEligible ? 'bg-pink-500 hover:bg-pink-600 text-white shadow-sm' : 'bg-gray-100 text-gray-400 cursor-not-allowed';
                         let btnAction = isEligible ? `onclick="window.selectVoucher('${v.ma_code}')"` : 'disabled';
-                        let borderClass = isEligible ? 'border-pink-200' : 'border-gray-200 opacity-70 grayscale';
+                        let borderClass = outOfStock ? 'border-gray-200 opacity-60 grayscale pointer-events-none' : (isEligible ? 'border-pink-200' : 'border-gray-200 opacity-80');
                         let btnText = outOfStock ? 'Hết lượt' : (isEligible ? 'Dùng ngay' : 'Chưa đủ đ/k');
                         
                         html += `
@@ -404,7 +416,7 @@
                                 <div>
                                     <div class="font-black text-pink-600 text-xl tracking-tight leading-none mb-1">${v.ma_code}</div>
                                     <div class="text-gray-800 font-bold text-sm">${desc}</div>
-                                    <div class="text-gray-500 text-xs font-medium mt-1">${minOrder} | Còn: ${Math.max(0, v.so_luong)}</div>
+                                    <div class="text-gray-500 text-xs font-medium mt-1">${minOrder} | Đã dùng ${percentUsed}%</div>
                                 </div>
                                 <button ${btnAction} class="px-5 py-2 rounded-full font-bold text-sm transition ${btnClass}">
                                     ${btnText}
@@ -438,38 +450,18 @@
         // 4. CHUYỂN ĐỔI PHƯƠNG THỨC THANH TOÁN
         // ==========================================
         const paymentRadios = document.querySelectorAll('input[name="payment"]');
-        const qrImg = document.querySelector('.checkout-qr__img');
-        const qrText = document.querySelector('.checkout-qr__text');
         
         paymentRadios.forEach(radio => {
             radio.addEventListener('change', function() {
                 document.querySelectorAll('.checkout-payment-option__label').forEach(lbl => lbl.classList.remove('checkout-payment-option__label--active'));
                 this.previousElementSibling.classList.add('checkout-payment-option__label--active');
-                
-                if (this.value === 'cod') {
-                    qrImg.classList.add('hidden');
-                    qrText.classList.add('hidden');
-                    btnText.textContent = 'Xác nhận đặt hàng';
-                } else {
-                    qrImg.classList.remove('hidden');
-                    qrText.classList.remove('hidden');
-                    btnText.textContent = 'Tôi đã thanh toán';
-                    
-                    if (this.value === 'momo') {
-                        qrText.textContent = 'Quét mã QR Momo để thanh toán';
-                        qrImg.src = 'https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=ThanhToanMomo123456';
-                    } else if (this.value === 'banking') {
-                        qrText.textContent = 'Quét mã QR Ngân hàng để thanh toán';
-                        qrImg.src = 'https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=ThanhToanNganHang123456';
-                    }
-                }
             });
         });
 
         // ==========================================
         // 5. KIỂM TRA BẮT BUỘC & THANH TOÁN
         // ==========================================
-        btnPay.addEventListener('click', async function() {
+        async function processCheckout() {
             const provinceOption = provinceSelect.options[provinceSelect.selectedIndex];
             const wardOption = wardSelect.options[wardSelect.selectedIndex];
             
@@ -484,7 +476,7 @@
             const fullAddress = `${street}, ${wardName}, ${provinceName}`;
 
             btnPay.disabled = true;
-            btnPay.classList.add('checkout-qr__btn--disabled');
+            btnPay.classList.add('checkout-qr__btn--disabled', 'cursor-not-allowed', 'opacity-70');
             btnText.textContent = 'Đang xử lý...';
             loadingIcon.classList.remove('hidden');
 
@@ -510,6 +502,43 @@
 
                 if (result.success) {
                     successPopup.classList.remove('hidden');
+                    
+                    const paymentMethod = document.querySelector('input[name="payment"]:checked').value;
+                    const qrSection = document.getElementById('qr-payment-section');
+                    const popupQrImg = document.getElementById('popup-qr-img');
+                    const successTitle = document.getElementById('success-title');
+                    const successDesc = document.getElementById('success-desc');
+                    const successIconWrap = document.getElementById('success-icon-wrap');
+
+                    if (paymentMethod === 'cod') {
+                        qrSection.classList.add('hidden');
+                        successIconWrap.classList.remove('hidden');
+                        successTitle.textContent = 'Thành công!';
+                        successDesc.textContent = 'Cảm ơn bạn. Đơn hàng của bạn đã được thanh toán và đang được xử lý.';
+                    } else {
+                        qrSection.classList.remove('hidden');
+                        successIconWrap.classList.add('hidden');
+                        successTitle.textContent = 'Đã tạo đơn hàng!';
+                        successDesc.textContent = 'Đơn hàng của bạn đang ở trạng thái chờ thanh toán. Vui lòng hoàn tất thanh toán để chúng tôi xử lý đơn hàng.';
+                        
+                        if (paymentMethod === 'momo') {
+                            popupQrImg.src = 'https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=ThanhToanMomo123456';
+                        } else {
+                            popupQrImg.src = 'https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=ThanhToanNganHang123456';
+                        }
+
+                        // Ẩn nút "Xem lịch sử", hiện nút X
+                        document.getElementById('btn-view-history').classList.add('hidden');
+                        document.getElementById('btn-cancel-qr').classList.remove('hidden');
+
+                        // Gắn ma_don_hang vào nút X để gọi API hủy
+                        document.getElementById('btn-cancel-qr').setAttribute('data-id', result.ma_don_hang);
+                    } else {
+                        // COD: hiện nút xem lịch sử, ẩn nút X
+                        document.getElementById('btn-view-history').classList.remove('hidden');
+                        document.getElementById('btn-cancel-qr').classList.add('hidden');
+                    }
+
                     setTimeout(() => {
                         successPopup.classList.add('checkout-success-overlay--visible');
                         popupContent.classList.add('checkout-success-popup--visible');
@@ -522,15 +551,74 @@
                 alert('Không thể kết nối đến server Node.js!');
                 resetButton();
             }
+        }
+
+        btnPay.addEventListener('click', function() {
+            if (this.disabled) return;
+            processCheckout();
         });
 
         function resetButton() {
             btnPay.disabled = false;
-            btnPay.classList.remove('checkout-qr__btn--disabled');
-            const selectedPayment = document.querySelector('input[name="payment"]:checked').value;
-            btnText.textContent = selectedPayment === 'cod' ? 'Xác nhận đặt hàng' : 'Tôi đã chuyển khoản';
+            btnPay.classList.remove('checkout-qr__btn--disabled', 'cursor-not-allowed', 'opacity-70');
+            btnText.textContent = 'Xác nhận đặt hàng';
             loadingIcon.classList.add('hidden');
         }
+
+        // "Tricks" bảo vệ đồ án: Giả lập tín hiệu ngân hàng báo thành công khi hiển thị ở popup
+        const popupQrImg = document.getElementById('popup-qr-img');
+        if (popupQrImg) {
+            popupQrImg.classList.add('cursor-pointer');
+            popupQrImg.title = "Mẹo bảo vệ đồ án: Double-click để giả lập Thanh toán thành công";
+            popupQrImg.addEventListener('dblclick', function() {
+                document.getElementById('success-title').textContent = 'Thanh toán thành công!';
+                document.getElementById('success-title').classList.replace('text-gray-800', 'text-green-500');
+                
+                const instruction = document.getElementById('qr-instruction');
+                instruction.textContent = 'Đã nhận được tiền. Hệ thống đang chuyển hướng...';
+                instruction.classList.replace('text-gray-800', 'text-green-500');
+                
+                // Ẩn ảnh QR đi cho thực tế
+                popupQrImg.classList.add('hidden');
+                
+                // Ẩn luôn nút X vì đã báo thành công
+                document.getElementById('btn-cancel-qr').classList.add('hidden');
+                
+                setTimeout(() => {
+                    window.location.href = '/user/profileuser?tab=orders';
+                }, 1500);
+            });
+        }
+
+        // Xử lý khi nhấn nút X để hủy thanh toán QR
+        document.getElementById('btn-cancel-qr').addEventListener('click', async function() {
+            const maDonHang = this.getAttribute('data-id');
+            if (!maDonHang) return;
+
+            if (!confirm('Bạn có chắc muốn hủy thanh toán và xóa đơn hàng này?')) return;
+
+            try {
+                const response = await fetch('http://localhost:3000/api/order/delete-unpaid', {
+                    method: 'POST',
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'Authorization': 'Bearer ' + token 
+                    },
+                    body: JSON.stringify({ ma_don_hang: maDonHang })
+                });
+
+                const result = await response.json();
+                if (result.success) {
+                    alert('Đã hủy đơn hàng thành công!');
+                    window.location.href = '/user/cart'; // Trở lại giỏ hàng (hiện tại trống)
+                } else {
+                    alert('Không thể hủy đơn: ' + result.message);
+                }
+            } catch (error) {
+                alert('Lỗi kết nối khi hủy đơn!');
+            }
+        });
+
     });
 </script>
 @endsection

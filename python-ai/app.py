@@ -44,70 +44,80 @@ def recommend():
         query = "SELECT ma_san_pham, ten_san_pham, mo_ta, loai_da_phu_hop, ma_danh_muc, so_luong_ton FROM san_pham WHERE trang_thai = 'dang_ban'"
         df = pd.read_sql(query, conn)
         
-        # 1.1 Lấy lịch sử mua hàng của user (nếu có)
+        # 1.1 Lấy lịch sử mua hàng của user (lấy cả danh mục và id sản phẩm)
+        purchased_products = []
         purchased_categories = []
         if ma_nguoi_dung:
             hist_query = f"""
-                SELECT DISTINCT sp.ma_danh_muc 
+                SELECT DISTINCT sp.ma_san_pham, sp.ma_danh_muc 
                 FROM chi_tiet_don_hang ct 
                 JOIN don_hang dh ON ct.ma_don_hang = dh.ma_don_hang 
                 JOIN san_pham sp ON ct.ma_san_pham = sp.ma_san_pham
                 WHERE dh.ma_nguoi_dung = {ma_nguoi_dung}
             """
             hist_df = pd.read_sql(hist_query, conn)
-            purchased_categories = hist_df['ma_danh_muc'].tolist()
+            if not hist_df.empty:
+                purchased_products = hist_df['ma_san_pham'].tolist()
+                purchased_categories = hist_df['ma_danh_muc'].tolist()
             
         conn.close()
 
         if df.empty:
-            return jsonify({"success": False, "data": []})
+            return jsonify({"success": False, "data": {"low_stock": [], "next_step": [], "skin_type": []}})
 
-        # 2. XỬ LÝ AI (NLP - Phân tích văn bản)
+        # ==========================================
+        # LIST 1: GỢI Ý MUA LẠI KẺO HẾT (LOW STOCK)
+        # ==========================================
+        # Tìm sản phẩm ĐÃ MUA và có tồn kho <= 20
+        low_stock_ids = df[(df['ma_san_pham'].isin(purchased_products)) & (df['so_luong_ton'] > 0) & (df['so_luong_ton'] <= 20)]['ma_san_pham'].tolist()
+        
+        # Nếu không có sản phẩm nào thỏa mãn, fallback lấy ngẫu nhiên 4 sản phẩm sắp hết hàng chung của shop
+        if not low_stock_ids:
+            low_stock_ids = df[(df['so_luong_ton'] > 0) & (df['so_luong_ton'] <= 20)].sort_values(by='so_luong_ton').head(4)['ma_san_pham'].tolist()
+
+        # ==========================================
+        # LIST 2: GỢI Ý BƯỚC TIẾP THEO (CROSS-SELLING)
+        # ==========================================
+        # Ánh xạ bước tiếp theo dựa trên danh mục đã mua
+        # 4: Chống nắng, 5: Sữa rửa mặt, 6: Toner, 7: Serum, 8: Kem dưỡng
+        routine_flow = {5: 6, 6: 7, 7: 8, 8: 4, 4: 5} 
+        next_step_categories = []
+        for cat in purchased_categories:
+            if cat in routine_flow:
+                next_step_categories.append(routine_flow[cat])
+        
+        next_step_ids = []
+        if next_step_categories:
+            next_step_ids = df[df['ma_danh_muc'].isin(next_step_categories)].head(4)['ma_san_pham'].tolist()
+
+        # ==========================================
+        # LIST 3: GỢI Ý THEO LOẠI DA (NLP)
+        # ==========================================
         user_profile = skin_keywords.get(loai_da_user, "")
-        
-        # Điền chuỗi rỗng vào các sản phẩm không có mô tả để AI không báo lỗi
         df['mo_ta'] = df['mo_ta'].fillna("")
-        
-        # Gộp từ khóa của user và mô tả của tất cả sản phẩm
         documents = [user_profile] + df['mo_ta'].tolist()
 
-        # Thuật toán TF-IDF biến chữ viết thành vector số học (Cải tiến: bắt theo cụm 1-2 từ như "kiềm dầu", "cấp ẩm")
         tfidf = TfidfVectorizer(ngram_range=(1, 2))
         tfidf_matrix = tfidf.fit_transform(documents)
-
-        # Tính độ tương đồng giữa User (vị trí 0) và các Sản phẩm
         cosine_sim = cosine_similarity(tfidf_matrix[0:1], tfidf_matrix[1:]).flatten()
-
-        # Gán điểm số AI vừa chấm được
         df['ai_score'] = cosine_sim
 
-        # 3. Rule-based recommendation: Cộng thêm điểm ưu tiên nếu sản phẩm thiết kế ĐÚNG cho loại da đó
+        # Ưu tiên sản phẩm đúng loại da
         df.loc[df['loai_da_phu_hop'] == loai_da_user, 'ai_score'] += 0.5
         df.loc[df['loai_da_phu_hop'] == 'tat_ca', 'ai_score'] += 0.2
 
-        # 4. Học từ hành vi người dùng: Cộng điểm cho các sản phẩm cùng danh mục mà user từng mua
-        if purchased_categories:
-            df.loc[df['ma_danh_muc'].isin(purchased_categories), 'ai_score'] += 0.3
-
-        # 5. Cross-selling theo lộ trình Skincare (Sữa rửa mặt(5) -> Toner(6) -> Serum(7) -> Kem dưỡng(8) -> Chống nắng(4))
-        routine_flow = {5: 6, 6: 7, 7: 8, 8: 4}
-        if purchased_categories:
-            for cat in purchased_categories:
-                if cat in routine_flow:
-                    next_step = routine_flow[cat]
-                    df.loc[df['ma_danh_muc'] == next_step, 'ai_score'] += 0.4
-                    
-        # 6. Gợi ý kích cầu (Sắp hết hàng): Ưu tiên hiển thị sản phẩm còn ít để khách mua kẻo hết
-        df.loc[(df['so_luong_ton'] > 0) & (df['so_luong_ton'] <= 20), 'ai_score'] += 0.25
-
-        # Sắp xếp và lấy 5 sản phẩm có điểm AI cao nhất
-        top_products = df.sort_values(by='ai_score', ascending=False).head(5)
-        recommended_ids = top_products['ma_san_pham'].tolist()
+        # Loại trừ các sản phẩm đã có ở 2 list trên để tránh trùng lặp
+        exclude_ids = set(low_stock_ids + next_step_ids)
+        skin_type_ids = df[~df['ma_san_pham'].isin(exclude_ids)].sort_values(by='ai_score', ascending=False).head(4)['ma_san_pham'].tolist()
 
         return jsonify({
             "success": True, 
             "loai_da_phan_tich": loai_da_user, 
-            "data": recommended_ids
+            "data": {
+                "low_stock": low_stock_ids,
+                "next_step": next_step_ids,
+                "skin_type": skin_type_ids
+            }
         })
 
     except Exception as e:

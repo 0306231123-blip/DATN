@@ -43,6 +43,15 @@ class ProductController extends Controller
             $query->whereRaw('COALESCE(gia_khuyen_mai, gia) <= ?', [$max]);
         }
 
+        // Lọc theo từ khóa tìm kiếm (Search bar)
+        if ($request->has('search') && $request->get('search') != '') {
+            $keyword = $request->get('search');
+            $query->where(function($q) use ($keyword) {
+                $q->where('ten_san_pham', 'like', '%' . $keyword . '%')
+                  ->orWhere('thuong_hieu', 'like', '%' . $keyword . '%');
+            });
+        }
+
         // Sắp xếp
         if ($request->has('sort') && $request->get('sort') != '') {
             $sort = $request->get('sort');

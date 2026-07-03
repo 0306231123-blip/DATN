@@ -79,6 +79,20 @@ router.post('/create', async (req, res) => {
 
         // 5. TRỪ LƯỢT SỬ DỤNG VOUCHER (Nếu có áp dụng mã)
         if (ma_khuyen_mai) {
+            const daSuDung = await DonHang.findOne({
+                where: {
+                    ma_nguoi_dung: maNguoiDung,
+                    ma_khuyen_mai: ma_khuyen_mai,
+                    trang_thai_don: { [Op.notIn]: ['da_huy', 'da_tra_hang'] }
+                },
+                transaction: t
+            });
+            
+            if (daSuDung) {
+                await t.rollback();
+                return res.status(400).json({ success: false, message: 'Bạn đã sử dụng mã khuyến mãi này rồi, và đơn hàng vẫn đang tồn tại!' });
+            }
+
             const voucher = await KhuyenMai.findByPk(ma_khuyen_mai, { transaction: t });
             if (voucher && voucher.so_luong > 0) {
                 await voucher.decrement('so_luong', { by: 1, transaction: t });
@@ -106,7 +120,7 @@ router.post('/create', async (req, res) => {
         await GioHang.destroy({ where: destroyWhere, transaction: t });
         await t.commit();
         
-        res.json({ success: true, message: 'Đặt hàng thành công!' });
+        res.json({ success: true, message: 'Đặt hàng thành công!', ma_don_hang: donHangMoi.ma_don_hang });
     } catch (error) {
         await t.rollback();
         console.error("Lỗi tạo đơn:", error);
@@ -179,6 +193,10 @@ router.post('/update-status', async (req, res) => {
                     by: item.so_luong, where: { ma_san_pham: item.ma_san_pham }, transaction: t
                 });
             }
+            // HOÀN LẠI VOUCHER
+            if (donHang.ma_khuyen_mai) {
+                await KhuyenMai.increment('so_luong', { by: 1, where: { ma_khuyen_mai: donHang.ma_khuyen_mai }, transaction: t });
+            }
         } 
         
         // ==========================================
@@ -223,6 +241,10 @@ router.post('/update-status', async (req, res) => {
                     where: { ma_san_pham: item.ma_san_pham }, 
                     transaction: t
                 });
+            }
+            // HOÀN LẠI VOUCHER
+            if (donHang.ma_khuyen_mai) {
+                await KhuyenMai.increment('so_luong', { by: 1, where: { ma_khuyen_mai: donHang.ma_khuyen_mai }, transaction: t });
             }
         }
 
@@ -296,6 +318,51 @@ router.post('/request-refund', verifyToken, async (req, res) => {
     } catch (error) {
         console.error('Lỗi hoàn tiền:', error);
         res.status(500).json({ success: false, message: 'Lỗi server' });
+    }
+});
+
+// --- HARD DELETE ĐƠN HÀNG KHI HỦY THANH TOÁN QR ---
+router.post('/delete-unpaid', verifyToken, async (req, res) => {
+    const t = await sequelize.transaction();
+    try {
+        const { ma_don_hang } = req.body;
+        const donHang = await DonHang.findByPk(ma_don_hang, {
+            include: [{ model: ChiTietDonHang, as: 'chi_tiet' }],
+            transaction: t
+        });
+
+        if (!donHang) {
+            await t.rollback();
+            return res.status(404).json({ success: false, message: 'Không tìm thấy đơn hàng' });
+        }
+
+        // Hoàn lại kho
+        if (donHang.chi_tiet && donHang.chi_tiet.length > 0) {
+            for (let item of donHang.chi_tiet) {
+                await SanPham.increment('so_luong_ton', {
+                    by: item.so_luong,
+                    where: { ma_san_pham: item.ma_san_pham },
+                    transaction: t
+                });
+            }
+            // Xóa chi tiết đơn hàng
+            await ChiTietDonHang.destroy({ where: { ma_don_hang }, transaction: t });
+        }
+
+        // Hoàn lại voucher (nếu có)
+        if (donHang.ma_khuyen_mai) {
+            await KhuyenMai.increment('so_luong', { by: 1, where: { ma_khuyen_mai: donHang.ma_khuyen_mai }, transaction: t });
+        }
+
+        // Xóa đơn hàng
+        await donHang.destroy({ transaction: t });
+
+        await t.commit();
+        res.json({ success: true, message: 'Đã hủy và xóa đơn hàng thành công' });
+    } catch (error) {
+        await t.rollback();
+        console.error('Lỗi xóa đơn:', error);
+        res.status(500).json({ success: false, message: 'Lỗi server khi xóa đơn' });
     }
 });
 

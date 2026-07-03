@@ -45,7 +45,7 @@ router.post('/check', async (req, res) => {
             where: {
                 ma_nguoi_dung: maNguoiDung,
                 ma_khuyen_mai: voucher.ma_khuyen_mai,
-                trang_thai_don: { [Op.ne]: 'da_huy' } // Trừ những đơn khách đã hủy ra (hủy thì cho xài lại)
+                trang_thai_don: { [Op.notIn]: ['da_huy', 'da_tra_hang'] } // Chỉ đơn đã hủy hoặc đã trả hàng/hoàn tiền thì mới cho dùng lại
             }
         });
 

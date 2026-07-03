@@ -397,13 +397,11 @@
                             actionBtnHtml = `<div class="mt-4 text-center text-red-600 font-bold w-full bg-red-50 py-2 rounded-lg">Yêu cầu trả hàng của bạn bị từ chối vì sai quy định hoàn trả.</div>`;
                         }
 
-                        const userOrderNumber = result.data.length - index;
-
                         htmlHistory += `
                             <div class="profile-order-card" id="order-${order.ma_don_hang}">
                                 <div class="profile-order-card__header">
                                     <div>
-                                        <p class="profile-order-card__id">Đơn hàng #${userOrderNumber}</p>
+                                        <p class="profile-order-card__id">Đơn hàng #${order.ma_don_hang}</p>
                                         <p class="profile-order-card__date">Ngày đặt: ${date}</p>
                                         <p class="profile-order-card__date mt-1 text-pink-600">Thanh toán: <span class="font-medium">${paymentMethodText}</span></p>
                                     </div>
@@ -461,13 +459,11 @@
                             activeStatusColor = 'bg-red-100 text-red-700 border border-red-300';
                             actionBtnHtml = `<div class="mt-4 text-sm text-left text-red-600 bg-red-50 p-3 rounded-lg w-full border border-red-200">Yêu cầu trả hàng của bạn đã bị từ chối vì lý do sai quy định hoàn trả.</div>`;
                         }
-                        const userOrderNumber = result.data.length - index;
-                        
                             htmlOrders += `
                             <div class="profile-order-card" id="order-${order.ma_don_hang}">
                                 <div class="profile-order-card__header" style="align-items: center; margin-bottom: 1rem;">
                                     <div>
-                                        <p class="profile-order-card__id">Đơn hàng #${userOrderNumber}</p>
+                                        <p class="profile-order-card__id">Đơn hàng #${order.ma_don_hang}</p>
                                         <p class="profile-order-card__date mt-1 text-pink-600">Thanh toán: <span class="font-medium">${paymentMethodText}</span></p>
                                     </div>
                                     <span class="profile-order-card__status ${activeStatusColor}">${activeStatusText}</span>

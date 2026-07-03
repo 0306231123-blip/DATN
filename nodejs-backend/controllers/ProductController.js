@@ -722,28 +722,38 @@ exports.getAIRecommendation = async (req, res) => {
           ma_nguoi_dung: decoded.ma_nguoi_dung
       });
 
-      // ... (Phần code bên dưới giữ nguyên y hệt như cũ) ...
-      const productIds = pythonResponse.data.data;
+      const aiData = pythonResponse.data.data;
 
-      if (!productIds || productIds.length === 0) {
-          return res.json({ success: true, data: [] });
+      // Gom tất cả ID lại để query 1 lần cho nhẹ DB
+      const allProductIds = new Set([
+          ...(aiData.low_stock || []),
+          ...(aiData.next_step || []),
+          ...(aiData.skin_type || [])
+      ]);
+
+      if (allProductIds.size === 0) {
+          return res.json({ success: true, data: { low_stock: [], next_step: [], skin_type: [] } });
       }
 
       const products = await SanPham.findAll({
-          where: { ma_san_pham: productIds },
+          where: { ma_san_pham: Array.from(allProductIds) },
           include: [{ 
               model: AnhSanPham, 
               as: 'danh_sach_anh' 
           }]
       });
 
-      // Sắp xếp lại mảng products theo đúng thứ tự điểm AI (productIds) mà Python trả về
-      const sortedProducts = productIds.map(id => products.find(p => p.ma_san_pham === id)).filter(p => p);
+      // Hàm helper để map lại mảng sản phẩm theo đúng thứ tự ID mà Python trả về
+      const mapProducts = (ids) => ids.map(id => products.find(p => p.ma_san_pham === id)).filter(p => p);
 
       res.json({
           success: true,
-          loai_da_text: loaiDaUser, // Chữ gửi về giao diện sẽ cập nhật chuẩn 100%
-          data: sortedProducts
+          loai_da_text: loaiDaUser,
+          data: {
+              low_stock: mapProducts(aiData.low_stock || []),
+              next_step: mapProducts(aiData.next_step || []),
+              skin_type: mapProducts(aiData.skin_type || [])
+          }
       });
 
   } catch (error) {
