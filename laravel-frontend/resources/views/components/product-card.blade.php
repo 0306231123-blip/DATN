@@ -8,9 +8,9 @@
         @endphp
 
         @if($anh)
-            <img src="{{ $anh->duong_dan_anh }}" alt="{{ $sp->ten_san_pham }}" class="product-card__img">
+            <img src="{{ asset($anh->duong_dan_anh) }}" alt="{{ $sp->ten_san_pham }}" class="product-card__img">
         @else
-            <span class="product-card__no-image">Chưa có ảnh</span>
+            <img src="{{ asset('images/logo.jpg') }}" alt="No image" class="product-card__img">
         @endif
 
         @if(isset($sp->tong_so_luong_ban) && $sp->tong_so_luong_ban > 0)

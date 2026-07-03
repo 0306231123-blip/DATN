@@ -41,7 +41,7 @@ def recommend():
 
         # 1. Kết nối Database lấy tất cả sản phẩm đang bán
         conn = get_db_connection()
-        query = "SELECT ma_san_pham, ten_san_pham, mo_ta, loai_da_phu_hop, ma_danh_muc FROM san_pham WHERE trang_thai = 'dang_ban'"
+        query = "SELECT ma_san_pham, ten_san_pham, mo_ta, loai_da_phu_hop, ma_danh_muc, so_luong_ton FROM san_pham WHERE trang_thai = 'dang_ban'"
         df = pd.read_sql(query, conn)
         
         # 1.1 Lấy lịch sử mua hàng của user (nếu có)
@@ -71,8 +71,8 @@ def recommend():
         # Gộp từ khóa của user và mô tả của tất cả sản phẩm
         documents = [user_profile] + df['mo_ta'].tolist()
 
-        # Thuật toán TF-IDF biến chữ viết thành vector số học
-        tfidf = TfidfVectorizer()
+        # Thuật toán TF-IDF biến chữ viết thành vector số học (Cải tiến: bắt theo cụm 1-2 từ như "kiềm dầu", "cấp ẩm")
+        tfidf = TfidfVectorizer(ngram_range=(1, 2))
         tfidf_matrix = tfidf.fit_transform(documents)
 
         # Tính độ tương đồng giữa User (vị trí 0) và các Sản phẩm
@@ -88,6 +88,17 @@ def recommend():
         # 4. Học từ hành vi người dùng: Cộng điểm cho các sản phẩm cùng danh mục mà user từng mua
         if purchased_categories:
             df.loc[df['ma_danh_muc'].isin(purchased_categories), 'ai_score'] += 0.3
+
+        # 5. Cross-selling theo lộ trình Skincare (Sữa rửa mặt(5) -> Toner(6) -> Serum(7) -> Kem dưỡng(8) -> Chống nắng(4))
+        routine_flow = {5: 6, 6: 7, 7: 8, 8: 4}
+        if purchased_categories:
+            for cat in purchased_categories:
+                if cat in routine_flow:
+                    next_step = routine_flow[cat]
+                    df.loc[df['ma_danh_muc'] == next_step, 'ai_score'] += 0.4
+                    
+        # 6. Gợi ý kích cầu (Sắp hết hàng): Ưu tiên hiển thị sản phẩm còn ít để khách mua kẻo hết
+        df.loc[(df['so_luong_ton'] > 0) & (df['so_luong_ton'] <= 20), 'ai_score'] += 0.25
 
         # Sắp xếp và lấy 5 sản phẩm có điểm AI cao nhất
         top_products = df.sort_values(by='ai_score', ascending=False).head(5)

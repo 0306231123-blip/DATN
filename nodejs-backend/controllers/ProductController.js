@@ -737,10 +737,13 @@ exports.getAIRecommendation = async (req, res) => {
           }]
       });
 
+      // Sắp xếp lại mảng products theo đúng thứ tự điểm AI (productIds) mà Python trả về
+      const sortedProducts = productIds.map(id => products.find(p => p.ma_san_pham === id)).filter(p => p);
+
       res.json({
           success: true,
           loai_da_text: loaiDaUser, // Chữ gửi về giao diện sẽ cập nhật chuẩn 100%
-          data: products
+          data: sortedProducts
       });
 
   } catch (error) {

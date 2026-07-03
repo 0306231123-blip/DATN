@@ -27,15 +27,48 @@ class ProductController extends Controller
             $query->whereIn('ma_danh_muc', $allCategoryIds);
         }
 
-        $danhSachSanPham = $query->orderBy('ngay_tao', 'desc')->paginate(12);
+        // Lọc theo thương hiệu
+        if ($request->has('thuong_hieu') && $request->get('thuong_hieu') != '') {
+            $thArray = explode(',', $request->get('thuong_hieu'));
+            $query->whereIn('thuong_hieu', $thArray);
+        }
+
+        // Lọc theo khoảng giá
+        if ($request->has('min_price') && $request->get('min_price') != '') {
+            $min = (int) $request->get('min_price');
+            $query->whereRaw('COALESCE(gia_khuyen_mai, gia) >= ?', [$min]);
+        }
+        if ($request->has('max_price') && $request->get('max_price') != '') {
+            $max = (int) $request->get('max_price');
+            $query->whereRaw('COALESCE(gia_khuyen_mai, gia) <= ?', [$max]);
+        }
+
+        // Sắp xếp
+        if ($request->has('sort') && $request->get('sort') != '') {
+            $sort = $request->get('sort');
+            if ($sort == 'price_asc') {
+                $query->orderByRaw('COALESCE(gia_khuyen_mai, gia) ASC');
+            } elseif ($sort == 'price_desc') {
+                $query->orderByRaw('COALESCE(gia_khuyen_mai, gia) DESC');
+            } else {
+                $query->orderBy('ngay_tao', 'desc');
+            }
+        } else {
+            $query->orderBy('ngay_tao', 'desc');
+        }
+
+        $danhSachSanPham = $query->paginate(12);
 
         // Nối thêm parameter vào pagination link để giữ nguyên query lọc khi chuyển trang
         $danhSachSanPham->appends($request->all());
         
         // Lấy danh sách danh mục để hiển thị checkbox filter
         $danhMucs = DB::table('danh_muc')->orderBy('thu_tu_hien_thi', 'asc')->get();
+
+        // Lấy danh sách thương hiệu để hiển thị
+        $thuongHieus = SanPham::where('trang_thai', 'dang_ban')->whereNotNull('thuong_hieu')->where('thuong_hieu', '!=', '')->distinct()->orderBy('thuong_hieu', 'asc')->pluck('thuong_hieu');
         
-        return view('page_user.product', compact('danhSachSanPham', 'danhMucs'));
+        return view('page_user.product', compact('danhSachSanPham', 'danhMucs', 'thuongHieus'));
     }
 
     // 2. Hàm hiển thị trang CHI TIẾT SẢN PHẨM
@@ -48,34 +81,123 @@ class ProductController extends Controller
     }
 
     // 3. Hàm hiển thị trang KHUYẾN MÃI
-    public function sale()
+    public function sale(Request $request)
     {
-        // Đã nâng cấp: Dùng paginate(12) thay vì get() để lỡ có nhiều hàng sale thì web vẫn mượt
-        $danhSachKhuyenMai = SanPham::whereNotNull('gia_khuyen_mai')
-                                    ->where('trang_thai', 'dang_ban')
-                                    ->paginate(12);
+        $query = SanPham::whereNotNull('gia_khuyen_mai')
+                        ->where('trang_thai', 'dang_ban');
+                        
+        // Lọc theo danh mục
+        if ($request->has('danh_muc') && $request->get('danh_muc') != '') {
+            $dmArray = explode(',', $request->get('danh_muc'));
+            $allCategoryIds = DB::table('danh_muc')
+                                ->whereIn('ma_danh_muc', $dmArray)
+                                ->orWhereIn('ma_danh_muc_cha', $dmArray)
+                                ->pluck('ma_danh_muc')
+                                ->toArray();
+            $query->whereIn('ma_danh_muc', $allCategoryIds);
+        }
+
+        // Lọc theo thương hiệu
+        if ($request->has('thuong_hieu') && $request->get('thuong_hieu') != '') {
+            $thArray = explode(',', $request->get('thuong_hieu'));
+            $query->whereIn('thuong_hieu', $thArray);
+        }
+
+        // Lọc theo khoảng giá
+        if ($request->has('min_price') && $request->get('min_price') != '') {
+            $min = (int) $request->get('min_price');
+            $query->whereRaw('COALESCE(gia_khuyen_mai, gia) >= ?', [$min]);
+        }
+        if ($request->has('max_price') && $request->get('max_price') != '') {
+            $max = (int) $request->get('max_price');
+            $query->whereRaw('COALESCE(gia_khuyen_mai, gia) <= ?', [$max]);
+        }
+
+        // Sắp xếp
+        if ($request->has('sort') && $request->get('sort') != '') {
+            $sort = $request->get('sort');
+            if ($sort == 'price_asc') {
+                $query->orderByRaw('COALESCE(gia_khuyen_mai, gia) ASC');
+            } elseif ($sort == 'price_desc') {
+                $query->orderByRaw('COALESCE(gia_khuyen_mai, gia) DESC');
+            } else {
+                $query->orderBy('ngay_tao', 'desc');
+            }
+        } else {
+            $query->orderBy('ngay_tao', 'desc');
+        }
+
+        $danhSachKhuyenMai = $query->paginate(12);
+        $danhSachKhuyenMai->appends($request->all());
         
-        return view('page_user.sale', compact('danhSachKhuyenMai'));
+        $danhMucs = DB::table('danh_muc')->orderBy('thu_tu_hien_thi', 'asc')->get();
+        $thuongHieus = SanPham::where('trang_thai', 'dang_ban')->whereNotNull('thuong_hieu')->where('thuong_hieu', '!=', '')->distinct()->orderBy('thuong_hieu', 'asc')->pluck('thuong_hieu');
+        
+        return view('page_user.sale', compact('danhSachKhuyenMai', 'danhMucs', 'thuongHieus'));
     }
 
     // 4. Hàm hiển thị trang BÁN CHẠY
-    public function bestseller()
+    public function bestseller(Request $request)
     {
-        $danhSachBanChay = SanPham::select('san_pham.*')
-            ->selectSub(function ($query) {
-                $query->from('chi_tiet_don_hang')
+        $query = SanPham::select('san_pham.*')
+            ->selectSub(function ($subquery) {
+                $subquery->from('chi_tiet_don_hang')
                     ->join('don_hang', 'chi_tiet_don_hang.ma_don_hang', '=', 'don_hang.ma_don_hang')
                     ->whereColumn('chi_tiet_don_hang.ma_san_pham', 'san_pham.ma_san_pham')
                     ->whereNotIn('don_hang.trang_thai_don', ['da_huy', 'da_tra_hang', 'tra_hang_hoan_tien'])
                     ->selectRaw('SUM(so_luong)');
             }, 'tong_so_luong_ban')
             ->where('san_pham.trang_thai', 'dang_ban')
-            // DÒNG NÀY SẼ LỌC BỎ NHỮNG SẢN PHẨM CÓ TỔNG SỐ LƯỢNG BÁN = 0 (HOẶC NULL)
-            ->having('tong_so_luong_ban', '>', 0) 
-            ->orderByRaw('tong_so_luong_ban DESC')
-            ->paginate(12);
+            ->having('tong_so_luong_ban', '>', 0);
+            
+        // Lọc theo danh mục
+        if ($request->has('danh_muc') && $request->get('danh_muc') != '') {
+            $dmArray = explode(',', $request->get('danh_muc'));
+            $allCategoryIds = DB::table('danh_muc')
+                                ->whereIn('ma_danh_muc', $dmArray)
+                                ->orWhereIn('ma_danh_muc_cha', $dmArray)
+                                ->pluck('ma_danh_muc')
+                                ->toArray();
+            $query->whereIn('san_pham.ma_danh_muc', $allCategoryIds);
+        }
 
-        return view('page_user.bestseller', compact('danhSachBanChay'));
+        // Lọc theo thương hiệu
+        if ($request->has('thuong_hieu') && $request->get('thuong_hieu') != '') {
+            $thArray = explode(',', $request->get('thuong_hieu'));
+            $query->whereIn('san_pham.thuong_hieu', $thArray);
+        }
+
+        // Lọc theo khoảng giá
+        if ($request->has('min_price') && $request->get('min_price') != '') {
+            $min = (int) $request->get('min_price');
+            $query->whereRaw('COALESCE(san_pham.gia_khuyen_mai, san_pham.gia) >= ?', [$min]);
+        }
+        if ($request->has('max_price') && $request->get('max_price') != '') {
+            $max = (int) $request->get('max_price');
+            $query->whereRaw('COALESCE(san_pham.gia_khuyen_mai, san_pham.gia) <= ?', [$max]);
+        }
+
+        // Sắp xếp
+        if ($request->has('sort') && $request->get('sort') != '') {
+            $sort = $request->get('sort');
+            if ($sort == 'price_asc') {
+                $query->orderByRaw('COALESCE(san_pham.gia_khuyen_mai, san_pham.gia) ASC');
+            } elseif ($sort == 'price_desc') {
+                $query->orderByRaw('COALESCE(san_pham.gia_khuyen_mai, san_pham.gia) DESC');
+            } else {
+                $query->orderByRaw('tong_so_luong_ban DESC');
+            }
+        } else {
+            $query->orderByRaw('tong_so_luong_ban DESC');
+        }
+            
+        $danhSachBanChay = $query->paginate(12);
+        $danhSachBanChay->appends($request->all());
+
+        $danhMucs = DB::table('danh_muc')->orderBy('thu_tu_hien_thi', 'asc')->get();
+        $thuongHieus = SanPham::where('trang_thai', 'dang_ban')->whereNotNull('thuong_hieu')->where('thuong_hieu', '!=', '')->distinct()->orderBy('thuong_hieu', 'asc')->pluck('thuong_hieu');
+        
+        return view('page_user.bestseller', compact('danhSachBanChay', 'danhMucs', 'thuongHieus'));
     }
 
     // 5. Hàm hiển thị TRANG CHỦ
