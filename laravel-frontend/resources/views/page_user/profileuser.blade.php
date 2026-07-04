@@ -464,6 +464,7 @@
                                 <div class="profile-order-card__header" style="align-items: center; margin-bottom: 1rem;">
                                     <div>
                                         <p class="profile-order-card__id">Đơn hàng #${order.ma_don_hang}</p>
+                                        <p class="profile-order-card__date">Ngày đặt: ${date}</p>
                                         <p class="profile-order-card__date mt-1 text-pink-600">Thanh toán: <span class="font-medium">${paymentMethodText}</span></p>
                                     </div>
                                     <span class="profile-order-card__status ${activeStatusColor}">${activeStatusText}</span>

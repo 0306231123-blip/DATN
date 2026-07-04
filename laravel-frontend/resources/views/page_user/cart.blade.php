@@ -108,6 +108,7 @@
                             <div class="flex-1 ml-4">
                                 <h3 class="font-bold text-gray-800 text-lg hover:text-pink-600 transition cursor-pointer">${sanPham.ten_san_pham}</h3>
                                 <p class="text-sm text-gray-500 mt-1">Còn lại: ${soLuongTon} SP</p>
+                                <p class="text-xs text-gray-400 mt-1">Đã thêm: ${new Date(item.ngay_them).toLocaleString('vi-VN')}</p>
                             </div>
                             
                             <div class="w-32 text-center font-black text-pink-600 text-lg">

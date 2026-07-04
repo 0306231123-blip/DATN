@@ -82,6 +82,21 @@ class OrderController {
         ],
       });
 
+      // Auto-complete orders that have been delivered for more than 3 days
+      const now = new Date();
+      for (let order of rows) {
+          if (order.trang_thai_don === 'giao_thanh_cong') {
+              const ngayGiao = new Date(order.ngay_cap_nhat || order.ngay_dat);
+              const diffTime = Math.abs(now - ngayGiao);
+              const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)); 
+              
+              if (diffDays > 3) {
+                  order.trang_thai_don = 'hoan_thanh';
+                  await order.save();
+              }
+          }
+      }
+
       // Add so_san_pham (product count) to each order
       const ordersData = rows.map(order => {
         const orderJSON = order.toJSON();
@@ -214,8 +229,8 @@ class OrderController {
       const currentStatus = order.trang_thai_don;
 
       if (
-          (trang_thai_don === 'da_tra_hang' || trang_thai_don === 'da_huy') && 
-          (currentStatus !== 'da_tra_hang' && currentStatus !== 'da_huy')
+          (trang_thai_don === 'da_huy') && 
+          (currentStatus !== 'da_huy')
       ) {
           for (let item of order.chi_tiet) {
               await SanPham.increment('so_luong_ton', {
@@ -563,6 +578,15 @@ class OrderController {
                 return res.status(400).json({ success: false, message: 'Chỉ đơn hàng đã giao thành công mới được yêu cầu trả hàng!' });
             }
             
+            // KIỂM TRA ĐIỀU KIỆN 3 NGÀY
+            const ngayGiao = new Date(donHang.ngay_cap_nhat || donHang.ngay_dat);
+            const diffTime = Math.abs(new Date() - ngayGiao);
+            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)); 
+            if (diffDays > 3) {
+                await t.rollback();
+                return res.status(400).json({ success: false, message: 'Đã quá 3 ngày kể từ khi nhận hàng, bạn không thể yêu cầu hoàn trả nữa!' });
+            }
+            
             // 1. Lưu vào bảng yeu_cau_tra_hang
             await YeuCauTraHang.create({
                 ma_don_hang: ma_don_hang,
@@ -620,7 +644,7 @@ class OrderController {
                 const diffTime = Math.abs(now - ngayGiao);
                 const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)); 
                 
-                if (diffDays >= 7) {
+                if (diffDays > 3) {
                     order.trang_thai_don = 'hoan_thanh';
                     await order.save();
                 }

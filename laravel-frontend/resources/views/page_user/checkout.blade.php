@@ -580,7 +580,7 @@
                 document.getElementById('success-title').classList.replace('text-gray-800', 'text-green-500');
                 
                 const instruction = document.getElementById('qr-instruction');
-                instruction.textContent = 'Đã nhận được tiền. Hệ thống đang chuyển hướng...';
+                instruction.textContent = 'Đã thanh toán thành công. Hệ thống đang chuyển hướng...';
                 instruction.classList.replace('text-gray-800', 'text-green-500');
                 
                 // Ẩn ảnh QR đi cho thực tế

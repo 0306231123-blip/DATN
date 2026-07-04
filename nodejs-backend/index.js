@@ -99,7 +99,10 @@ sequelize
       }
     }
     
-    app.listen(PORT, () => console.log(`API running on port ${PORT} [${NODE_ENV}]`));
+    const server = app.listen(PORT, () => console.log(`API running on port ${PORT} [${NODE_ENV}]`));
+    server.on('error', (err) => {
+        console.error('Server error:', err);
+    });
   })
   .catch((err) => {
     console.error('Database connection failed:', err.message);

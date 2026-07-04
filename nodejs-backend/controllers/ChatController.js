@@ -82,7 +82,8 @@ class ChatController {
             include: [{
                 model: TinNhan,
                 as: 'tin_nhan',
-                attributes: []
+                attributes: [],
+                required: true
             }],
             attributes: [
                 'ma_nguoi_dung',
@@ -90,9 +91,6 @@ class ChatController {
                 'email',
                 [sequelize.fn('MAX', sequelize.col('tin_nhan.ngay_gui')), 'latest_message_date']
             ],
-            where: {
-                '$tin_nhan.ma_tin_nhan$': { [Op.not]: null } // Inner join implicit check
-            },
             group: ['nguoi_dung.ma_nguoi_dung'],
             order: [[sequelize.col('latest_message_date'), 'DESC']]
         });
