@@ -92,6 +92,10 @@ sequelize
             `); 
             console.log('Created canh_bao_he_thong'); 
         } catch(e) {}
+        try { await sequelize.query('ALTER TABLE khuyen_mai ADD COLUMN ma_san_pham INT NULL AFTER gia_tri'); console.log('Added ma_san_pham'); } catch(e) {}
+        try { await sequelize.query('ALTER TABLE khuyen_mai ADD COLUMN ma_danh_muc INT NULL AFTER ma_san_pham'); console.log('Added ma_danh_muc'); } catch(e) {}
+        try { await sequelize.query('ALTER TABLE khuyen_mai ADD CONSTRAINT fk_km_sp FOREIGN KEY (ma_san_pham) REFERENCES san_pham(ma_san_pham) ON DELETE CASCADE'); console.log('Added fk_km_sp'); } catch(e) {}
+        try { await sequelize.query('ALTER TABLE khuyen_mai ADD CONSTRAINT fk_km_dm FOREIGN KEY (ma_danh_muc) REFERENCES danh_muc(ma_danh_muc) ON DELETE CASCADE'); console.log('Added fk_km_dm'); } catch(e) {}
         // --- END TEMPORARY MIGRATIONS ---
 
       } catch (err) {

@@ -20,6 +20,14 @@ const KhuyenMai = sequelize.define('KhuyenMai', {
         type: DataTypes.INTEGER,
         allowNull: false
     },
+    ma_san_pham: {
+        type: DataTypes.INTEGER,
+        allowNull: true
+    },
+    ma_danh_muc: {
+        type: DataTypes.INTEGER,
+        allowNull: true
+    },
     don_toi_thieu: {
         type: DataTypes.INTEGER,
         defaultValue: 0
