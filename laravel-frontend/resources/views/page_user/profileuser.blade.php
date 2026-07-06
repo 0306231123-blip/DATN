@@ -117,6 +117,17 @@
             {{-- Tab: Lịch sử --}}
             <div id="tab-history" class="tab-content profile-tab">
                 <h2 class="profile-tab__title">Lịch sử mua hàng</h2>
+                
+                <!-- Filter buttons -->
+                <div class="profile-order-filters" id="history-filters" style="display: none;">
+                    <button class="profile-filter-btn profile-filter-btn--active" onclick="filterOrders('history', 'all', event)">Tất cả</button>
+                    <button class="profile-filter-btn" onclick="filterOrders('history', 'hoan_thanh', event)">Hoàn thành</button>
+                    <button class="profile-filter-btn" onclick="filterOrders('history', 'giao_thanh_cong', event)">Giao thành công</button>
+                    <button class="profile-filter-btn" onclick="filterOrders('history', 'da_huy', event)">Đã hủy</button>
+                    <button class="profile-filter-btn" onclick="filterOrders('history', 'da_tra_hang', event)">Đã trả hàng</button>
+                    <button class="profile-filter-btn" onclick="filterOrders('history', 'tu_choi_tra_hang', event)">Từ chối trả hàng</button>
+                </div>
+
                 <div id="history-container" class="profile-orders-empty">
                     Chưa có dữ liệu lịch sử mua hàng.
                 </div>
@@ -125,6 +136,16 @@
             {{-- Tab: Đơn hàng --}}
             <div id="tab-orders" class="tab-content profile-tab">
                 <h2 class="profile-tab__title">Quản lý đơn hàng</h2>
+
+                <!-- Filter buttons -->
+                <div class="profile-order-filters" id="orders-filters" style="display: none;">
+                    <button class="profile-filter-btn profile-filter-btn--active" onclick="filterOrders('orders', 'all', event)">Tất cả</button>
+                    <button class="profile-filter-btn" onclick="filterOrders('orders', 'cho_xac_nhan', event)">Chờ xác nhận</button>
+                    <button class="profile-filter-btn" onclick="filterOrders('orders', 'da_xac_nhan', event)">Đã xác nhận</button>
+                    <button class="profile-filter-btn" onclick="filterOrders('orders', 'dang_giao', event)">Đang giao</button>
+                    <button class="profile-filter-btn" onclick="filterOrders('orders', 'dang_tra_hang', event)">Đang xử lý trả hàng</button>
+                </div>
+
                 <div id="orders-container" class="profile-orders-empty">
                     Bạn chưa có đơn hàng nào đang được xử lý.
                 </div>
@@ -398,7 +419,7 @@
                         }
 
                         htmlHistory += `
-                            <div class="profile-order-card" id="order-${order.ma_don_hang}">
+                            <div class="profile-order-card" id="order-${order.ma_don_hang}" data-status="${order.trang_thai_don}">
                                 <div class="profile-order-card__header">
                                     <div>
                                         <p class="profile-order-card__id">Đơn hàng #${order.ma_don_hang}</p>
@@ -460,7 +481,7 @@
                             actionBtnHtml = `<div class="mt-4 text-sm text-left text-red-600 bg-red-50 p-3 rounded-lg w-full border border-red-200">Yêu cầu trả hàng của bạn đã bị từ chối vì lý do sai quy định hoàn trả.</div>`;
                         }
                             htmlOrders += `
-                            <div class="profile-order-card" id="order-${order.ma_don_hang}">
+                            <div class="profile-order-card" id="order-${order.ma_don_hang}" data-status="${order.trang_thai_don}">
                                 <div class="profile-order-card__header" style="align-items: center; margin-bottom: 1rem;">
                                     <div>
                                         <p class="profile-order-card__id">Đơn hàng #${order.ma_don_hang}</p>
@@ -486,10 +507,12 @@
                 htmlHistory += '</div>';
                 
                 if (hasOrders) {
+                    document.getElementById('orders-filters').style.display = 'flex';
                     ordersContainer.innerHTML = htmlOrders;
                     ordersContainer.classList.remove('profile-orders-empty');
                 }
                 if (hasHistory) {
+                    document.getElementById('history-filters').style.display = 'flex';
                     historyContainer.innerHTML = htmlHistory;
                     historyContainer.classList.remove('profile-orders-empty');
                 }
@@ -598,6 +621,63 @@ async function callUpdateStatusAPI(maDonHang, trangThaiMoi, lyDoTra, lyDoHuy, ng
         }
     } catch (error) {
         alert("Có lỗi kết nối đến server Node.js!");
+    }
+}
+
+// 6. CHỨC NĂNG LỌC ĐƠN HÀNG
+function filterOrders(tab, status, event) {
+    // Cập nhật trạng thái active cho nút filter
+    const filterContainer = document.getElementById(tab + '-filters');
+    if (filterContainer) {
+        filterContainer.querySelectorAll('.profile-filter-btn').forEach(btn => {
+            btn.classList.remove('profile-filter-btn--active');
+        });
+        if (event && event.currentTarget) {
+            event.currentTarget.classList.add('profile-filter-btn--active');
+        }
+    }
+
+    // Ẩn/hiện các đơn hàng
+    const containerId = tab === 'history' ? 'history-container' : 'orders-container';
+    const container = document.getElementById(containerId);
+    
+    if (container) {
+        const orderCards = container.querySelectorAll('.profile-order-card');
+        let visibleCount = 0;
+
+        orderCards.forEach(card => {
+            const cardStatus = card.getAttribute('data-status');
+            
+            let isMatch = false;
+            if (status === 'all') {
+                isMatch = true;
+            } else if (status === 'dang_tra_hang' && (cardStatus === 'dang_tra_hang' || cardStatus === 'tra_hang_hoan_tien')) {
+                isMatch = true;
+            } else if (cardStatus === status) {
+                isMatch = true;
+            }
+            
+            if (isMatch) {
+                card.style.display = 'flex';
+                visibleCount++;
+            } else {
+                card.style.display = 'none';
+            }
+        });
+
+        // Nếu không có đơn hàng nào thỏa mãn filter
+        let emptyMsgEl = container.querySelector('.filter-empty-msg');
+        if (visibleCount === 0 && orderCards.length > 0) {
+            if (!emptyMsgEl) {
+                emptyMsgEl = document.createElement('div');
+                emptyMsgEl.className = 'filter-empty-msg profile-orders-empty';
+                emptyMsgEl.textContent = 'Không có đơn hàng nào ở trạng thái này.';
+                container.appendChild(emptyMsgEl);
+            }
+            emptyMsgEl.style.display = 'block';
+        } else if (emptyMsgEl) {
+            emptyMsgEl.style.display = 'none';
+        }
     }
 }
 </script>
