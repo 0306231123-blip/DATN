@@ -88,7 +88,7 @@ exports.updateReturnRequestStatus = async (req, res) => {
         await KhuyenMai.increment('so_luong', { by: 1, where: { ma_khuyen_mai: donHang.ma_khuyen_mai }, transaction });
       }
     } else if (trang_thai === 'tu_choi') {
-      await donHang.update({ trang_thai_don: 'giao_thanh_cong', ngay_cap_nhat: new Date() }, { transaction });
+      await donHang.update({ trang_thai_don: 'tu_choi_tra_hang', ngay_cap_nhat: new Date() }, { transaction });
     }
 
     await transaction.commit();

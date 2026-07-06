@@ -419,6 +419,7 @@ exports.updateProduct = async (req, res) => {
     });
 
     res.status(200).json({ status: 'success', message: 'Cập nhật sản phẩm thành công.', data: product });
+    logActivity(req.user ? req.user.ma_nguoi_dung : null, 'CẬP NHẬT', 'san_pham', `Cập nhật sản phẩm #${productId}: ${product.ten_san_pham}`);
   } catch (error) {
     if (t) await t.rollback();
     console.error('Update product error:', error);

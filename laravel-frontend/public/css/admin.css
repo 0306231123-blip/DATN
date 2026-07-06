@@ -313,7 +313,7 @@ body {
     position: absolute;
     top: 50px;
     right: 0;
-    width: 320px;
+    width: 340px;
     background: var(--bg-card);
     border: 1px solid var(--border-color);
     border-radius: var(--radius-md);
@@ -346,34 +346,103 @@ body {
 }
 
 .noti-body {
-    max-height: 350px;
+    max-height: 380px;
     overflow-y: auto;
 }
 
+/* Two-column item: icon + body */
 .noti-item {
-    padding: 12px 16px;
-    border-bottom: 1px solid var(--border-color);
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--border-light);
+    transition: background var(--transition-fast);
 }
 
-.noti-item:last-child {
-    border-bottom: none;
+.noti-item:last-child { border-bottom: none; }
+
+.noti-item:hover { background: var(--bg-hover); }
+
+.noti-item-icon {
+    width: 32px;
+    height: 32px;
+    border-radius: var(--radius-sm);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.95rem;
+    flex-shrink: 0;
+    margin-top: 2px;
+}
+
+.noti-item-body {
+    flex: 1;
+    min-width: 0;
+}
+
+.noti-action {
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    margin-bottom: 2px;
 }
 
 .noti-user {
-    font-size: 0.85rem;
+    font-size: 0.82rem;
     color: var(--text-primary);
-    margin-bottom: 4px;
+    margin-bottom: 2px;
 }
 
-.noti-target {
-    font-size: 0.8rem;
+.noti-detail {
+    font-size: 0.78rem;
     color: var(--text-secondary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    margin-bottom: 2px;
 }
 
 .noti-time {
-    font-size: 0.75rem;
+    font-size: 0.72rem;
     color: var(--text-muted);
-    margin-top: 6px;
+}
+
+.noti-empty {
+    text-align: center;
+    padding: 30px 20px;
+    color: var(--text-muted);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+}
+
+.noti-empty p {
+    margin: 0;
+    font-size: 0.85rem;
+}
+
+/* Badge count on bell button */
+.notification-dot {
+    position: absolute;
+    top: 4px;
+    right: 4px;
+    min-width: 16px;
+    height: 16px;
+    background: #ef4444;
+    border-radius: 8px;
+    border: 2px solid var(--bg-body);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.6rem;
+    font-weight: 700;
+    color: #fff;
+    padding: 0 3px;
+    line-height: 1;
+    pointer-events: none;
 }
 
 /* ---------- Global Reset ---------- */
@@ -1931,6 +2000,64 @@ body {
 
 .stats-empty-state p {
     font-size: 0.88rem;
+}
+
+/* =============================================================
+   PAGINATION UI
+   ============================================================= */
+.pagination-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px 20px;
+    border-top: 1px solid var(--border-light);
+    background: var(--bg-card);
+}
+
+.pagination-info {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+}
+
+.pagination {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.page-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 32px;
+    height: 32px;
+    padding: 0 8px;
+    font-size: 0.85rem;
+    font-weight: 500;
+    color: var(--text-primary);
+    background: var(--bg-body);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    transition: all var(--transition-fast);
+}
+
+.page-btn:hover:not(:disabled) {
+    background: var(--bg-hover);
+    border-color: var(--border-hover);
+}
+
+.page-btn.active {
+    background: var(--primary-color);
+    color: #fff;
+    border-color: var(--primary-color);
+}
+
+.page-btn:disabled {
+    color: var(--text-muted);
+    background: var(--bg-body);
+    cursor: not-allowed;
+    opacity: 0.5;
 }
 
 /* =============================================================

@@ -10,6 +10,20 @@ const jwt = require('jsonwebtoken');
 const { Op } = require('sequelize');
 const sequelize = require('../config/database');
 const { QueryTypes } = require('sequelize');
+const { logActivity } = require('../utils/logActivity');
+
+const STATUS_LABEL = {
+  cho_xac_nhan: 'Chờ xác nhận',
+  da_xac_nhan: 'Đã xác nhận',
+  dang_giao: 'Đang giao',
+  giao_thanh_cong: 'Giao thành công',
+  da_huy: 'Đã hủy',
+  dang_tra_hang: 'Đang trả hàng',
+  da_tra_hang: 'Đã trả hàng',
+  tra_hang_hoan_tien: 'Trả hàng hoàn tiền',
+  tu_choi_tra_hang: 'Từ chối trả hàng',
+  hoan_thanh: 'Hoàn thành',
+};
 
 class OrderController {
   // ==========================================
@@ -277,6 +291,11 @@ class OrderController {
         message: 'Cập nhật trạng thái đơn hàng thành công.',
         data: order,
       });
+      logActivity(
+        'CẬP NHẬT TRẠNG THÁI',
+        'don_hang',
+        `Đơn #${orderId}: ${STATUS_LABEL[currentStatus] || currentStatus} → ${STATUS_LABEL[trang_thai_don] || trang_thai_don}`
+      );
     } catch (error) {
       console.error('Update order status error:', error);
       res.status(500).json({

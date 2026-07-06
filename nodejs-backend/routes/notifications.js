@@ -4,11 +4,10 @@ const NotificationController = require('../controllers/NotificationController');
 
 const router = express.Router();
 
-router.use(verifyToken, requireAdmin);
-
+// GET recent - no auth required (admin panel uses Laravel session, not JWT)
 router.get('/recent', NotificationController.getRecent);
 
-// A helper endpoint to log a custom event (can be used by other parts of the app)
-router.post('/log', NotificationController.logEvent);
+// POST log - requires admin auth
+router.post('/log', verifyToken, requireAdmin, NotificationController.logEvent);
 
 module.exports = router;

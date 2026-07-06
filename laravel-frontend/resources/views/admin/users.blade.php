@@ -57,7 +57,7 @@
         </table>
     </div>
     <!-- Pagination Container -->
-    <div id="pagination-container" style="display: flex; justify-content: center; align-items: center; padding: 20px 0;"></div>
+    <div id="pagination-container" class="pagination-container" style="display: none;"></div>
 </div>
 
 <!-- Stats Card -->
@@ -184,16 +184,34 @@ function renderPagination(pagination) {
     const container = document.getElementById('pagination-container');
     if (!container) return;
 
-    if (!pagination || pagination.last_page <= 1) {
-        container.innerHTML = '';
+    if (!pagination) {
+        container.style.display = 'none';
         return;
     }
+    
+    const current_page = pagination.current_page || pagination.page || 1;
+    const last_page = pagination.last_page || pagination.pages || 1;
+    const total = pagination.total || 0;
+    
+    container.style.display = 'flex';
+    let html = `<div class="pagination-info">Hiển thị trang ${current_page} / ${last_page} (Tổng: ${total})</div>`;
 
-    let html = `<div class="pagination" style="display: flex; gap: 10px; align-items: center;">
-        <button class="btn btn-secondary" style="padding: 6px 12px;" onclick="changePage(${pagination.current_page - 1})" ${pagination.current_page === 1 ? 'disabled' : ''}>Trang trước</button>
-        <span style="font-size: 14px; font-weight: 500;">Trang ${pagination.current_page} / ${pagination.last_page}</span>
-        <button class="btn btn-secondary" style="padding: 6px 12px;" onclick="changePage(${pagination.current_page + 1})" ${pagination.current_page === pagination.last_page ? 'disabled' : ''}>Trang sau</button>
-    </div>`;
+    html += '<div class="pagination">';
+    html += `<button class="page-btn" ${current_page <= 1 ? 'disabled' : ''} onclick="changePage(${current_page - 1})">‹</button>`;
+
+    for (let i = 1; i <= last_page; i++) {
+        if (i === current_page) {
+            html += `<button class="page-btn active">${i}</button>`;
+        } else if (i === 1 || i === last_page || Math.abs(i - current_page) <= 1) {
+            html += `<button class="page-btn" onclick="changePage(${i})">${i}</button>`;
+        } else if (i === current_page - 2 || i === current_page + 2) {
+            html += '<span style="padding: 0 4px; color: var(--text-muted);">...</span>';
+        }
+    }
+
+    html += `<button class="page-btn" ${current_page >= last_page ? 'disabled' : ''} onclick="changePage(${current_page + 1})">›</button>`;
+    html += '</div>';
+    
     container.innerHTML = html;
 }
 

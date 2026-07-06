@@ -66,10 +66,7 @@
     </div>
 
     <!-- Pagination -->
-    <div class="pagination-wrapper" id="pagination-wrapper" style="display: none;">
-        <div class="pagination-info" id="pagination-info"></div>
-        <div class="pagination-btns" id="pagination-btns"></div>
-    </div>
+    <div id="products-pagination" class="pagination-container" style="display: none;"></div>
 </div>
 
 <!-- Stats Cards -->
@@ -132,6 +129,7 @@
             </tbody>
         </table>
     </div>
+    <div id="inventory-pagination" class="pagination-container" style="display: none;"></div>
 </div>
 
 <!-- Bắt đầu view-vouchers -->
@@ -171,10 +169,8 @@
             </tbody>
         </table>
         
-        <div class="pagination-wrapper" id="voucher-pagination-wrapper" style="display: none; margin-top: 15px;">
-            <div class="pagination-info" id="voucher-pagination-info"></div>
-            <div class="pagination-btns" id="voucher-pagination-btns"></div>
-        </div>
+        <!-- Pagination -->
+        <div id="vouchers-pagination" class="pagination-container" style="display: none;"></div>
     </div>
 </div>
 
@@ -555,6 +551,39 @@ let categories = [];
 let currentEditId = null;
 let galleryImages = []; // cached gallery images
 
+let currentProductsPage = 1;
+let currentInventoryPage = 1;
+let currentVouchersPage = 1;
+
+// ========== SHARED PAGINATION ==========
+function renderPagination(pagination, containerId, pageChangeCallbackName) {
+    const container = document.getElementById(containerId);
+    if (!container) return;
+    
+    const currentPage = pagination.current_page || pagination.page || 1;
+    const totalPages = pagination.last_page || pagination.pages || 1;
+    const total = pagination.total || 0;
+    
+    container.style.display = 'flex';
+    let html = `<div class="pagination-info">Hiển thị trang ${currentPage} / ${totalPages} (Tổng: ${total})</div>`;
+    
+    html += '<div class="pagination">';
+    html += `<button class="page-btn" ${currentPage <= 1 ? 'disabled' : ''} onclick="${pageChangeCallbackName}(${currentPage - 1})">‹</button>`;
+    
+    for (let i = 1; i <= totalPages; i++) {
+        if (i === 1 || i === totalPages || Math.abs(i - currentPage) <= 1) {
+            html += `<button class="page-btn ${i === currentPage ? 'active' : ''}" onclick="${pageChangeCallbackName}(${i})">${i}</button>`;
+        } else if (i === currentPage - 2 || i === currentPage + 2) {
+            html += `<span style="padding: 0 4px; color: var(--text-muted);">...</span>`;
+        }
+    }
+    
+    html += `<button class="page-btn" ${currentPage >= totalPages ? 'disabled' : ''} onclick="${pageChangeCallbackName}(${currentPage + 1})">›</button>`;
+    html += '</div>';
+    
+    container.innerHTML = html;
+}
+
 // ========== LOAD DATA ==========
 
 async function loadCategories() {
@@ -580,10 +609,10 @@ function updateCategorySelects() {
     select.innerHTML = options;
 }
 
-async function loadProducts(search = '', status = 'all') {
+async function loadProducts(search = '', status = 'all', page = 1) {
     try {
         const settings = window.getGlobalSettings ? window.getGlobalSettings() : { perPage: 15, lowStockThreshold: 20 };
-        let url = `${API_BASE_URL}/products?per_page=${settings.perPage}&low_stock_threshold=${settings.lowStockThreshold}`;
+        let url = `${API_BASE_URL}/products?per_page=${settings.perPage}&page=${page}&low_stock_threshold=${settings.lowStockThreshold}`;
         if (search) url += `&search=${encodeURIComponent(search)}`;
         if (status && status !== 'all') url += `&trang_thai=${status}`;
 
@@ -593,12 +622,22 @@ async function loadProducts(search = '', status = 'all') {
         if (result.status === 'success' || result.success) {
             products = result.data;
             renderTable();
+            if (result.pagination) {
+                renderPagination(result.pagination, 'products-pagination', 'changeProductsPage');
+            }
             loadStats();
         }
     } catch (error) {
         console.error('Error loading products:', error);
         showAlert('Lỗi khi tải sản phẩm', 'error');
     }
+}
+
+function changeProductsPage(page) {
+    currentProductsPage = page;
+    const search = document.getElementById('product-search-input').value;
+    const status = document.querySelector('.role-tab.active')?.dataset.status || 'all';
+    loadProducts(search, status, page);
 }
 
 // ========== RENDER TABLE ==========
@@ -1187,9 +1226,9 @@ function switchView(view) {
     document.getElementById('view-vouchers').style.display = view === 'vouchers' ? 'block' : 'none';
 
     if (view === 'inventory') {
-        loadInventory();
+        loadInventory(currentInventoryPage);
     } else if (view === 'vouchers') {
-        loadVouchers();
+        loadVouchers(currentVouchersPage);
     }
 }
 
@@ -1239,14 +1278,18 @@ showModal = function(title, productId = null) {
 };
 
 // -- Inventory Logic --
-async function loadInventory() {
+async function loadInventory(page = 1) {
     const tbody = document.getElementById('inventory-tbody');
     tbody.innerHTML = '<tr><td colspan="4" style="text-align: center;">Đang tải...</td></tr>';
     try {
-        const response = await fetch(`${API_BASE_URL}/products?per_page=100`);
+        const settings = window.getGlobalSettings ? window.getGlobalSettings() : { perPage: 15 };
+        const response = await fetch(`${API_BASE_URL}/products?per_page=${settings.perPage}&page=${page}`);
         const result = await response.json();
         if (result.status === 'success' || result.success) {
             let html = '';
+            if (result.pagination) {
+                renderPagination(result.pagination, 'inventory-pagination', 'changeInventoryPage');
+            }
             result.data.forEach(p => {
                 if (p.co_bien_the && p.bien_the && p.bien_the.length > 0) {
                     p.bien_the.forEach(v => {
@@ -1333,6 +1376,11 @@ async function openBulkImportModal() {
     } catch (e) {
         tbody.innerHTML = '<tr><td colspan="5">Lỗi tải dữ liệu</td></tr>';
     }
+}
+
+function changeInventoryPage(page) {
+    currentInventoryPage = page;
+    loadInventory(page);
 }
 
 function closeBulkImportModal() {
@@ -1467,7 +1515,7 @@ let vouchers = [];
 async function loadVouchers(page = 1) {
     try {
         const search = document.getElementById('voucher-search-input').value;
-        let url = `${API_BASE_URL}/voucher?page=${page}&limit=10`;
+        let url = `${API_BASE_URL}/voucher?page=${page}&limit=15`;
         if (search) url += `&search=${encodeURIComponent(search)}`;
         
         const response = await fetch(url);
@@ -1476,11 +1524,18 @@ async function loadVouchers(page = 1) {
         if (result.status === 'success') {
             vouchers = result.data;
             renderVouchersTable();
-            // Optional: Handle pagination rendering if needed
+            if (result.pagination) {
+                renderPagination(result.pagination, 'vouchers-pagination', 'changeVouchersPage');
+            }
         }
     } catch (error) {
         showAlert('Lỗi tải danh sách voucher', 'error');
     }
+}
+
+function changeVouchersPage(page) {
+    currentVouchersPage = page;
+    loadVouchers(page);
 }
 
 function renderVouchersTable() {

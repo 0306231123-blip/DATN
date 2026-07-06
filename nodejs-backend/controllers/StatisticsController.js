@@ -99,7 +99,17 @@ class StatisticsController {
 
       // 3. Category distribution
       const catRows = await sequelize.query(
-        'SELECT dm.ten_danh_muc, COALESCE(SUM(ctdh.thanh_tien),0) AS tong_doanh_thu FROM danh_muc dm LEFT JOIN san_pham sp ON dm.ma_danh_muc=sp.ma_danh_muc LEFT JOIN chi_tiet_don_hang ctdh ON sp.ma_san_pham=ctdh.ma_san_pham LEFT JOIN don_hang dh ON ctdh.ma_don_hang=dh.ma_don_hang AND dh.trang_thai_don=\'giao_thanh_cong\' AND DATE(dh.ngay_dat)>=:startDate AND DATE(dh.ngay_dat)<=:endDate GROUP BY dm.ma_danh_muc, dm.ten_danh_muc HAVING tong_doanh_thu>0 ORDER BY tong_doanh_thu DESC',
+        `SELECT dm.ten_danh_muc, COALESCE(SUM(ctdh.thanh_tien),0) AS tong_doanh_thu
+         FROM danh_muc dm
+         INNER JOIN san_pham sp ON dm.ma_danh_muc = sp.ma_danh_muc
+         INNER JOIN chi_tiet_don_hang ctdh ON sp.ma_san_pham = ctdh.ma_san_pham
+         INNER JOIN don_hang dh ON ctdh.ma_don_hang = dh.ma_don_hang
+         WHERE dh.trang_thai_don = 'giao_thanh_cong'
+           AND DATE(dh.ngay_dat) >= :startDate
+           AND DATE(dh.ngay_dat) <= :endDate
+         GROUP BY dm.ma_danh_muc, dm.ten_danh_muc
+         HAVING tong_doanh_thu > 0
+         ORDER BY tong_doanh_thu DESC`,
         { replacements: { startDate, endDate }, type: QueryTypes.SELECT }
       );
       const totalCR = catRows.reduce((s, r) => s + Number(r.tong_doanh_thu), 0);

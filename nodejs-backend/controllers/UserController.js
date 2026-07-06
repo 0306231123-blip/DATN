@@ -3,6 +3,7 @@ const bcrypt = require('bcryptjs');
 const { Op, QueryTypes } = require('sequelize');
 const sequelize = require('../config/database');
 const { getUsersStats, getUserStats } = require('../utils/userStats');
+const { logActivity } = require('../utils/logActivity');
 
 /**
  * GET /api/users
@@ -185,6 +186,7 @@ exports.createUser = async (req, res) => {
         vai_tro: user.vai_tro,
       },
     });
+    logActivity('THÊM', 'nguoi_dung', `Tạo tài khoản: ${ho_ten} (${email}) - ${vai_tro || 'khach_hang'}`);
   } catch (error) {
     console.error('Create user error:', error);
     res.status(500).json({
@@ -298,9 +300,11 @@ exports.updateUser = async (req, res) => {
         email: user.email,
         vai_tro: user.vai_tro,
         trang_thai: user.trang_thai,
-        ly_do_khoa: user.ly_do_khoa // Trả về để Frontend biết
+        ly_do_khoa: user.ly_do_khoa
       },
     });
+    const action = updateData.trang_thai === 'bi_khoa' ? 'KHÓA' : updateData.trang_thai === 'hoat_dong' ? 'MỞ KHÓA' : 'CẬP NHẬT';
+    logActivity(action, 'nguoi_dung', `${action} tài khoản #${userId}: ${user.ho_ten}`);
   } catch (error) {
     console.error('Update user error:', error);
     res.status(500).json({
@@ -342,6 +346,7 @@ exports.deleteUser = async (req, res) => {
       success: true,
       message: 'Xóa người dùng thành công.',
     });
+    logActivity('XÓA', 'nguoi_dung', `Xóa tài khoản #${userId}: ${user.ho_ten} (${user.email})`);
   } catch (error) {
     console.error('Delete user error:', error);
     res.status(500).json({

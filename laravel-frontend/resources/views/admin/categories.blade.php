@@ -47,6 +47,9 @@
                     </tbody>
                 </table>
             </div>
+            
+            <!-- Pagination -->
+            <div id="categories-pagination" class="pagination-container" style="display: none;"></div>
         </div>
     </div>
 
@@ -115,12 +118,14 @@
 const API_BASE_URL = 'http://localhost:3000/api';
 
 let categories = [];
+let allCategories = []; // For parent category lookup
 let currentEditId = null;
+let currentPage = 1;
 
 // Load categories
-async function loadCategories(search = '') {
+async function loadCategories(search = '', page = 1) {
     try {
-        let url = `${API_BASE_URL}/categories?per_page=100`;
+        let url = `${API_BASE_URL}/categories?limit=15&page=${page}`;
         if (search) {
             url += `&search=${encodeURIComponent(search)}`;
         }
@@ -128,9 +133,19 @@ async function loadCategories(search = '') {
         const response = await fetch(url);
         const result = await response.json();
 
+        // Also fetch all categories for dropdown and parent lookup if not loaded
+        if (allCategories.length === 0) {
+            const allRes = await fetch(`${API_BASE_URL}/categories?limit=1000`);
+            const allData = await allRes.json();
+            if (allData.status === 'success') {
+                allCategories = allData.data;
+            }
+        }
+
         if (result.status === 'success') {
             categories = result.data;
             renderTable();
+            renderPagination(result.pagination);
             loadStats();
             updateParentCategorySelect();
         }
@@ -138,6 +153,43 @@ async function loadCategories(search = '') {
         console.error('Error loading categories:', error);
         showAlert('Lỗi khi tải danh mục', 'error');
     }
+}
+
+function changePage(page) {
+    const search = document.getElementById('category-search-input').value;
+    currentPage = page;
+    loadCategories(search, page);
+}
+
+function renderPagination(pagination) {
+    const container = document.getElementById('categories-pagination');
+    if (!pagination) {
+        container.style.display = 'none';
+        return;
+    }
+    
+    const pages = pagination.pages || 1;
+    const page = pagination.page || 1;
+    const total = pagination.total || 0;
+    
+    container.style.display = 'flex';
+    let html = `<div class="pagination-info">Hiển thị trang ${page} / ${pages} (Tổng: ${total})</div>`;
+    
+    html += '<div class="pagination">';
+    html += `<button class="page-btn" ${page <= 1 ? 'disabled' : ''} onclick="changePage(${page - 1})">‹</button>`;
+    
+    for (let i = 1; i <= pages; i++) {
+        if (i === 1 || i === pages || Math.abs(i - page) <= 1) {
+            html += `<button class="page-btn ${i === page ? 'active' : ''}" onclick="changePage(${i})">${i}</button>`;
+        } else if (i === page - 2 || i === page + 2) {
+            html += `<span style="padding: 0 4px; color: var(--text-muted);">...</span>`;
+        }
+    }
+    
+    html += `<button class="page-btn" ${page >= pages ? 'disabled' : ''} onclick="changePage(${page + 1})">›</button>`;
+    html += '</div>';
+    
+    container.innerHTML = html;
 }
 
 // Render table
@@ -190,7 +242,8 @@ async function loadStats() {
 // Update parent category select
 function updateParentCategorySelect() {
     const select = document.getElementById('ma_danh_muc_cha');
-    const parentCategories = categories.filter(cat => !cat.ma_danh_muc_cha);
+    const sourceList = allCategories.length > 0 ? allCategories : categories;
+    const parentCategories = sourceList.filter(cat => !cat.ma_danh_muc_cha);
 
     const options = '<option value="">-- Không --</option>' +
         parentCategories.map(cat =>
@@ -203,7 +256,7 @@ function updateParentCategorySelect() {
 // Get parent category name
 function getParentCategoryName(id) {
     if (!id) return '--';
-    const parent = categories.find(cat => cat.ma_danh_muc === id);
+    const parent = allCategories.find(cat => cat.ma_danh_muc === id) || categories.find(cat => cat.ma_danh_muc === id);
     return parent ? parent.ten_danh_muc : '--';
 }
 

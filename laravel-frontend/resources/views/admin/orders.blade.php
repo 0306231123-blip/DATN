@@ -82,7 +82,7 @@
         </table>
     </div>
 
-    <div class="pagination-wrapper" id="orders-pagination"></div>
+    <div id="orders-pagination" class="pagination-container" style="display: none;"></div>
 </div>
 
 <div class="modal" id="modal-order-detail" style="display: none;">
@@ -495,25 +495,32 @@ let detailsHTML = `
 // ========== Pagination ==========
 function renderPagination(pagination) {
     const wrapper = document.getElementById('orders-pagination');
-    if (pagination.last_page <= 1) {
-        wrapper.innerHTML = '';
+    if (!pagination) {
+        wrapper.style.display = 'none';
         return;
     }
+    
+    const current_page = pagination.current_page || pagination.page || 1;
+    const last_page = pagination.last_page || pagination.pages || 1;
+    const total = pagination.total || 0;
+    
+    wrapper.style.display = 'flex';
+    let html = `<div class="pagination-info">Hiển thị trang ${current_page} / ${last_page} (Tổng: ${total})</div>`;
 
-    let html = '<div class="pagination">';
-    html += `<button class="page-btn" ${pagination.current_page <= 1 ? 'disabled' : ''} onclick="goToPage(${pagination.current_page - 1})">‹</button>`;
+    html += '<div class="pagination">';
+    html += `<button class="page-btn" ${current_page <= 1 ? 'disabled' : ''} onclick="goToPage(${current_page - 1})">‹</button>`;
 
-    for (let i = 1; i <= pagination.last_page; i++) {
-        if (i === pagination.current_page) {
-            html += `<button class="page-btn page-btn--active">${i}</button>`;
-        } else if (i <= 3 || i > pagination.last_page - 2 || Math.abs(i - pagination.current_page) <= 1) {
+    for (let i = 1; i <= last_page; i++) {
+        if (i === current_page) {
+            html += `<button class="page-btn active">${i}</button>`;
+        } else if (i === 1 || i === last_page || Math.abs(i - current_page) <= 1) {
             html += `<button class="page-btn" onclick="goToPage(${i})">${i}</button>`;
-        } else if (i === 4 || i === pagination.last_page - 2) {
-            html += '<span class="page-dots">...</span>';
+        } else if (i === current_page - 2 || i === current_page + 2) {
+            html += '<span style="padding: 0 4px; color: var(--text-muted);">...</span>';
         }
     }
 
-    html += `<button class="page-btn" ${pagination.current_page >= pagination.last_page ? 'disabled' : ''} onclick="goToPage(${pagination.current_page + 1})">›</button>`;
+    html += `<button class="page-btn" ${current_page >= last_page ? 'disabled' : ''} onclick="goToPage(${current_page + 1})">›</button>`;
     html += '</div>';
 
     wrapper.innerHTML = html;

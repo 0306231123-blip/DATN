@@ -136,19 +136,34 @@
     <!-- Trend Line Chart -->
     <div class="stats-charts-row" id="stats-charts-row">
         <div class="data-card data-card--chart" id="trend-chart-card">
-            <h3 class="card-section-title">Biểu đồ xu hướng</h3>
+            <div class="chart-header-row">
+                <div>
+                    <h3 class="card-section-title" style="margin-bottom: 2px;">Biểu đồ xu hướng</h3>
+                    <p class="chart-description">So sánh doanh thu (trục trái, đơn vị: đồng) và số đơn hàng (trục phải) theo từng ngày trong kỳ</p>
+                </div>
+                <div class="chart-insight-badges" id="chart-insight-badges">
+                    <!-- filled by JS -->
+                </div>
+            </div>
             <div class="chart-legend-toggles" id="chart-legend-toggles">
                 <div class="chart-legend-item active" data-dataset="revenue" id="toggle-revenue">
                     <span class="chart-legend-dot" style="background: #7c5cfc;"></span>
                     <span>Doanh thu</span>
+                    <span class="legend-axis-hint">(trái)</span>
                 </div>
                 <div class="chart-legend-item active" data-dataset="orders" id="toggle-orders">
                     <span class="chart-legend-dot" style="background: #f472b6;"></span>
                     <span>Đơn hàng</span>
+                    <span class="legend-axis-hint">(phải)</span>
                 </div>
+                <span class="chart-hint-text"><i data-lucide="info" class="icon-xs"></i> Click vào tên để ẩn/hiện đường</span>
             </div>
             <div class="chart-body chart-body--stats">
                 <canvas id="trendChart"></canvas>
+            </div>
+            <div class="chart-footer-note">
+                <i data-lucide="mouse-pointer-2" class="icon-xs"></i>
+                Di chuột lên biểu đồ để xem chi tiết từng ngày
             </div>
         </div>
     </div>
@@ -161,13 +176,14 @@
     <!-- Top Products -->
     <div class="data-card data-card--chart top-products-section" id="top-products-card">
         <h3 class="card-section-title">Top sản phẩm bán chạy</h3>
+        <p class="chart-description" style="margin-top: 2px; margin-bottom: 12px;">Sản phẩm được bán nhiều nhất trong kỳ, xếp hạng theo số lượng đã bán</p>
         <table class="top-products-table" id="top-products-table">
             <thead>
                 <tr>
-                    <th>#</th>
+                    <th title="Thứ hạng">#</th>
                     <th>Sản phẩm</th>
-                    <th>Đã bán</th>
-                    <th>Doanh thu</th>
+                    <th title="Tổng số lượng bán được">Đã bán <span class="th-unit">(cái)</span></th>
+                    <th title="Tổng doanh thu từ sản phẩm này">Doanh thu <span class="th-unit">(đ)</span></th>
                 </tr>
             </thead>
             <tbody id="top-products-tbody">
@@ -178,10 +194,21 @@
 
     <!-- Category Distribution (Doughnut) -->
     <div class="data-card data-card--chart category-chart-section" id="category-chart-card">
-        <h3 class="card-section-title">Cơ cấu danh mục</h3>
+        <div style="display: flex; align-items: flex-start; justify-content: space-between; gap: 8px;">
+            <div>
+                <h3 class="card-section-title" style="margin-bottom: 2px;">Cơ cấu danh mục</h3>
+                <p class="chart-description">Tỷ lệ đóng góp doanh thu của từng danh mục sản phẩm</p>
+            </div>
+            <div class="category-total-badge" id="category-total-badge"></div>
+        </div>
         <div class="category-chart-wrapper" id="category-chart-wrapper">
-            <div class="category-doughnut-container">
+            <div class="category-doughnut-container" style="position: relative;">
                 <canvas id="categoryDoughnutChart"></canvas>
+                <!-- Center label -->
+                <div class="doughnut-center-label" id="doughnut-center-label">
+                    <span class="doughnut-center-value" id="doughnut-center-value">--</span>
+                    <span class="doughnut-center-sub">Tổng DT</span>
+                </div>
             </div>
             <div class="category-legend" id="category-legend">
                 <p style="color: #9ca3af; text-align: center; padding: 20px;">Đang tải...</p>
@@ -191,6 +218,163 @@
 </div>
 
 <style>
+/* Chart header row */
+.chart-header-row {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 8px;
+    flex-wrap: wrap;
+}
+
+.chart-description {
+    font-size: 0.78rem;
+    color: var(--text-muted);
+    margin: 0 0 4px 0;
+    line-height: 1.5;
+}
+
+.chart-insight-badges {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+}
+
+.insight-badge {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    background: var(--bg-body);
+    border: 1px solid var(--border-light);
+    border-radius: var(--radius-sm);
+    padding: 6px 12px;
+    min-width: 80px;
+}
+
+.insight-badge-label {
+    font-size: 0.68rem;
+    color: var(--text-muted);
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    white-space: nowrap;
+}
+
+.insight-badge-value {
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-top: 1px;
+}
+
+.legend-axis-hint {
+    font-size: 0.7rem;
+    color: var(--text-muted);
+    margin-left: 2px;
+}
+
+.chart-hint-text {
+    margin-left: auto;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    font-style: italic;
+}
+
+.chart-footer-note {
+    margin-top: 8px;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 0.73rem;
+    color: var(--text-muted);
+    font-style: italic;
+}
+
+/* Doughnut center label */
+.doughnut-center-label {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    text-align: center;
+    pointer-events: none;
+}
+
+.doughnut-center-value {
+    display: block;
+    font-size: 0.8rem;
+    font-weight: 800;
+    color: var(--text-primary);
+    line-height: 1.2;
+}
+
+.doughnut-center-sub {
+    display: block;
+    font-size: 0.62rem;
+    color: var(--text-muted);
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+.category-total-badge {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--color-primary);
+    background: var(--color-primary-light);
+    border-radius: var(--radius-full);
+    padding: 3px 10px;
+    white-space: nowrap;
+    flex-shrink: 0;
+    align-self: flex-start;
+    margin-top: 2px;
+}
+
+/* Table header unit hint */
+.th-unit {
+    font-weight: 400;
+    opacity: 0.65;
+    font-size: 0.7em;
+}
+
+/* Category legend - updated for revenue display */
+.category-legend-revenue {
+    font-size: 0.73rem;
+    color: var(--text-muted);
+    font-weight: 500;
+    display: block;
+    margin-top: 1px;
+}
+
+/* Tooltip explain for summary cards */
+.summary-label-row {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.summary-info-icon {
+    width: 13px;
+    height: 13px;
+    border-radius: 50%;
+    background: var(--border-color);
+    color: var(--text-muted);
+    font-size: 0.6rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    cursor: help;
+    flex-shrink: 0;
+    line-height: 1;
+    font-style: normal;
+}
+
 /* Modal Styles */
 .stats-modal {
     border: none;
@@ -541,6 +725,32 @@ function renderTrendChart(trendData) {
     const revenueData = trendData.map(d => d.doanh_thu);
     const ordersData = trendData.map(d => d.so_don);
 
+    // ---- Insight badges ----
+    const maxRevenue = Math.max(...revenueData);
+    const maxRevDate = labels[revenueData.indexOf(maxRevenue)];
+    const totalRevenue = revenueData.reduce((a, b) => a + b, 0);
+    const avgOrders = ordersData.length ? (ordersData.reduce((a, b) => a + b, 0) / ordersData.length).toFixed(1) : 0;
+    const badgesEl = document.getElementById('chart-insight-badges');
+    if (badgesEl) {
+        badgesEl.innerHTML = `
+            <div class="insight-badge">
+                <span class="insight-badge-label">Doanh thu cao nhất</span>
+                <span class="insight-badge-value" style="color:#7c5cfc;">${formatCurrency(maxRevenue)}</span>
+                <span class="insight-badge-label" style="margin-top:1px;">ngày ${maxRevDate}</span>
+            </div>
+            <div class="insight-badge">
+                <span class="insight-badge-label">Tổng kỳ</span>
+                <span class="insight-badge-value" style="color:#7c5cfc;">${formatCurrency(totalRevenue)}</span>
+                <span class="insight-badge-label" style="margin-top:1px;">doanh thu</span>
+            </div>
+            <div class="insight-badge">
+                <span class="insight-badge-label">TB đơn/ngày</span>
+                <span class="insight-badge-value" style="color:#f472b6;">${avgOrders}</span>
+                <span class="insight-badge-label" style="margin-top:1px;">đơn hàng</span>
+            </div>
+        `;
+    }
+
     if (trendChartInstance) trendChartInstance.destroy();
 
     trendChartInstance = new Chart(ctx, {
@@ -549,7 +759,7 @@ function renderTrendChart(trendData) {
             labels,
             datasets: [
                 {
-                    label: 'Doanh thu',
+                    label: 'Doanh thu (đ)',
                     data: revenueData,
                     borderColor: '#7c5cfc',
                     backgroundColor: 'rgba(124, 92, 252, 0.08)',
@@ -557,14 +767,14 @@ function renderTrendChart(trendData) {
                     fill: true,
                     tension: 0.35,
                     pointRadius: 0,
-                    pointHoverRadius: 5,
+                    pointHoverRadius: 6,
                     pointHoverBackgroundColor: '#7c5cfc',
                     pointHoverBorderColor: '#fff',
                     pointHoverBorderWidth: 2,
                     yAxisID: 'y',
                 },
                 {
-                    label: 'Đơn hàng',
+                    label: 'Số đơn hàng',
                     data: ordersData,
                     borderColor: '#f472b6',
                     backgroundColor: 'rgba(244, 114, 182, 0.06)',
@@ -572,7 +782,7 @@ function renderTrendChart(trendData) {
                     fill: true,
                     tension: 0.35,
                     pointRadius: 0,
-                    pointHoverRadius: 5,
+                    pointHoverRadius: 6,
                     pointHoverBackgroundColor: '#f472b6',
                     pointHoverBorderColor: '#fff',
                     pointHoverBorderWidth: 2,
@@ -591,16 +801,31 @@ function renderTrendChart(trendData) {
                 legend: { display: false },
                 tooltip: {
                     backgroundColor: '#1e1b4b',
-                    titleFont: { family: 'Inter', size: 12 },
+                    titleColor: '#e2e8f0',
+                    titleFont: { family: 'Inter', size: 12, weight: '600' },
                     bodyFont: { family: 'Inter', size: 12 },
+                    footerFont: { family: 'Inter', size: 10 },
                     padding: 14,
                     cornerRadius: 10,
+                    borderColor: 'rgba(255,255,255,0.1)',
+                    borderWidth: 1,
                     callbacks: {
+                        title: function(items) {
+                            return 'Ngày ' + items[0].label;
+                        },
                         label: function(ctx) {
                             if (ctx.datasetIndex === 0) {
-                                return ' Doanh thu: ' + formatCurrencyFull(ctx.parsed.y);
+                                return '  💰 Doanh thu: ' + formatCurrencyFull(ctx.parsed.y);
                             }
-                            return ' Đơn hàng: ' + ctx.parsed.y;
+                            return '  🛒 Đơn hàng: ' + ctx.parsed.y + ' đơn';
+                        },
+                        footer: function(items) {
+                            const rev = items[0]?.parsed.y || 0;
+                            const ord = items[1]?.parsed.y || 0;
+                            if (ord > 0) {
+                                return '  Trung bình/đơn: ' + formatCurrencyFull(Math.round(rev / ord));
+                            }
+                            return '';
                         }
                     }
                 }
@@ -614,17 +839,27 @@ function renderTrendChart(trendData) {
                         maxTicksLimit: 12,
                     },
                     border: { display: false },
+                    title: {
+                        display: false,
+                    },
                 },
                 y: {
                     position: 'left',
-                    grid: { color: '#f3f4f6', drawBorder: false },
+                    grid: { color: 'rgba(0,0,0,0.05)', drawBorder: false },
                     ticks: {
                         font: { family: 'Inter', size: 11 },
-                        color: '#9ca3af',
+                        color: '#7c5cfc',
                         callback: v => formatCurrency(v),
                     },
                     border: { display: false },
                     beginAtZero: true,
+                    title: {
+                        display: true,
+                        text: 'Doanh thu (đ)',
+                        color: '#7c5cfc',
+                        font: { family: 'Inter', size: 10, weight: '600' },
+                        padding: { bottom: 4 },
+                    },
                 },
                 y1: {
                     position: 'right',
@@ -633,9 +868,17 @@ function renderTrendChart(trendData) {
                         font: { family: 'Inter', size: 11 },
                         color: '#f472b6',
                         stepSize: 1,
+                        callback: v => v + ' đơn',
                     },
                     border: { display: false },
                     beginAtZero: true,
+                    title: {
+                        display: true,
+                        text: 'Số đơn hàng',
+                        color: '#f472b6',
+                        font: { family: 'Inter', size: 10, weight: '600' },
+                        padding: { bottom: 4 },
+                    },
                 }
             }
         }
@@ -643,6 +886,7 @@ function renderTrendChart(trendData) {
 
     // Legend toggle
     initChartLegendToggles();
+    lucide.createIcons();
 }
 
 function initChartLegendToggles() {
@@ -704,6 +948,8 @@ function renderCategoryDoughnut(categories) {
 
     if (!categories || categories.length === 0) {
         legendEl.innerHTML = '<p style="color: #9ca3af; text-align: center;">Chưa có dữ liệu</p>';
+        const centerEl = document.getElementById('doughnut-center-value');
+        if (centerEl) centerEl.textContent = '0đ';
         if (categoryChartInstance) { categoryChartInstance.destroy(); categoryChartInstance = null; }
         return;
     }
@@ -711,6 +957,15 @@ function renderCategoryDoughnut(categories) {
     const labels = categories.map(c => c.ten_danh_muc);
     const data = categories.map(c => c.tong_doanh_thu);
     const colors = categories.map((_, i) => chartColors[i % chartColors.length]);
+    const totalDT = data.reduce((a, b) => a + b, 0);
+
+    // Update center label
+    const centerEl = document.getElementById('doughnut-center-value');
+    if (centerEl) centerEl.textContent = formatCurrency(totalDT);
+
+    // Update total badge
+    const badgeEl = document.getElementById('category-total-badge');
+    if (badgeEl) badgeEl.textContent = categories.length + ' danh mục';
 
     if (categoryChartInstance) categoryChartInstance.destroy();
 
@@ -723,7 +978,7 @@ function renderCategoryDoughnut(categories) {
                 backgroundColor: colors,
                 borderWidth: 2,
                 borderColor: '#fff',
-                hoverOffset: 6,
+                hoverOffset: 8,
             }]
         },
         options: {
@@ -734,13 +989,26 @@ function renderCategoryDoughnut(categories) {
                 legend: { display: false },
                 tooltip: {
                     backgroundColor: '#1e1b4b',
-                    titleFont: { family: 'Inter', size: 12 },
+                    titleColor: '#e2e8f0',
+                    titleFont: { family: 'Inter', size: 12, weight: '600' },
                     bodyFont: { family: 'Inter', size: 12 },
-                    padding: 12,
-                    cornerRadius: 8,
+                    footerFont: { family: 'Inter', size: 10, style: 'italic' },
+                    footerColor: '#94a3b8',
+                    padding: 14,
+                    cornerRadius: 10,
+                    borderColor: 'rgba(255,255,255,0.1)',
+                    borderWidth: 1,
                     callbacks: {
+                        title: function(items) {
+                            return items[0].label;
+                        },
                         label: function(ctx) {
-                            return ` ${ctx.label}: ${formatCurrencyFull(ctx.raw)}`;
+                            const pct = totalDT > 0 ? ((ctx.raw / totalDT) * 100).toFixed(1) : 0;
+                            return `  Doanh thu: ${formatCurrencyFull(ctx.raw)}`;
+                        },
+                        footer: function(items) {
+                            const pct = totalDT > 0 ? ((items[0].raw / totalDT) * 100).toFixed(1) : 0;
+                            return `  Tỷ lệ: ${pct}% tổng doanh thu`;
                         }
                     }
                 }
@@ -748,12 +1016,15 @@ function renderCategoryDoughnut(categories) {
         }
     });
 
-    // Render legend
+    // Render legend - show both % and revenue
     legendEl.innerHTML = categories.map((cat, i) => `
-        <div class="category-legend-item">
+        <div class="category-legend-item" style="cursor: default;" title="${escapeHtml(cat.ten_danh_muc)}: ${formatCurrencyFull(Number(cat.tong_doanh_thu))}">
             <span class="category-legend-dot" style="background: ${colors[i]};"></span>
-            <span class="category-legend-label" title="${escapeHtml(cat.ten_danh_muc)}">${escapeHtml(cat.ten_danh_muc)}</span>
-            <span class="category-legend-value">${cat.phan_tram}%</span>
+            <span class="category-legend-label">${escapeHtml(cat.ten_danh_muc)}</span>
+            <div style="display:flex;flex-direction:column;align-items:flex-end;">
+                <span class="category-legend-value" style="color:${colors[i]};">${cat.phan_tram}%</span>
+                <span class="category-legend-revenue">${formatCurrency(Number(cat.tong_doanh_thu))}</span>
+            </div>
         </div>
     `).join('');
 }
