@@ -189,7 +189,6 @@
         const token = localStorage.getItem('token');
         if (!token) {
             alert('Vui lòng đăng nhập để thêm sản phẩm vào giỏ hàng!');
-            window.location.href = '/login'; 
             return;
         }
 
@@ -220,7 +219,6 @@
         const token = localStorage.getItem('token');
         if (!token) {
             alert('Vui lòng đăng nhập để mua hàng!');
-            window.location.href = '/login'; 
             return;
         }
 

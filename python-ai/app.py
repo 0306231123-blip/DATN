@@ -44,7 +44,7 @@ def recommend():
         query = "SELECT ma_san_pham, ten_san_pham, mo_ta, loai_da_phu_hop, ma_danh_muc, so_luong_ton FROM san_pham WHERE trang_thai = 'dang_ban'"
         df = pd.read_sql(query, conn)
         
-        # 1.1 Lấy lịch sử mua hàng của user (lấy cả danh mục và id sản phẩm)
+        # 1.1 Lấy lịch sử mua hàng của user (lấy cả danh mục và id sản phẩm, chỉ lấy đơn hàng thành công)
         purchased_products = []
         purchased_categories = []
         if ma_nguoi_dung:
@@ -54,6 +54,7 @@ def recommend():
                 JOIN don_hang dh ON ct.ma_don_hang = dh.ma_don_hang 
                 JOIN san_pham sp ON ct.ma_san_pham = sp.ma_san_pham
                 WHERE dh.ma_nguoi_dung = {ma_nguoi_dung}
+                AND dh.trang_thai_don IN ('giao_thanh_cong', 'hoan_thanh')
             """
             hist_df = pd.read_sql(hist_query, conn)
             if not hist_df.empty:
@@ -68,12 +69,8 @@ def recommend():
         # ==========================================
         # LIST 1: GỢI Ý MUA LẠI KẺO HẾT (LOW STOCK)
         # ==========================================
-        # Tìm sản phẩm ĐÃ MUA và có tồn kho <= 20
+        # Tìm sản phẩm ĐÃ MUA THÀNH CÔNG và có tồn kho <= 20
         low_stock_ids = df[(df['ma_san_pham'].isin(purchased_products)) & (df['so_luong_ton'] > 0) & (df['so_luong_ton'] <= 20)]['ma_san_pham'].tolist()
-        
-        # Nếu không có sản phẩm nào thỏa mãn, fallback lấy ngẫu nhiên 4 sản phẩm sắp hết hàng chung của shop
-        if not low_stock_ids:
-            low_stock_ids = df[(df['so_luong_ton'] > 0) & (df['so_luong_ton'] <= 20)].sort_values(by='so_luong_ton').head(4)['ma_san_pham'].tolist()
 
         # ==========================================
         # LIST 2: GỢI Ý BƯỚC TIẾP THEO (CROSS-SELLING)

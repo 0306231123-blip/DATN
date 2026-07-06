@@ -466,6 +466,33 @@
         // ==========================================
         // 5. KIỂM TRA BẮT BUỘC & THANH TOÁN
         // ==========================================
+        let pendingAddress = '';
+        let pendingPaymentMethod = '';
+
+        async function callCreateOrderAPI(fullAddress, paymentMethod) {
+            try {
+                const response = await fetch('http://localhost:3000/api/order/create', {
+                    method: 'POST',
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'Authorization': 'Bearer ' + token 
+                    },
+                    body: JSON.stringify({ 
+                        dia_chi: fullAddress,
+                        ma_khuyen_mai: appliedVoucherId,
+                        so_tien_giam: currentDiscount,
+                        phi_van_chuyen: currentShippingFee,
+                        selected_items: selectedItems,
+                        phuong_thuc_thanh_toan: paymentMethod
+                    })
+                });
+                return await response.json();
+            } catch (error) {
+                console.error(error);
+                return null;
+            }
+        }
+
         async function processCheckout() {
             const provinceOption = provinceSelect.options[provinceSelect.selectedIndex];
             const wardOption = wardSelect.options[wardSelect.selectedIndex];
@@ -478,83 +505,76 @@
             if (!wardName) { alert('🛑 Vui lòng chọn Phường / Xã!'); wardSelect.focus(); return; }
             if (!street || street.length < 5) { alert('🛑 Vui lòng nhập chi tiết Số nhà, tên đường!'); streetInput.focus(); return; }
 
-            const fullAddress = `${street}, ${wardName}, ${provinceName}`;
+            pendingAddress = `${street}, ${wardName}, ${provinceName}`;
+            pendingPaymentMethod = document.querySelector('input[name="payment"]:checked').value;
 
             btnPay.disabled = true;
             btnPay.classList.add('checkout-qr__btn--disabled', 'cursor-not-allowed', 'opacity-70');
             btnText.textContent = 'Đang xử lý...';
             loadingIcon.classList.remove('hidden');
 
-            try {
-                const response = await fetch('http://localhost:3000/api/order/create', {
-                    method: 'POST',
-                    headers: { 
-                        'Content-Type': 'application/json',
-                        'Authorization': 'Bearer ' + token 
-                    },
-                    // GỬI KÈM TIỀN SHIP, VOUCHER, SP CHỌN...
-                    body: JSON.stringify({ 
-                        dia_chi: fullAddress,
-                        ma_khuyen_mai: appliedVoucherId,
-                        so_tien_giam: currentDiscount,
-                        phi_van_chuyen: currentShippingFee,
-                        selected_items: selectedItems,
-                        phuong_thuc_thanh_toan: document.querySelector('input[name="payment"]:checked').value
-                    })
-                });
+            const qrSection = document.getElementById('qr-payment-section');
+            const popupQrImg = document.getElementById('popup-qr-img');
+            const successTitle = document.getElementById('success-title');
+            const successDesc = document.getElementById('success-desc');
+            const successIconWrap = document.getElementById('success-icon-wrap');
 
-                const result = await response.json();
-
-                if (result.success) {
+            if (pendingPaymentMethod === 'cod') {
+                // Tạo đơn hàng ngay với COD
+                const result = await callCreateOrderAPI(pendingAddress, pendingPaymentMethod);
+                if (result && result.success) {
                     successPopup.classList.remove('hidden');
+                    qrSection.classList.add('hidden');
+                    successIconWrap.classList.remove('hidden');
+                    successTitle.textContent = 'Thành công!';
+                    successDesc.textContent = 'Cảm ơn bạn. Đơn hàng của bạn đã được đặt và đang được xử lý.';
                     
-                    const paymentMethod = document.querySelector('input[name="payment"]:checked').value;
-                    const qrSection = document.getElementById('qr-payment-section');
-                    const popupQrImg = document.getElementById('popup-qr-img');
-                    const successTitle = document.getElementById('success-title');
-                    const successDesc = document.getElementById('success-desc');
-                    const successIconWrap = document.getElementById('success-icon-wrap');
-
-                    if (paymentMethod === 'cod') {
-                        qrSection.classList.add('hidden');
-                        successIconWrap.classList.remove('hidden');
-                        successTitle.textContent = 'Thành công!';
-                        successDesc.textContent = 'Cảm ơn bạn. Đơn hàng của bạn đã được thanh toán và đang được xử lý.';
-                        
-                        // COD: hiện nút xem lịch sử, ẩn nút X
-                        document.getElementById('btn-view-history').classList.remove('hidden');
-                        document.getElementById('btn-cancel-qr').classList.add('hidden');
-                    } else {
-                        qrSection.classList.remove('hidden');
-                        successIconWrap.classList.add('hidden');
-                        successTitle.textContent = 'Đã tạo đơn hàng!';
-                        successDesc.textContent = 'Đơn hàng của bạn đang ở trạng thái chờ thanh toán. Vui lòng hoàn tất thanh toán để chúng tôi xử lý đơn hàng.';
-                        
-                        if (paymentMethod === 'momo') {
-                            popupQrImg.src = 'https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=ThanhToanMomo123456';
-                        } else {
-                            popupQrImg.src = 'https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=ThanhToanNganHang123456';
-                        }
-
-                        // Ẩn nút "Xem lịch sử", hiện nút X
-                        document.getElementById('btn-view-history').classList.add('hidden');
-                        document.getElementById('btn-cancel-qr').classList.remove('hidden');
-
-                        // Gắn ma_don_hang vào nút X để gọi API hủy
-                        document.getElementById('btn-cancel-qr').setAttribute('data-id', result.ma_don_hang);
-                    }
+                    document.getElementById('btn-view-history').classList.remove('hidden');
+                    document.getElementById('btn-cancel-qr').classList.add('hidden');
 
                     setTimeout(() => {
                         successPopup.classList.add('checkout-success-overlay--visible');
                         popupContent.classList.add('checkout-success-popup--visible');
                     }, 10);
                 } else {
-                    alert('Lỗi đặt hàng: ' + result.message);
+                    alert(result ? 'Lỗi đặt hàng: ' + result.message : 'Không thể kết nối đến server Node.js!');
                     resetButton();
                 }
-            } catch (error) {
-                alert('Không thể kết nối đến server Node.js!');
-                resetButton();
+            } else {
+                // Hiển thị mã QR trước, KHÔNG TẠO ĐƠN HÀNG NGAY
+                successPopup.classList.remove('hidden');
+                qrSection.classList.remove('hidden');
+                successIconWrap.classList.add('hidden');
+                
+                // Trả lại text đen mặc định
+                successTitle.classList.remove('text-green-500');
+                successTitle.classList.add('text-gray-800');
+                successTitle.textContent = 'Quét mã để thanh toán!';
+                
+                successDesc.textContent = 'Sau khi quét mã thanh toán thành công, hệ thống sẽ tự động tạo đơn hàng cho bạn.';
+                
+                if (pendingPaymentMethod === 'momo') {
+                    popupQrImg.src = 'https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=ThanhToanMomo123456';
+                } else {
+                    popupQrImg.src = 'https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=ThanhToanNganHang123456';
+                }
+                popupQrImg.classList.remove('hidden');
+
+                const instruction = document.getElementById('qr-instruction');
+                instruction.classList.remove('text-green-500');
+                instruction.classList.add('text-gray-800');
+                instruction.textContent = 'Vui lòng quét mã QR để thanh toán';
+
+                // Ẩn nút "Xem lịch sử", hiện nút X
+                document.getElementById('btn-view-history').classList.add('hidden');
+                document.getElementById('btn-cancel-qr').classList.remove('hidden');
+
+                setTimeout(() => {
+                    successPopup.classList.add('checkout-success-overlay--visible');
+                    popupContent.classList.add('checkout-success-popup--visible');
+                }, 10);
+                
+                resetButton(); // Bỏ loading ở nút xác nhận ngoài form
             }
         }
 
@@ -575,53 +595,44 @@
         if (popupQrImg) {
             popupQrImg.classList.add('cursor-pointer');
             popupQrImg.title = "Mẹo bảo vệ đồ án: Double-click để giả lập Thanh toán thành công";
-            popupQrImg.addEventListener('dblclick', function() {
-                document.getElementById('success-title').textContent = 'Thanh toán thành công!';
-                document.getElementById('success-title').classList.replace('text-gray-800', 'text-green-500');
-                
+            popupQrImg.addEventListener('dblclick', async function() {
                 const instruction = document.getElementById('qr-instruction');
-                instruction.textContent = 'Đã thanh toán thành công. Hệ thống đang chuyển hướng...';
-                instruction.classList.replace('text-gray-800', 'text-green-500');
+                instruction.textContent = 'Đang xác nhận thanh toán và tạo đơn hàng...';
                 
-                // Ẩn ảnh QR đi cho thực tế
-                popupQrImg.classList.add('hidden');
+                // Gọi API tạo đơn hàng lúc này
+                const result = await callCreateOrderAPI(pendingAddress, pendingPaymentMethod);
                 
-                // Ẩn luôn nút X vì đã báo thành công
-                document.getElementById('btn-cancel-qr').classList.add('hidden');
-                
-                setTimeout(() => {
-                    window.location.href = '/user/profileuser?tab=orders';
-                }, 1500);
+                if (result && result.success) {
+                    document.getElementById('success-title').textContent = 'Thanh toán thành công!';
+                    document.getElementById('success-title').classList.replace('text-gray-800', 'text-green-500');
+                    
+                    instruction.textContent = 'Đã thanh toán thành công. Hệ thống đang chuyển hướng...';
+                    instruction.classList.replace('text-gray-800', 'text-green-500');
+                    
+                    // Ẩn ảnh QR đi cho thực tế
+                    popupQrImg.classList.add('hidden');
+                    
+                    // Ẩn luôn nút X vì đã báo thành công
+                    document.getElementById('btn-cancel-qr').classList.add('hidden');
+                    
+                    setTimeout(() => {
+                        window.location.href = '/user/profileuser?tab=orders';
+                    }, 1500);
+                } else {
+                    alert(result ? 'Lỗi tạo đơn: ' + result.message : 'Lỗi kết nối khi thanh toán!');
+                    instruction.textContent = 'Vui lòng quét mã QR để thanh toán';
+                }
             });
         }
 
         // Xử lý khi nhấn nút X để hủy thanh toán QR
-        document.getElementById('btn-cancel-qr').addEventListener('click', async function() {
-            const maDonHang = this.getAttribute('data-id');
-            if (!maDonHang) return;
-
-            if (!confirm('Bạn có chắc muốn hủy thanh toán và xóa đơn hàng này?')) return;
-
-            try {
-                const response = await fetch('http://localhost:3000/api/order/delete-unpaid', {
-                    method: 'POST',
-                    headers: { 
-                        'Content-Type': 'application/json',
-                        'Authorization': 'Bearer ' + token 
-                    },
-                    body: JSON.stringify({ ma_don_hang: maDonHang })
-                });
-
-                const result = await response.json();
-                if (result.success) {
-                    alert('Đã hủy đơn hàng thành công!');
-                    window.location.href = '/user/cart'; // Trở lại giỏ hàng (hiện tại trống)
-                } else {
-                    alert('Không thể hủy đơn: ' + result.message);
-                }
-            } catch (error) {
-                alert('Lỗi kết nối khi hủy đơn!');
-            }
+        document.getElementById('btn-cancel-qr').addEventListener('click', function() {
+            // Không cần gọi API delete-unpaid nữa vì đơn chưa được tạo
+            successPopup.classList.remove('checkout-success-overlay--visible');
+            popupContent.classList.remove('checkout-success-popup--visible');
+            setTimeout(() => {
+                successPopup.classList.add('hidden');
+            }, 300);
         });
 
     });
