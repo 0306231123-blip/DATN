@@ -229,14 +229,23 @@ class OrderController {
       const currentStatus = order.trang_thai_don;
 
       if (
-          (trang_thai_don === 'da_huy') && 
-          (currentStatus !== 'da_huy')
+          (trang_thai_don === 'da_huy' || trang_thai_don === 'da_tra_hang') && 
+          (currentStatus !== 'da_huy' && currentStatus !== 'da_tra_hang')
       ) {
-          for (let item of order.chi_tiet) {
-              await SanPham.increment('so_luong_ton', {
-                  by: item.so_luong,
-                  where: { ma_san_pham: item.ma_san_pham }
-              });
+          // Trả lại kho sản phẩm nếu là Hủy đơn (Nếu trả hàng thì admin tự xử lý kho sau khi kiểm định)
+          if (trang_thai_don === 'da_huy') {
+              for (let item of order.chi_tiet) {
+                  await SanPham.increment('so_luong_ton', {
+                      by: item.so_luong,
+                      where: { ma_san_pham: item.ma_san_pham }
+                  });
+              }
+          }
+          
+          // Hoàn lại Voucher cho cả Hủy đơn và Trả hàng
+          if (order.ma_khuyen_mai) {
+              const KhuyenMai = require('../models/KhuyenMai');
+              await KhuyenMai.increment('so_luong', { by: 1, where: { ma_khuyen_mai: order.ma_khuyen_mai } });
           }
       }
 

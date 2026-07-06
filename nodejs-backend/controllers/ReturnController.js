@@ -1,5 +1,6 @@
 const YeuCauTraHang = require('../models/YeuCauTraHang');
 const DonHang = require('../models/DonHang');
+const KhuyenMai = require('../models/KhuyenMai'); // Thêm KhuyenMai
 const sequelize = require('../config/database');
 
 exports.createReturnRequest = async (req, res) => {
@@ -81,6 +82,11 @@ exports.updateReturnRequestStatus = async (req, res) => {
 
     if (trang_thai === 'da_duyet') {
       await donHang.update({ trang_thai_don: 'da_tra_hang', ngay_cap_nhat: new Date() }, { transaction });
+      
+      // Hoàn lại lượt sử dụng Voucher cho khách hàng nếu có
+      if (donHang.ma_khuyen_mai) {
+        await KhuyenMai.increment('so_luong', { by: 1, where: { ma_khuyen_mai: donHang.ma_khuyen_mai }, transaction });
+      }
     } else if (trang_thai === 'tu_choi') {
       await donHang.update({ trang_thai_don: 'giao_thanh_cong', ngay_cap_nhat: new Date() }, { transaction });
     }
