@@ -9,6 +9,7 @@
 <div class="view-tabs" style="margin-bottom: 20px; border-bottom: 1px solid #e2e8f0; display: flex; gap: 20px;">
     <button class="view-tab active" data-view="products" onclick="switchView('products')" style="padding: 10px 20px; font-weight: bold; background: none; border: none; border-bottom: 2px solid var(--primary-color); color: var(--primary-color); cursor: pointer;">Sản Phẩm</button>
     <button class="view-tab" data-view="inventory" onclick="switchView('inventory')" style="padding: 10px 20px; font-weight: bold; background: none; border: none; border-bottom: 2px solid transparent; color: #64748b; cursor: pointer;">Kho Hàng</button>
+    <button class="view-tab" data-view="vouchers" onclick="switchView('vouchers')" style="padding: 10px 20px; font-weight: bold; background: none; border: none; border-bottom: 2px solid transparent; color: #64748b; cursor: pointer;">Khuyến Mãi</button>
 </div>
 
 <div id="view-products">
@@ -130,6 +131,50 @@
             <tbody id="inventory-tbody">
             </tbody>
         </table>
+    </div>
+</div>
+
+<!-- Bắt đầu view-vouchers -->
+<div id="view-vouchers" style="display: none;">
+    <div class="page-action-bar">
+        <div class="action-bar-left">
+            <button class="btn btn-primary" onclick="openVoucherModal()">
+                <i data-lucide="plus" class="icon-xs"></i> Thêm khuyến mãi
+            </button>
+        </div>
+        <div class="action-bar-right">
+            <div class="search-box">
+                <i data-lucide="search" class="icon-xs search-icon"></i>
+                <input type="text" placeholder="Tìm kiếm voucher..." class="search-input" id="voucher-search-input" onkeyup="if(event.key === 'Enter') loadVouchers()">
+            </div>
+            <button class="btn btn-secondary" onclick="loadVouchers()" style="margin-left: 10px;">
+                <i data-lucide="refresh-cw" class="icon-xs"></i>
+            </button>
+        </div>
+    </div>
+    
+    <div class="data-card">
+        <table class="admin-table">
+            <thead>
+                <tr>
+                    <th>Mã Code</th>
+                    <th>Loại / Giá trị</th>
+                    <th>Áp dụng cho</th>
+                    <th>Số lượng</th>
+                    <th>Hạn sử dụng</th>
+                    <th>Trạng thái</th>
+                    <th>Thao tác</th>
+                </tr>
+            </thead>
+            <tbody id="vouchers-tbody">
+                <tr><td colspan="7" style="text-align: center;">Đang tải...</td></tr>
+            </tbody>
+        </table>
+        
+        <div class="pagination-wrapper" id="voucher-pagination-wrapper" style="display: none; margin-top: 15px;">
+            <div class="pagination-info" id="voucher-pagination-info"></div>
+            <div class="pagination-btns" id="voucher-pagination-btns"></div>
+        </div>
     </div>
 </div>
 
@@ -402,6 +447,93 @@
                 </tbody>
             </table>
         </div>
+    </div>
+</div>
+
+<!-- Modal Thêm/Sửa Khuyến Mãi -->
+<div class="modal" id="modal-voucher" style="display: none; z-index: 1002;">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2 id="voucher-modal-title">Thêm Khuyến Mãi</h2>
+            <button class="modal-close" onclick="closeVoucherModal()">&times;</button>
+        </div>
+        <form id="form-voucher" class="form" onsubmit="saveVoucher(event)">
+            <input type="hidden" id="voucher-id">
+            <div class="form-row">
+                <div class="form-group" style="flex: 1;">
+                    <label>Mã Code *</label>
+                    <input type="text" id="voucher-code" class="form-control" required>
+                </div>
+                <div class="form-group" style="flex: 1;">
+                    <label>Loại Giảm *</label>
+                    <select id="voucher-type" class="form-control" required>
+                        <option value="tien_mat">Tiền mặt</option>
+                        <option value="phan_tram">Phần trăm</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div class="form-row">
+                <div class="form-group" style="flex: 1;">
+                    <label>Giá trị giảm *</label>
+                    <input type="number" id="voucher-value" class="form-control" required min="1">
+                </div>
+                <div class="form-group" style="flex: 1;">
+                    <label>Đơn tối thiểu</label>
+                    <input type="number" id="voucher-min-order" class="form-control" value="0" min="0">
+                </div>
+            </div>
+            
+            <div class="form-row">
+                <div class="form-group" style="flex: 1;">
+                    <label>Giảm tối đa (Nếu theo %)</label>
+                    <input type="number" id="voucher-max-discount" class="form-control" min="0">
+                </div>
+                <div class="form-group" style="flex: 1;">
+                    <label>Số lượng</label>
+                    <input type="number" id="voucher-quantity" class="form-control" value="0" min="0">
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group" style="flex: 1;">
+                    <label>Áp dụng cho Danh Mục</label>
+                    <select id="voucher-category" class="form-control">
+                        <option value="">-- Tất cả danh mục --</option>
+                    </select>
+                </div>
+                <div class="form-group" style="flex: 1;">
+                    <label>Áp dụng cho Sản Phẩm</label>
+                    <select id="voucher-product" class="form-control">
+                        <option value="">-- Tất cả sản phẩm --</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group" style="flex: 1;">
+                    <label>Ngày bắt đầu</label>
+                    <input type="datetime-local" id="voucher-start" class="form-control">
+                </div>
+                <div class="form-group" style="flex: 1;">
+                    <label>Ngày kết thúc *</label>
+                    <input type="datetime-local" id="voucher-end" class="form-control" required>
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label>Trạng thái</label>
+                <select id="voucher-status" class="form-control">
+                    <option value="hoat_dong">Hoạt động</option>
+                    <option value="tam_dung">Tạm dừng</option>
+                </select>
+            </div>
+
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" onclick="closeVoucherModal()">Hủy</button>
+                <button type="submit" class="btn btn-primary">Lưu Voucher</button>
+            </div>
+        </form>
     </div>
 </div>
 @endsection
@@ -1052,9 +1184,12 @@ function switchView(view) {
 
     document.getElementById('view-products').style.display = view === 'products' ? 'block' : 'none';
     document.getElementById('view-inventory').style.display = view === 'inventory' ? 'block' : 'none';
+    document.getElementById('view-vouchers').style.display = view === 'vouchers' ? 'block' : 'none';
 
     if (view === 'inventory') {
         loadInventory();
+    } else if (view === 'vouchers') {
+        loadVouchers();
     }
 }
 
@@ -1323,6 +1458,175 @@ function closeLogsModal() {
     document.getElementById('modal-logs').style.display = 'none';
     if(document.getElementById('modal-overlay') && document.getElementById('modal-product').style.display !== 'block') {
         document.getElementById('modal-overlay').style.display = 'none';
+    }
+}
+
+// ========== VOUCHERS ==========
+let vouchers = [];
+
+async function loadVouchers(page = 1) {
+    try {
+        const search = document.getElementById('voucher-search-input').value;
+        let url = `${API_BASE_URL}/voucher?page=${page}&limit=10`;
+        if (search) url += `&search=${encodeURIComponent(search)}`;
+        
+        const response = await fetch(url);
+        const result = await response.json();
+        
+        if (result.status === 'success') {
+            vouchers = result.data;
+            renderVouchersTable();
+            // Optional: Handle pagination rendering if needed
+        }
+    } catch (error) {
+        showAlert('Lỗi tải danh sách voucher', 'error');
+    }
+}
+
+function renderVouchersTable() {
+    const tbody = document.getElementById('vouchers-tbody');
+    if (!tbody) return;
+    
+    if (vouchers.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="7" style="text-align: center;">Không có voucher nào</td></tr>';
+        return;
+    }
+    
+    tbody.innerHTML = vouchers.map(v => {
+        const typeText = v.loai_giam === 'phan_tram' ? '%' : 'VNĐ';
+        const valueText = v.loai_giam === 'phan_tram' ? v.gia_tri + '%' : Number(v.gia_tri).toLocaleString('vi-VN') + 'đ';
+        const applyTo = v.san_pham ? `SP: ${escapeHtml(v.san_pham.ten_san_pham)}` : (v.danh_muc ? `DM: ${escapeHtml(v.danh_muc.ten_danh_muc)}` : 'Tất cả');
+        const endDate = new Date(v.ngay_ket_thuc).toLocaleString('vi-VN');
+        const statusBadge = v.trang_thai === 'hoat_dong' ? '<span class="status-badge status-badge--active">Hoạt động</span>' : '<span class="status-badge status-badge--inactive">Tạm dừng</span>';
+        
+        return `
+            <tr>
+                <td><strong>${escapeHtml(v.ma_code)}</strong></td>
+                <td>${valueText}</td>
+                <td>${applyTo}</td>
+                <td>${v.so_luong}</td>
+                <td>${endDate}</td>
+                <td>${statusBadge}</td>
+                <td>
+                    <div class="action-btns">
+                        <button class="icon-action-btn" title="Sửa" onclick="editVoucher(${v.ma_khuyen_mai})">
+                            <i data-lucide="pencil" class="icon-xs"></i>
+                        </button>
+                        <button class="icon-action-btn icon-action-btn--danger" title="Xóa" onclick="deleteVoucher(${v.ma_khuyen_mai})">
+                            <i data-lucide="trash-2" class="icon-xs"></i>
+                        </button>
+                    </div>
+                </td>
+            </tr>
+        `;
+    }).join('');
+    
+    if (window.lucide) lucide.createIcons();
+}
+
+function openVoucherModal() {
+    document.getElementById('form-voucher').reset();
+    document.getElementById('voucher-id').value = '';
+    document.getElementById('voucher-modal-title').textContent = 'Thêm Khuyến Mãi';
+    
+    // Load options for products and categories
+    const catSelect = document.getElementById('voucher-category');
+    catSelect.innerHTML = '<option value="">-- Tất cả danh mục --</option>' + categories.map(c => `<option value="${c.ma_danh_muc}">${escapeHtml(c.ten_danh_muc)}</option>`).join('');
+    
+    const prodSelect = document.getElementById('voucher-product');
+    prodSelect.innerHTML = '<option value="">-- Tất cả sản phẩm --</option>' + products.map(p => `<option value="${p.ma_san_pham}">${escapeHtml(p.ten_san_pham)}</option>`).join('');
+    
+    document.getElementById('modal-voucher').style.display = 'block';
+    if(document.getElementById('modal-overlay')) document.getElementById('modal-overlay').style.display = 'block';
+}
+
+function closeVoucherModal() {
+    document.getElementById('modal-voucher').style.display = 'none';
+    if(document.getElementById('modal-overlay')) document.getElementById('modal-overlay').style.display = 'none';
+}
+
+function editVoucher(id) {
+    const v = vouchers.find(x => x.ma_khuyen_mai === id);
+    if (!v) return;
+    
+    openVoucherModal();
+    document.getElementById('voucher-modal-title').textContent = 'Sửa Khuyến Mãi';
+    document.getElementById('voucher-id').value = v.ma_khuyen_mai;
+    document.getElementById('voucher-code').value = v.ma_code;
+    document.getElementById('voucher-type').value = v.loai_giam;
+    document.getElementById('voucher-value').value = v.gia_tri;
+    document.getElementById('voucher-min-order').value = v.don_toi_thieu;
+    document.getElementById('voucher-max-discount').value = v.giam_toi_da || '';
+    document.getElementById('voucher-quantity').value = v.so_luong;
+    document.getElementById('voucher-category').value = v.ma_danh_muc || '';
+    document.getElementById('voucher-product').value = v.ma_san_pham || '';
+    document.getElementById('voucher-status').value = v.trang_thai;
+    
+    if (v.ngay_bat_dau) {
+        const d = new Date(v.ngay_bat_dau);
+        d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
+        document.getElementById('voucher-start').value = d.toISOString().slice(0, 16);
+    }
+    if (v.ngay_ket_thuc) {
+        const d = new Date(v.ngay_ket_thuc);
+        d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
+        document.getElementById('voucher-end').value = d.toISOString().slice(0, 16);
+    }
+}
+
+async function saveVoucher(e) {
+    e.preventDefault();
+    const id = document.getElementById('voucher-id').value;
+    const payload = {
+        ma_code: document.getElementById('voucher-code').value,
+        loai_giam: document.getElementById('voucher-type').value,
+        gia_tri: document.getElementById('voucher-value').value,
+        don_toi_thieu: document.getElementById('voucher-min-order').value || 0,
+        giam_toi_da: document.getElementById('voucher-max-discount').value || null,
+        so_luong: document.getElementById('voucher-quantity').value || 0,
+        ma_danh_muc: document.getElementById('voucher-category').value || null,
+        ma_san_pham: document.getElementById('voucher-product').value || null,
+        ngay_bat_dau: document.getElementById('voucher-start').value || null,
+        ngay_ket_thuc: document.getElementById('voucher-end').value,
+        trang_thai: document.getElementById('voucher-status').value
+    };
+    
+    const method = id ? 'PUT' : 'POST';
+    const url = id ? `${API_BASE_URL}/voucher/${id}` : `${API_BASE_URL}/voucher`;
+    
+    try {
+        const res = await fetch(url, {
+            method,
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify(payload)
+        });
+        const result = await res.json();
+        
+        if (result.status === 'success') {
+            showAlert(result.message, 'success');
+            closeVoucherModal();
+            loadVouchers();
+        } else {
+            showAlert(result.message, 'error');
+        }
+    } catch (error) {
+        showAlert('Lỗi kết nối', 'error');
+    }
+}
+
+async function deleteVoucher(id) {
+    if (!confirm('Bạn có chắc muốn xóa voucher này?')) return;
+    try {
+        const res = await fetch(`${API_BASE_URL}/voucher/${id}`, { method: 'DELETE' });
+        const result = await res.json();
+        if (result.status === 'success') {
+            showAlert('Xóa thành công', 'success');
+            loadVouchers();
+        } else {
+            showAlert(result.message, 'error');
+        }
+    } catch (error) {
+        showAlert('Lỗi kết nối', 'error');
     }
 }
 

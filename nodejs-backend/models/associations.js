@@ -19,6 +19,14 @@ const LichSuKho = require('./LichSuKho');
 const YeuCauTraHang = require('./YeuCauTraHang');
 const TinNhan = require('./TinNhan');
 const CanhBaoHeThong = require('./CanhBaoHeThong');
+const KhuyenMai = require('./KhuyenMai');
+
+// ========== KhuyenMai ↔ SanPham/DanhMuc ==========
+KhuyenMai.belongsTo(SanPham, { foreignKey: 'ma_san_pham', as: 'san_pham' });
+SanPham.hasMany(KhuyenMai, { foreignKey: 'ma_san_pham', as: 'khuyen_mai' });
+
+KhuyenMai.belongsTo(DanhMuc, { foreignKey: 'ma_danh_muc', as: 'danh_muc' });
+DanhMuc.hasMany(KhuyenMai, { foreignKey: 'ma_danh_muc', as: 'khuyen_mai' });
 
 // ========== User ↔ Order ==========
 // User has many Orders
@@ -162,4 +170,5 @@ module.exports = {
   LichSuKho,
   YeuCauTraHang,
   CanhBaoHeThong,
+  KhuyenMai,
 };

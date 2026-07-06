@@ -1,5 +1,7 @@
 const KhuyenMai = require('../models/KhuyenMai');
 const DonHang = require('../models/DonHang');
+const SanPham = require('../models/SanPham');
+const DanhMuc = require('../models/DanhMuc');
 const { Op } = require('sequelize');
 const jwt = require('jsonwebtoken');
 
@@ -127,6 +129,97 @@ class VoucherController {
     } catch (error) {
         console.error(error);
         res.status(500).json({ success: false, message: 'Lỗi lấy danh sách voucher' });
+    }
+  }
+
+  // GET /api/voucher
+  async getAll(req, res) {
+    try {
+        const { page = 1, limit = 10, search = '' } = req.query;
+        const offset = (page - 1) * limit;
+        const where = search ? { ma_code: { [Op.like]: `%${search}%` } } : {};
+
+        const { count, rows } = await KhuyenMai.findAndCountAll({
+            where,
+            include: [
+                { model: SanPham, as: 'san_pham', attributes: ['ten_san_pham'] },
+                { model: DanhMuc, as: 'danh_muc', attributes: ['ten_danh_muc'] }
+            ],
+            limit: parseInt(limit),
+            offset,
+            order: [['ma_khuyen_mai', 'DESC']]
+        });
+
+        res.json({
+            status: 'success',
+            data: rows,
+            pagination: {
+                total: count,
+                page: parseInt(page),
+                limit: parseInt(limit),
+                pages: Math.ceil(count / limit)
+            }
+        });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ status: 'error', message: 'Lỗi lấy danh sách voucher' });
+    }
+  }
+
+  // GET /api/voucher/:id
+  async getById(req, res) {
+    try {
+        const voucher = await KhuyenMai.findByPk(req.params.id);
+        if (!voucher) return res.status(404).json({ status: 'error', message: 'Không tìm thấy voucher' });
+        res.json({ status: 'success', data: voucher });
+    } catch (error) {
+        res.status(500).json({ status: 'error', message: error.message });
+    }
+  }
+
+  // POST /api/voucher
+  async create(req, res) {
+    try {
+        const checkExist = await KhuyenMai.findOne({ where: { ma_code: req.body.ma_code } });
+        if (checkExist) {
+            return res.status(400).json({ status: 'error', message: 'Mã code đã tồn tại' });
+        }
+        const voucher = await KhuyenMai.create(req.body);
+        res.json({ status: 'success', data: voucher, message: 'Thêm voucher thành công' });
+    } catch (error) {
+        res.status(500).json({ status: 'error', message: error.message });
+    }
+  }
+
+  // PUT /api/voucher/:id
+  async update(req, res) {
+    try {
+        if (req.body.ma_code) {
+            const checkExist = await KhuyenMai.findOne({ 
+                where: { 
+                    ma_code: req.body.ma_code,
+                    ma_khuyen_mai: { [Op.ne]: req.params.id }
+                } 
+            });
+            if (checkExist) return res.status(400).json({ status: 'error', message: 'Mã code đã tồn tại' });
+        }
+
+        const updated = await KhuyenMai.update(req.body, { where: { ma_khuyen_mai: req.params.id } });
+        if (!updated[0]) return res.status(404).json({ status: 'error', message: 'Không tìm thấy voucher' });
+        res.json({ status: 'success', message: 'Cập nhật thành công' });
+    } catch (error) {
+        res.status(500).json({ status: 'error', message: error.message });
+    }
+  }
+
+  // DELETE /api/voucher/:id
+  async delete(req, res) {
+    try {
+        const deleted = await KhuyenMai.destroy({ where: { ma_khuyen_mai: req.params.id } });
+        if (!deleted) return res.status(404).json({ status: 'error', message: 'Không tìm thấy voucher' });
+        res.json({ status: 'success', message: 'Xóa voucher thành công' });
+    } catch (error) {
+        res.status(500).json({ status: 'error', message: error.message });
     }
   }
 }
