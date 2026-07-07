@@ -60,7 +60,7 @@ class OrderController {
       }
 
       // Filter by status
-      const validStatuses = ['cho_xac_nhan', 'da_xac_nhan', 'dang_giao', 'giao_thanh_cong', 'da_huy', 'dang_tra_hang', 'da_tra_hang', 'tra_hang_hoan_tien', 'hoan_thanh', 'tu_choi_tra_hang'];
+      const validStatuses = ['cho_xac_nhan', 'da_xac_nhan', 'dang_giao', 'giao_thanh_cong', 'da_huy', 'dang_tra_hang', 'da_tra_hang', 'tra_hang_hoan_tien', 'hoan_thanh', 'tu_choi_tra_hang', 'khong_du_dieu_kien'];
       if (trang_thai && trang_thai !== 'all' && validStatuses.includes(trang_thai)) {
         where.trang_thai_don = trang_thai;
       }
@@ -218,7 +218,7 @@ class OrderController {
         });
       }
 
-      const validStatuses = ['cho_xac_nhan', 'da_xac_nhan', 'dang_giao', 'giao_thanh_cong', 'da_huy', 'dang_tra_hang', 'da_tra_hang', 'tra_hang_hoan_tien', 'hoan_thanh', 'tu_choi_tra_hang'];
+      const validStatuses = ['cho_xac_nhan', 'da_xac_nhan', 'dang_giao', 'giao_thanh_cong', 'da_huy', 'dang_tra_hang', 'da_tra_hang', 'tra_hang_hoan_tien', 'hoan_thanh', 'tu_choi_tra_hang', 'khong_du_dieu_kien'];
       if (!trang_thai_don || !validStatuses.includes(trang_thai_don)) {
         return res.status(400).json({
           status: 'error',
@@ -423,8 +423,35 @@ class OrderController {
         let tongThanhToan = tong_tien + tienShip - tienGiam;
         if (tongThanhToan < 0) tongThanhToan = 0; // Chống lỗi âm tiền
 
+        let mappedPaymentMethod = 'chuyen_khoan';
+        if (phuong_thuc_thanh_toan === 'cod') mappedPaymentMethod = 'tien_mat';
+        else if (phuong_thuc_thanh_toan === 'momo') mappedPaymentMethod = 'vi_dien_tu';
+        else if (phuong_thuc_thanh_toan === 'banking') mappedPaymentMethod = 'chuyen_khoan';
+
+        // TẠO MÃ ĐƠN HÀNG CUSTOM (VD: 0707#01)
+        const todayStart = new Date();
+        todayStart.setHours(0, 0, 0, 0);
+        const todayEnd = new Date();
+        todayEnd.setHours(23, 59, 59, 999);
+        
+        const countOrdersToday = await DonHang.count({
+            where: {
+                ngay_dat: {
+                    [Op.between]: [todayStart, todayEnd]
+                }
+            },
+            transaction: t
+        });
+        
+        const day = String(todayStart.getDate()).padStart(2, '0');
+        const month = String(todayStart.getMonth() + 1).padStart(2, '0');
+        const year = String(todayStart.getFullYear()).slice(-2);
+        const sequence = String(countOrdersToday + 1).padStart(2, '0');
+        const customOrderCode = `${day}${month}${year}#${sequence}`;
+
         // 4. Lệnh tạo đơn hàng (Đã sửa lại biến user cho chuẩn)
         const donHangMoi = await DonHang.create({
+            ma_don_hang_custom: customOrderCode,
             ma_nguoi_dung: maNguoiDung, 
             ho_ten_nguoi_nhan: req.body.ho_ten || (user ? user.ho_ten : 'Khách hàng'), 
             so_dien_thoai_nhan: so_dien_thoai || (user ? user.so_dien_thoai : '0123456789'), 
@@ -435,7 +462,7 @@ class OrderController {
             ma_khuyen_mai: ma_khuyen_mai || null,
             so_tien_giam: tienGiam,
             trang_thai_don: 'cho_xac_nhan', 
-            phuong_thuc_thanh_toan: phuong_thuc_thanh_toan || 'chuyen_khoan', 
+            phuong_thuc_thanh_toan: mappedPaymentMethod, 
             trang_thai_thanh_toan: phuong_thuc_thanh_toan === 'cod' ? 'chua_thanh_toan' : 'da_thanh_toan'
         }, { transaction: t });
 

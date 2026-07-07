@@ -28,6 +28,7 @@
         'cho_xac_nhan'    => ['text' => 'Chờ xác nhận', 'class' => 'order-badge--pending'],
         'da_xac_nhan'     => ['text' => 'Đã xác nhận',  'class' => 'order-badge--confirmed'],
         'da_huy'          => ['text' => 'Đã hủy',       'class' => 'order-badge--cancelled'],
+        'khong_du_dieu_kien'=> ['text' => 'Không đủ ĐK', 'class' => 'order-badge--cancelled'],
     ];
     $defaultTrangThai = ['text' => 'Không xác định', 'class' => 'order-badge--pending'];
 @endphp
@@ -133,7 +134,7 @@
                                 $trangThai = $trangThaiMap[$dh['trang_thai_don']] ?? $defaultTrangThai;
                             @endphp
                             <tr>
-                                <td class="ro-id">#DH{{ str_pad($dh['ma_don_hang'], 4, '0', STR_PAD_LEFT) }}</td>
+                                <td class="ro-id">{{ $dh['ma_don_hang_custom'] ? '#' . $dh['ma_don_hang_custom'] : '#DH' . str_pad($dh['ma_don_hang'], 4, '0', STR_PAD_LEFT) }}</td>
                                 <td>{{ $dh['ho_ten_nguoi_nhan'] }}</td>
                                 <td>{{ $formatTien($dh['tong_thanh_toan']) }}</td>
                                 <td><span class="order-badge order-badge--sm {{ $trangThai['class'] }}">{{ $trangThai['text'] }}</span></td>

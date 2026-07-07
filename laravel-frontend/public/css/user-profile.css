@@ -259,6 +259,33 @@
     background-color: var(--user-pink-600);
 }
 
+/* === Search Bar === */
+.profile-search-bar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+    align-items: center;
+}
+
+.profile-search-group {
+    flex: 1;
+    min-width: 250px;
+}
+
+.profile-search-group--date {
+    flex: 0 1 auto;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-weight: 600;
+    color: var(--user-gray-600);
+}
+
+.profile-search-group--date .profile-form__input {
+    width: 140px;
+}
+
 /*===Order Filters===*/
 .profile-order-filters {
     display: flex;

@@ -305,8 +305,8 @@
             if (result.success && result.data.length > 0) {
                 let html = '';
                 result.data.forEach(v => {
-                    const tienGiam = parseInt(v.gia_tri).toLocaleString() + (v.loai_giam === 'tien_mat' ? 'đ' : '%');
-                    const donToiThieu = parseInt(v.don_toi_thieu).toLocaleString() + 'đ';
+                    const tienGiam = parseInt(v.gia_tri).toLocaleString() + (v.loai_giam === 'tien_mat' ? ' VNĐ' : '%');
+                    const donToiThieu = parseInt(v.don_toi_thieu).toLocaleString() + ' VNĐ';
                     
                     const outOfStock = v.so_luong <= 0;
                     const cardClass = outOfStock ? 'opacity-50 grayscale' : 'hover:shadow-md';

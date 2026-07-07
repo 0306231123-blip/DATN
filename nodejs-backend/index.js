@@ -58,6 +58,61 @@ app.use('/api/voucher', require('./routes/voucher'));
 app.use('/api/notifications', require('./routes/notifications'));
 app.use('/api/chat', require('./routes/chat'));
 
+// --- Mock Payment API cho Đồ án (Vượt tường lửa + CORS) ---
+app.get('/api/next-order-id', async (req, res) => {
+    try {
+        const [result] = await sequelize.query('SELECT MAX(ma_don_hang) as maxId FROM don_hang');
+        const maxId = result[0].maxId || 0;
+        
+        const todayStart = new Date();
+        todayStart.setHours(0, 0, 0, 0);
+        const [countResult] = await sequelize.query(`SELECT COUNT(*) as count FROM don_hang WHERE ngay_dat >= :today`, {
+            replacements: { today: todayStart }
+        });
+        const orderCountToday = (countResult[0].count || 0) + 1;
+        
+        const year = String(todayStart.getFullYear()).slice(-2);
+        const month = String(todayStart.getMonth() + 1).padStart(2, '0');
+        const day = String(todayStart.getDate()).padStart(2, '0');
+        const nextIdStr = `${day}${month}${year}#${String(orderCountToday).padStart(2, '0')}`;
+        
+        res.json({ nextId: maxId + 1, nextIdStr: nextIdStr });
+    } catch (e) {
+        res.json({ nextId: Math.floor(Math.random() * 1000000), nextIdStr: 'UNKNOWN#01' });
+    }
+});
+
+app.post('/api/create-mock-webhook', async (req, res) => {
+    try {
+        const response = await fetch('https://webhook.site/token', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+            body: JSON.stringify({
+                default_content: req.body.html_content,
+                default_content_type: "text/html",
+                default_status: 200
+            })
+        });
+        const data = await response.json();
+        res.json({ success: true, uuid: data.uuid, url: 'https://webhook.site/' + data.uuid });
+    } catch (e) {
+        res.status(500).json({ success: false, error: e.toString() });
+    }
+});
+
+app.get('/api/check-mock-webhook/:uuid', async (req, res) => {
+    try {
+        const response = await fetch('https://webhook.site/token/' + req.params.uuid + '/requests');
+        const data = await response.json();
+        console.log(`[Webhook Poll] UUID: ${req.params.uuid}, Reqs: ${data.data ? data.data.length : 'undefined'}`);
+        res.json({ success: true, requests: data.data || [] });
+    } catch (e) {
+        console.error('[Webhook Poll Error]', e);
+        res.status(500).json({ success: false, error: e.toString() });
+    }
+});
+// ------------------------------------------
+
 // Kết nối database và khởi động server
 const PORT = process.env.PORT || 3000;
 const NODE_ENV = process.env.NODE_ENV || 'development';

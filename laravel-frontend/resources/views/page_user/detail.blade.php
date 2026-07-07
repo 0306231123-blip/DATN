@@ -66,14 +66,14 @@
                 <div class="detail-price-row" style="background: #fafafa; padding: 1rem 1.25rem; border-radius: 4px; margin-bottom: 1.5rem; display: flex; align-items: center; gap: 1rem;">
                     @if($sanPham->gia_khuyen_mai)
                         <div class="detail-price-box--original" style="font-size: 1rem; color: #929292; text-decoration: line-through;">
-                            ₫{{ number_format($sanPham->gia, 0, ',', '.') }}
+                            {{ number_format($sanPham->gia, 0, ',', '.') }} VNĐ
                         </div>
                         <div class="detail-price-box--sale" style="font-size: 1.875rem; font-weight: 500; color: #ee4d2d;">
-                            ₫{{ number_format($sanPham->gia_khuyen_mai, 0, ',', '.') }}
+                            {{ number_format($sanPham->gia_khuyen_mai, 0, ',', '.') }} VNĐ
                         </div>
                     @else
                         <div class="detail-price-box--sale detail-price-box--full" style="font-size: 1.875rem; font-weight: 500; color: #ee4d2d;">
-                            ₫{{ number_format($sanPham->gia, 0, ',', '.') }}
+                            {{ number_format($sanPham->gia, 0, ',', '.') }} VNĐ
                         </div>
                     @endif
                 </div>

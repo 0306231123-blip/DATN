@@ -1,0 +1,2 @@
+const sequelize = require('./config/database');
+sequelize.query("ALTER TABLE don_hang MODIFY COLUMN trang_thai_don ENUM('cho_xac_nhan', 'da_xac_nhan', 'dang_giao', 'giao_thanh_cong', 'da_huy', 'dang_tra_hang', 'da_tra_hang', 'tra_hang_hoan_tien', 'hoan_thanh', 'tu_choi_tra_hang', 'khong_du_dieu_kien') DEFAULT 'cho_xac_nhan'").then(() => console.log('Enum updated')).catch(console.error).finally(()=>process.exit());

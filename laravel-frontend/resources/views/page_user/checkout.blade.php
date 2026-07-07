@@ -8,19 +8,71 @@
 @section('content')
 <section class="user-section" style="position: relative;">
     <div class="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 py-8">
-    <div class="mb-4">
+    <div class="mb-4 max-w-[64rem] mx-auto">
         <a href="/user/cart" class="inline-flex items-center text-gray-500 hover:text-pink-600 font-bold transition">
             <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
             Quay lại Giỏ hàng
         </a>
     </div>
-    
+
     <div class="checkout-grid">
         
         {{-- Left Column --}}
         <div class="checkout-column">
+            {{-- Personal Info Form --}}
+            <div class="checkout-address">
+                <label class="checkout-address__label">
+                    Thông tin người nhận <span class="checkout-address__label-required">*</span>
+                </label>
+                
+                <div class="checkout-address__fields mb-6">
+                    <div>
+                        <input type="text" id="ho_ten" placeholder="Họ và tên người nhận..." class="checkout-address__input">
+                    </div>
+                    <div>
+                        <input type="text" id="so_dien_thoai" placeholder="Số điện thoại người nhận..." class="checkout-address__input">
+                    </div>
+                </div>
+
+                <hr class="my-6 border-pink-100">
+
+                <label class="checkout-address__label">
+                    Địa chỉ giao hàng <span class="checkout-address__label-required">*</span>
+                    <span class="checkout-address__label-hint">Bắt buộc nhập đầy đủ thông tin bên dưới</span>
+                </label>
+                
+                <div class="checkout-address__fields">
+                    <div>
+                        <select id="province" required class="checkout-address__select">
+                            <option value="" disabled selected>1. Chọn Tỉnh / Thành phố (Chuẩn mới)</option>
+                        </select>
+                    </div>
+                    <div>
+                        <select id="ward" required class="checkout-address__select cursor-pointer">
+                            <option value="" disabled selected>2. Chọn Phường / Xã</option>
+                        </select>
+                    </div>
+                    <div>
+                        <input type="text" id="street" required placeholder="3. Nhập số nhà, tên đường..." class="checkout-address__input">
+                    </div>
+                </div>
+            </div>
+
+            {{-- Selected Products Form --}}
+            <div class="checkout-address">
+                <label class="checkout-address__label mb-4">
+                    Sản phẩm đã chọn
+                </label>
+                <div id="checkout-products-list" class="flex flex-col">
+                    <p class="text-gray-500 text-sm italic py-2">Đang tải...</p>
+                </div>
+            </div>
+        </div>
+
+        {{-- Right Column --}}
+        <div class="checkout-column">
             {{-- Payment Summary --}}
-            <div class="checkout-summary">
+            <div class="checkout-summary" style="width: 100%;">
                 <div class="checkout-summary__title">Tổng thanh toán</div>
                 
                 <div class="checkout-summary__rows">
@@ -59,37 +111,10 @@
                     <p id="voucher-msg" class="checkout-voucher__msg hidden"></p>
                 </div>
             </div>
-            
-            {{-- Address Form --}}
-            <div class="checkout-address">
-                <label class="checkout-address__label">
-                    Địa chỉ giao hàng <span class="checkout-address__label-required">*</span>
-                    <span class="checkout-address__label-hint">Bắt buộc nhập đầy đủ thông tin bên dưới</span>
-                </label>
-                
-                <div class="checkout-address__fields">
-                    <div>
-                        <select id="province" required class="checkout-address__select">
-                            <option value="" disabled selected>1. Chọn Tỉnh / Thành phố (Chuẩn mới)</option>
-                        </select>
-                    </div>
-                    <div>
-                        <select id="ward" required class="checkout-address__select">
-                            <option value="" disabled selected>2. Chọn Phường / Xã</option>
-                        </select>
-                    </div>
-                    <div>
-                        <input type="text" id="street" required placeholder="3. Nhập số nhà, tên đường..." class="checkout-address__input">
-                    </div>
-                </div>
-            </div>
-        </div>
 
-        {{-- Right Column --}}
-        <div class="checkout-column" style="align-items: center;">
-            <div class="checkout-payment-title">Phương thức thanh toán (Payment Method)</div>
+            <div class="checkout-payment-title" style="width: 100%;">Phương thức thanh toán (Payment Method)</div>
             
-            <div class="checkout-payment-methods">
+            <div class="checkout-payment-methods" style="width: 100%;">
                 <label class="checkout-payment-option">
                     <span class="checkout-payment-option__label checkout-payment-option__label--active">Banking</span>
                     <input type="radio" name="payment" value="banking" class="checkout-payment-option__radio" checked>
@@ -122,25 +147,52 @@
 
     {{-- Success Popup --}}
     <div id="success-popup" class="checkout-success-overlay hidden">
-        <div class="checkout-success-popup relative" id="popup-content">
+        <div class="checkout-success-popup relative max-w-2xl w-full" id="popup-content">
             <button id="btn-cancel-qr" class="absolute top-4 right-4 text-gray-400 hover:text-red-500 transition-colors hidden z-50">
                 <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
             </button>
-            <div class="checkout-success-popup__icon-wrap" id="success-icon-wrap">
-                <svg class="checkout-success-popup__icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>
-            </div>
-            <h3 class="checkout-success-popup__title" id="success-title">Thành công!</h3>
             
-            <div id="qr-payment-section" class="hidden mt-4 flex flex-col items-center border-t border-b border-gray-100 py-4 mb-4">
-                <p id="qr-instruction" class="text-gray-800 font-bold mb-3 text-center">Vui lòng quét mã QR để thanh toán</p>
-                <img id="popup-qr-img" src="" class="w-48 h-48 rounded-xl shadow-sm border border-gray-100 mb-2">
-                <p class="text-xs text-red-500 font-medium text-center px-4">Đơn hàng sẽ tự động hủy nếu không nhận được thanh toán trong vòng 24h.</p>
+            <div id="success-content" class="hidden">
+                <div class="flex flex-col items-center text-center w-full">
+                    <div class="checkout-success-popup__icon-wrap" id="success-icon-wrap">
+                        <svg class="checkout-success-popup__icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>
+                    </div>
+                    <h3 class="checkout-success-popup__title w-full text-center" id="success-title" style="text-align: center;">Thành công!</h3>
+                    <p class="checkout-success-popup__desc w-full text-center" id="success-desc" style="text-align: center;">Cảm ơn bạn. Đơn hàng của bạn đã được đặt thành công và đang được xử lý.</p>
+                    <a href="/user/profileuser?tab=orders" id="btn-view-history" class="btn-dark mt-6" style="width: 100%; text-align: center; text-transform: uppercase; letter-spacing: 0.05em;">
+                        Xem lịch sử đơn hàng
+                    </a>
+                </div>
             </div>
 
-            <p class="checkout-success-popup__desc" id="success-desc">Cảm ơn bạn. Đơn hàng của bạn đã được thanh toán và đang được xử lý.</p>
-            <a href="/user/profileuser?tab=orders" id="btn-view-history" class="btn-dark mt-2" style="width: 100%; text-align: center; text-transform: uppercase; letter-spacing: 0.05em;">
-                Xem lịch sử đơn hàng
-            </a>
+            <div id="bill-section" class="hidden">
+                <h3 class="text-2xl font-black text-center text-gray-800 mb-6 uppercase tracking-wide">Hóa Đơn Của Bạn</h3>
+                <div class="text-left text-base text-gray-700 space-y-3 mb-6 bg-gray-50 p-6 rounded-2xl border border-gray-200 shadow-sm">
+                    <p class="flex justify-between"><strong class="text-gray-800">Khách hàng:</strong> <span id="bill-name" class="font-medium"></span></p>
+                    <p class="flex justify-between"><strong class="text-gray-800">SĐT:</strong> <span id="bill-phone" class="font-medium"></span></p>
+                    <p class="flex justify-between"><strong class="text-gray-800">Địa chỉ:</strong> <span id="bill-address" class="font-medium text-right w-2/3"></span></p>
+                    <div class="mt-4 border-t border-gray-200 pt-4">
+                        <strong class="block mb-3 text-pink-600 text-lg">Sản phẩm:</strong>
+                        <div id="bill-products" class="max-h-60 overflow-y-auto custom-scrollbar pr-2 space-y-3"></div>
+                    </div>
+                    <div class="mt-4 border-t border-gray-300 pt-4 flex justify-between items-center font-bold text-xl text-gray-800">
+                        <span>Tổng tiền:</span>
+                        <span id="bill-total" class="text-pink-600 text-2xl"></span>
+                    </div>
+                </div>
+                <button id="btn-proceed-pay" class="w-full bg-pink-500 hover:bg-pink-600 text-white font-bold py-4 rounded-xl transition shadow-lg text-lg uppercase">
+                    Thanh toán
+                </button>
+            </div>
+            
+            <div id="qr-payment-section" class="hidden flex-col items-center">
+                <h3 class="checkout-success-popup__title" id="qr-title">Quét mã để thanh toán!</h3>
+                <p id="qr-instruction" class="text-gray-800 font-bold mb-3 text-center">Vui lòng quét mã QR để thanh toán</p>
+                <img id="popup-qr-img" src="" class="w-64 h-auto rounded-xl shadow-sm border border-gray-100 mb-2">
+                <p class="text-xs text-red-500 font-medium text-center px-4 mb-2" id="qr-countdown-text">Đơn hàng sẽ tự động hủy sau <span id="qr-countdown" class="font-bold text-lg">03:00</span> phút nếu không nhận được thanh toán.</p>
+                <p class="checkout-success-popup__desc text-gray-600">Sau khi quét mã thanh toán thành công, hệ thống sẽ tự động tạo đơn hàng cho bạn.</p>
+                <button id="btn-done-qr" class="hidden">Đã thanh toán (Test)</button>
+            </div>
         </div>
     </div>
 
@@ -175,6 +227,54 @@
         const successPopup = document.getElementById('success-popup');
         const popupContent = document.getElementById('popup-content');
         const token = localStorage.getItem('token');
+        
+        const hoTenInput = document.getElementById('ho_ten');
+        const soDienThoaiInput = document.getElementById('so_dien_thoai');
+
+        if (token) {
+            fetch('http://localhost:3000/api/auth/me', {
+                headers: { 'Authorization': 'Bearer ' + token }
+            })
+            .then(res => res.json())
+            .then(result => {
+                if (result.success && result.data) {
+                    hoTenInput.value = result.data.ho_ten || '';
+                    soDienThoaiInput.value = result.data.so_dien_thoai || '';
+                    
+                    if (result.data.dia_chi) {
+                        const parts = result.data.dia_chi.split(', ');
+                        if (parts.length >= 3) {
+                            const pName = parts[parts.length - 1];
+                            const wName = parts[parts.length - 2];
+                            const sName = parts.slice(0, parts.length - 2).join(', ');
+                            
+                            let checkExist = setInterval(function() {
+                                if (provinceSelect.options.length > 1) {
+                                    clearInterval(checkExist);
+                                    let foundProvince = Array.from(provinceSelect.options).find(opt => opt.getAttribute('data-name') === pName);
+                                    if (foundProvince) {
+                                        provinceSelect.value = foundProvince.value;
+                                        provinceSelect.dispatchEvent(new Event('change'));
+                                        
+                                        let checkWardExist = setInterval(function() {
+                                            if (wardSelect.options.length > 1) {
+                                                clearInterval(checkWardExist);
+                                                let foundWard = Array.from(wardSelect.options).find(opt => opt.getAttribute('data-name') === wName);
+                                                if (foundWard) {
+                                                    wardSelect.value = foundWard.value;
+                                                    streetInput.value = sName;
+                                                }
+                                            }
+                                        }, 100);
+                                    }
+                                }
+                            }, 100);
+                        }
+                    }
+                }
+            })
+            .catch(err => console.error("Lỗi lấy thông tin cá nhân:", err));
+        }
 
         // Khai báo biến lưu trạng thái Tiền & Voucher
         let baseTotal = 0;          // Tổng tiền hàng gốc
@@ -259,6 +359,7 @@
                 if (result.success && result.data.length > 0) {
                     baseTotal = 0;
                     let hasValidItems = false;
+                    let productsHtml = '';
                     result.data.forEach(item => {
                         // Chỉ tính những sản phẩm được check ở giỏ hàng (hoặc tính hết nếu URL không có items)
                         if (selectedItems.length === 0 || selectedItems.includes(item.ma_san_pham)) {
@@ -270,8 +371,28 @@
                             const gia = item.san_pham.gia_khuyen_mai || item.san_pham.gia;
                             baseTotal += gia * item.so_luong;
                             hasValidItems = true;
+
+                            const mangAnh = item.san_pham.danh_sach_anh; 
+                            const linkAnh = (mangAnh && mangAnh.length > 0) ? mangAnh[0].duong_dan_anh : '/images/logo.jpg';
+
+                            productsHtml += `
+                                <div class="flex items-center gap-4 py-3 border-b border-gray-100 last:border-0">
+                                    <div class="w-16 h-16 flex-shrink-0 bg-gray-50 rounded-lg overflow-hidden border border-gray-100">
+                                        <img src="${linkAnh}" alt="${item.san_pham.ten_san_pham}" class="w-full h-full object-cover">
+                                    </div>
+                                    <div class="flex-grow min-w-0">
+                                        <h4 class="font-bold text-gray-800 text-sm truncate" title="${item.san_pham.ten_san_pham}">${item.san_pham.ten_san_pham}</h4>
+                                        <div class="flex items-center justify-between mt-1">
+                                            <span class="text-sm font-medium text-pink-600">${new Intl.NumberFormat('vi-VN').format(gia)} VNĐ</span>
+                                            <span class="text-sm text-gray-500 font-medium">x${item.so_luong}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            `;
                         }
                     });
+                    
+                    document.getElementById('checkout-products-list').innerHTML = productsHtml;
                     
                     if (!hasValidItems) {
                         alert('Không có sản phẩm nào được chọn hợp lệ!');
@@ -400,13 +521,13 @@
                     let html = '';
                     result.data.forEach(v => {
                         let desc = v.loai_giam === 'tien_mat' ? 
-                                   `Giảm ${v.gia_tri.toLocaleString()}đ` : 
-                                   `Giảm ${v.gia_tri}% (Tối đa ${(v.giam_toi_da||0).toLocaleString()}đ)`;
+                                   `Giảm ${v.gia_tri.toLocaleString()} VNĐ` : 
+                                   `Giảm ${v.gia_tri}% (Tối đa ${(v.giam_toi_da||0).toLocaleString()} VNĐ)`;
                         
                         let outOfStock = v.so_luong <= 0;
                         let percentUsed = Math.round(Math.max(5, 100 - Math.sqrt(v.so_luong) * 3));
                         if (outOfStock) percentUsed = 100;
-                        let minOrder = `Đơn tối thiểu: ${v.don_toi_thieu.toLocaleString()}đ`;
+                        let minOrder = `Đơn tối thiểu: ${v.don_toi_thieu.toLocaleString()} VNĐ`;
                         let isEligible = baseTotal >= v.don_toi_thieu && !outOfStock;
                         
                         let btnClass = isEligible ? 'bg-pink-500 hover:bg-pink-600 text-white shadow-sm' : 'bg-gray-100 text-gray-400 cursor-not-allowed';
@@ -478,6 +599,8 @@
                         'Authorization': 'Bearer ' + token 
                     },
                     body: JSON.stringify({ 
+                        ho_ten: document.getElementById('ho_ten').value.trim(),
+                        so_dien_thoai: document.getElementById('so_dien_thoai').value.trim(),
                         dia_chi: fullAddress,
                         ma_khuyen_mai: appliedVoucherId,
                         so_tien_giam: currentDiscount,
@@ -500,6 +623,12 @@
             const provinceName = (provinceOption && provinceOption.value !== "") ? provinceOption.getAttribute('data-name') : null;
             const wardName = (wardOption && wardOption.value !== "") ? wardOption.getAttribute('data-name') : null;
             const street = streetInput.value.trim();
+            
+            const hoTen = document.getElementById('ho_ten').value.trim();
+            const sdt = document.getElementById('so_dien_thoai').value.trim();
+
+            if (!hoTen) { alert('🛑 Vui lòng nhập họ và tên người nhận!'); document.getElementById('ho_ten').focus(); return; }
+            if (!sdt || !/^0\d{9}$/.test(sdt)) { alert('🛑 Vui lòng nhập số điện thoại hợp lệ (10 số, bắt đầu bằng 0)!'); document.getElementById('so_dien_thoai').focus(); return; }
 
             if (!provinceName) { alert('🛑 Vui lòng chọn Tỉnh / Thành phố!'); provinceSelect.focus(); return; }
             if (!wardName) { alert('🛑 Vui lòng chọn Phường / Xã!'); wardSelect.focus(); return; }
@@ -519,17 +648,18 @@
             const successDesc = document.getElementById('success-desc');
             const successIconWrap = document.getElementById('success-icon-wrap');
 
+            const billSection = document.getElementById('bill-section');
+            const successContent = document.getElementById('success-content');
+
             if (pendingPaymentMethod === 'cod') {
                 // Tạo đơn hàng ngay với COD
                 const result = await callCreateOrderAPI(pendingAddress, pendingPaymentMethod);
                 if (result && result.success) {
                     successPopup.classList.remove('hidden');
                     qrSection.classList.add('hidden');
-                    successIconWrap.classList.remove('hidden');
-                    successTitle.textContent = 'Thành công!';
-                    successDesc.textContent = 'Cảm ơn bạn. Đơn hàng của bạn đã được đặt và đang được xử lý.';
+                    billSection.classList.add('hidden');
+                    successContent.classList.remove('hidden');
                     
-                    document.getElementById('btn-view-history').classList.remove('hidden');
                     document.getElementById('btn-cancel-qr').classList.add('hidden');
 
                     setTimeout(() => {
@@ -541,42 +671,147 @@
                     resetButton();
                 }
             } else {
-                // Hiển thị mã QR trước, KHÔNG TẠO ĐƠN HÀNG NGAY
-                successPopup.classList.remove('hidden');
-                qrSection.classList.remove('hidden');
-                successIconWrap.classList.add('hidden');
+                // Hiển thị Bill trước, KHÔNG TẠO ĐƠN HÀNG NGAY
+                document.getElementById('bill-name').textContent = hoTen;
+                document.getElementById('bill-phone').textContent = sdt;
+                document.getElementById('bill-address').textContent = pendingAddress;
                 
-                // Trả lại text đen mặc định
-                successTitle.classList.remove('text-green-500');
-                successTitle.classList.add('text-gray-800');
-                successTitle.textContent = 'Quét mã để thanh toán!';
+                const checkoutImages = document.querySelectorAll('#checkout-products-list img');
+                const checkoutProducts = document.querySelectorAll('#checkout-products-list .flex-grow h4');
+                const checkoutPrices = document.querySelectorAll('#checkout-products-list .flex-grow .text-pink-600');
+                const checkoutQtys = document.querySelectorAll('#checkout-products-list .flex-grow .text-gray-500');
                 
-                successDesc.textContent = 'Sau khi quét mã thanh toán thành công, hệ thống sẽ tự động tạo đơn hàng cho bạn.';
-                
-                if (pendingPaymentMethod === 'momo') {
-                    popupQrImg.src = 'https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=ThanhToanMomo123456';
-                } else {
-                    popupQrImg.src = 'https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=ThanhToanNganHang123456';
+                let billProductsHtml = '';
+                for(let i=0; i<checkoutProducts.length; i++){
+                    let imgSrc = checkoutImages[i] ? checkoutImages[i].src : '/images/logo.jpg';
+                    billProductsHtml += `
+                        <div class="flex items-center gap-3 py-2 border-b border-gray-100 last:border-0">
+                            <div class="w-12 h-12 flex-shrink-0 bg-gray-50 rounded-md overflow-hidden border border-gray-200">
+                                <img src="${imgSrc}" class="w-full h-full object-cover">
+                            </div>
+                            <div class="flex-grow min-w-0">
+                                <div class="text-sm font-medium text-gray-800 truncate" title="${checkoutProducts[i].textContent}">${checkoutProducts[i].textContent}</div>
+                                <div class="flex justify-between mt-1 text-sm">
+                                    <span class="text-gray-500">SL: ${checkoutQtys[i].textContent.replace('x', '')}</span>
+                                    <span class="text-pink-600 font-bold">${checkoutPrices[i].textContent}</span>
+                                </div>
+                            </div>
+                        </div>
+                    `;
                 }
-                popupQrImg.classList.remove('hidden');
+                document.getElementById('bill-products').innerHTML = billProductsHtml;
+                document.getElementById('bill-total').textContent = document.getElementById('final-price').textContent;
 
-                const instruction = document.getElementById('qr-instruction');
-                instruction.classList.remove('text-green-500');
-                instruction.classList.add('text-gray-800');
-                instruction.textContent = 'Vui lòng quét mã QR để thanh toán';
-
-                // Ẩn nút "Xem lịch sử", hiện nút X
-                document.getElementById('btn-view-history').classList.add('hidden');
-                document.getElementById('btn-cancel-qr').classList.remove('hidden');
-
-                setTimeout(() => {
-                    successPopup.classList.add('checkout-success-overlay--visible');
-                    popupContent.classList.add('checkout-success-popup--visible');
-                }, 10);
+                successPopup.classList.remove('hidden');
+                billSection.classList.remove('hidden');
                 
-                resetButton(); // Bỏ loading ở nút xác nhận ngoài form
+                qrSection.classList.add('hidden');
+                qrSection.classList.remove('flex');
+                successContent.classList.add('hidden');
+                
+                let amountStr = document.getElementById('final-price').textContent.replace(/\D/g, '');
+                let amount = parseInt(amountStr);
+                
+                let nextOrderIdRes = await fetch('http://localhost:3000/api/next-order-id').then(r=>r.json()).catch(()=>({nextId: Math.floor(Math.random() * 1000000), nextIdStr: 'MOCK#01'}));
+                let orderId = nextOrderIdRes.nextIdStr || ('#' + nextOrderIdRes.nextId);
+                
+                // Giải pháp siêu việt vượt tường lửa (Windows Firewall) + vượt lỗi CORS
+                // Dùng Backend Node.js của chính máy bạn để gọi lên webhook.site
+                fetch('http://localhost:3000/api/create-mock-webhook', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        html_content: `<html><body style="font-family:sans-serif;text-align:center;padding:50px;background:#fdf2f8;"><h1 style="color:#db2777;font-size:30px">✅ Thanh toán thành công!</h1><p style="font-size:24px;font-weight:bold;color:#db2777;margin:15px 0">${amount.toLocaleString('vi-VN')} VNĐ</p><p style="font-size:18px">Đơn hàng <strong>${orderId}</strong> của bạn sẽ được xác nhận sớm!!</p><p style="color:#666">Vui lòng kiểm tra màn hình máy tính.</p></body></html>`
+                    })
+                })
+                .then(res => res.json())
+                .then(data => {
+                    if (!data.success) throw new Error('Lỗi tạo webhook');
+                    
+                    let webhookUrl = data.url;
+                    
+                    // Tạo mã QR trỏ về trang web webhook (công cộng, ai quét cũng được, mạng nào cũng được)
+                    popupQrImg.src = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(webhookUrl)}`;
+                    
+                    if (pendingPaymentMethod === 'momo') {
+                        document.getElementById('qr-title').textContent = 'Quét mã Momo!';
+                    } else {
+                        document.getElementById('qr-title').textContent = 'Quét mã Ngân Hàng!';
+                    }
+                    
+                    // Đặt hàm kiểm tra xem điện thoại đã quét QR chưa bằng cách gọi API Node.js (để Node.js hỏi lại webhook)
+                    let checkPaymentInterval = setInterval(async () => {
+                        try {
+                            let res = await fetch(`http://localhost:3000/api/check-mock-webhook/${data.uuid}?t=${Date.now()}`);
+                            let reqs = await res.json();
+                            if (reqs.success && reqs.requests && reqs.requests.length > 0) {
+                                clearInterval(checkPaymentInterval);
+                                // Tự động nhấn nút hoàn thành
+                                const btnDoneQr = document.getElementById('btn-done-qr');
+                                if(btnDoneQr) btnDoneQr.click();
+                            }
+                        } catch(e) {}
+                    }, 2000);
+                    
+                    popupQrImg.classList.remove('hidden');
+
+                    const instruction = document.getElementById('qr-instruction');
+                    instruction.classList.remove('text-green-500');
+                    instruction.classList.add('text-gray-800');
+                    instruction.textContent = 'Vui lòng quét mã QR bằng điện thoại để tự động thanh toán';
+
+                    document.getElementById('btn-cancel-qr').classList.remove('hidden');
+
+                    setTimeout(() => {
+                        successPopup.classList.add('checkout-success-overlay--visible');
+                        popupContent.classList.add('checkout-success-popup--visible');
+                    }, 10);
+                    
+                    resetButton(); // Bỏ loading ở nút xác nhận ngoài form
+                    
+                    // Truyền ID vào hàm đếm ngược để có thể dọn dẹp interval
+                    startQrCountdown(checkPaymentInterval);
+                })
+                .catch(err => {
+                    alert('Lỗi tạo mã QR, vui lòng kiểm tra kết nối mạng hoặc Backend Node.js chưa chạy!');
+                    resetButton();
+                });
             }
         }
+
+        let qrCountdownInterval = null;
+        function startQrCountdown(pollingIntervalId) {
+            if (qrCountdownInterval) clearInterval(qrCountdownInterval);
+            let timeLeft = 180;
+            const countdownEl = document.getElementById('qr-countdown');
+            if (countdownEl) countdownEl.textContent = '03:00';
+            
+            qrCountdownInterval = setInterval(() => {
+                timeLeft--;
+                if (timeLeft < 0) {
+                    clearInterval(qrCountdownInterval);
+                    if (pollingIntervalId) clearInterval(pollingIntervalId);
+                    alert('Hết thời gian thanh toán! Đơn hàng đã bị hủy.');
+                    successPopup.classList.remove('checkout-success-overlay--visible');
+                    popupContent.classList.remove('checkout-success-popup--visible');
+                    setTimeout(() => {
+                        successPopup.classList.add('hidden');
+                    }, 300);
+                    return;
+                }
+                
+                let m = Math.floor(timeLeft / 60);
+                let s = timeLeft % 60;
+                if (countdownEl) countdownEl.textContent = `${m < 10 ? '0'+m : m}:${s < 10 ? '0'+s : s}`;
+            }, 1000);
+        }
+
+        document.getElementById('btn-proceed-pay').addEventListener('click', function() {
+            document.getElementById('bill-section').classList.add('hidden');
+            document.getElementById('qr-payment-section').classList.remove('hidden');
+            document.getElementById('qr-payment-section').classList.add('flex');
+            startQrCountdown();
+        });
 
         btnPay.addEventListener('click', function() {
             if (this.disabled) return;
@@ -590,12 +825,11 @@
             loadingIcon.classList.add('hidden');
         }
 
-        // "Tricks" bảo vệ đồ án: Giả lập tín hiệu ngân hàng báo thành công khi hiển thị ở popup
+        // "Tricks" bảo vệ đồ án: Nút giả lập thanh toán thành công
+        const btnDoneQr = document.getElementById('btn-done-qr');
         const popupQrImg = document.getElementById('popup-qr-img');
-        if (popupQrImg) {
-            popupQrImg.classList.add('cursor-pointer');
-            popupQrImg.title = "Mẹo bảo vệ đồ án: Double-click để giả lập Thanh toán thành công";
-            popupQrImg.addEventListener('dblclick', async function() {
+        if (btnDoneQr) {
+            btnDoneQr.addEventListener('click', async function() {
                 const instruction = document.getElementById('qr-instruction');
                 instruction.textContent = 'Đang xác nhận thanh toán và tạo đơn hàng...';
                 
@@ -603,14 +837,15 @@
                 const result = await callCreateOrderAPI(pendingAddress, pendingPaymentMethod);
                 
                 if (result && result.success) {
-                    document.getElementById('success-title').textContent = 'Thanh toán thành công!';
-                    document.getElementById('success-title').classList.replace('text-gray-800', 'text-green-500');
+                    document.getElementById('qr-title').textContent = 'Thanh toán thành công!';
+                    document.getElementById('qr-title').classList.add('text-green-500');
                     
                     instruction.textContent = 'Đã thanh toán thành công. Hệ thống đang chuyển hướng...';
-                    instruction.classList.replace('text-gray-800', 'text-green-500');
+                    instruction.classList.add('text-green-500');
                     
                     // Ẩn ảnh QR đi cho thực tế
                     popupQrImg.classList.add('hidden');
+                    btnDoneQr.classList.add('hidden');
                     
                     // Ẩn luôn nút X vì đã báo thành công
                     document.getElementById('btn-cancel-qr').classList.add('hidden');
@@ -627,7 +862,7 @@
 
         // Xử lý khi nhấn nút X để hủy thanh toán QR
         document.getElementById('btn-cancel-qr').addEventListener('click', function() {
-            // Không cần gọi API delete-unpaid nữa vì đơn chưa được tạo
+            if (qrCountdownInterval) clearInterval(qrCountdownInterval);
             successPopup.classList.remove('checkout-success-overlay--visible');
             popupContent.classList.remove('checkout-success-popup--visible');
             setTimeout(() => {

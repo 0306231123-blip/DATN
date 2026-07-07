@@ -54,10 +54,10 @@
 
         <div class="price-wrap mt-2 flex flex-col items-center justify-end flex-grow">
             @if($sp->gia_khuyen_mai)
-                <span class="price-current text-pink-600 font-black text-lg">{{ number_format($sp->gia_khuyen_mai, 0, ',', '.') }} đ</span>
-                <span class="price-original text-gray-400 text-xs line-through mt-0.5">{{ number_format($sp->gia, 0, ',', '.') }} đ</span>
+                <span class="price-current text-pink-600 font-black text-lg">{{ number_format($sp->gia_khuyen_mai, 0, ',', '.') }} VNĐ</span>
+                <span class="price-original text-gray-400 text-xs line-through mt-0.5">{{ number_format($sp->gia, 0, ',', '.') }} VNĐ</span>
             @else
-                <span class="price-current text-pink-600 font-black text-lg">{{ number_format($sp->gia, 0, ',', '.') }} đ</span>
+                <span class="price-current text-pink-600 font-black text-lg">{{ number_format($sp->gia, 0, ',', '.') }} VNĐ</span>
             @endif
         </div>
     </div>

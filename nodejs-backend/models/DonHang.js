@@ -8,6 +8,10 @@ const DonHang = sequelize.define('don_hang', {
     primaryKey: true,
     autoIncrement: true,
   },
+  ma_don_hang_custom: {
+    type: DataTypes.STRING(20),
+    allowNull: true,
+  },
   ma_nguoi_dung: {
     type: DataTypes.INTEGER,
     allowNull: false,
@@ -53,7 +57,7 @@ const DonHang = sequelize.define('don_hang', {
     defaultValue: 'chua_thanh_toan',
   },
   trang_thai_don: {
-    type: DataTypes.ENUM('cho_xac_nhan', 'da_xac_nhan', 'dang_giao', 'giao_thanh_cong', 'da_huy', 'dang_tra_hang', 'da_tra_hang', 'tra_hang_hoan_tien', 'hoan_thanh', 'tu_choi_tra_hang'),
+    type: DataTypes.ENUM('cho_xac_nhan', 'da_xac_nhan', 'dang_giao', 'giao_thanh_cong', 'da_huy', 'dang_tra_hang', 'da_tra_hang', 'tra_hang_hoan_tien', 'hoan_thanh', 'tu_choi_tra_hang', 'khong_du_dieu_kien'),
     defaultValue: 'cho_xac_nhan',
   },
   // THÊM CỘT NÀY VÀO DƯỚI CÙNG

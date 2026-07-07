@@ -36,14 +36,14 @@
                     <div class="space-y-3 mb-6">
                         <div class="flex justify-between text-gray-600">
                             <span>Tạm tính</span>
-                            <span id="subtotal-price" class="font-bold">0 đ</span>
+                            <span id="subtotal-price" class="font-bold">0 VNĐ</span>
                         </div>
                     </div>
                     
                     <div class="flex justify-between items-end mb-6 pt-4 border-t border-gray-100">
                         <span class="text-gray-800 font-bold text-lg">Tổng tiền</span>
                         <div class="text-right">
-                            <span id="total-price" class="text-pink-600 text-2xl font-black block">0 đ</span>
+                            <span id="total-price" class="text-pink-600 text-2xl font-black block">0 VNĐ</span>
                             <span class="text-xs text-gray-500">(Đã bao gồm VAT)</span>
                         </div>
                     </div>
@@ -65,7 +65,7 @@
 <script>
     // Hàm Format Tiền (Bỏ .00, dùng dấu chấm)
     function formatPrice(price) {
-        return new Intl.NumberFormat('vi-VN').format(price) + ' đ'; 
+        return new Intl.NumberFormat('vi-VN').format(price) + ' VNĐ'; 
     }
 
     // 1. GỌI API ĐỂ LOAD GIỎ HÀNG

@@ -52,6 +52,10 @@
                 <span>Đã trả hàng</span>
                 <span class="tab-count" id="count-da_tra_hang">0</span>
             </button>
+            <button class="status-tab" data-status="khong_du_dieu_kien" id="tab-ineligible">
+                <span>Không đủ ĐK</span>
+                <span class="tab-count" id="count-khong_du_dieu_kien">0</span>
+            </button>
         </div>
     </div>
     <div class="action-bar-right">
@@ -189,7 +193,7 @@ function renderTable(orders) {
 
         return `
             <tr>
-                <td><span class="order-id-link" onclick="viewOrderDetail(${order.ma_don_hang})">#DH${String(order.ma_don_hang).padStart(4, '0')}</span></td>
+                <td><span class="order-id-link" onclick="viewOrderDetail(${order.ma_don_hang})">${order.ma_don_hang_custom || '#DH' + String(order.ma_don_hang).padStart(4, '0')}</span></td>
                 <td><span class="text-bold">${escapeHtml(customerName)}</span></td>
                 <td><span class="text-secondary">${soSanPham} sản phẩm</span></td>
                 <td><span class="text-bold">${totalFormatted}</span></td>
@@ -204,6 +208,7 @@ function renderTable(orders) {
                         <option value="dang_tra_hang" ${order.trang_thai_don === 'dang_tra_hang' ? 'selected' : ''}>Yêu cầu trả</option>
                         <option value="da_tra_hang" ${order.trang_thai_don === 'da_tra_hang' ? 'selected' : ''}>Đã trả hàng</option>
                         <option value="tu_choi_tra_hang" ${order.trang_thai_don === 'tu_choi_tra_hang' ? 'selected' : ''}>Từ chối trả</option>
+                        <option value="khong_du_dieu_kien" ${order.trang_thai_don === 'khong_du_dieu_kien' ? 'selected' : ''}>Không đủ điều kiện</option>
                     </select>
                 </td>
                 <td><span class="text-secondary">${dateFormatted}</span></td>
@@ -376,12 +381,22 @@ async function viewOrderDetail(orderId) {
             const customerPhone = order.so_dien_thoai_nhan || (order.nguoi_dung ? order.nguoi_dung.so_dien_thoai : '');
 
             document.getElementById('modal-order-title').textContent =
-                `Đơn hàng #DH${String(order.ma_don_hang).padStart(4, '0')}`;
+                `Đơn hàng ${order.ma_don_hang_custom || '#DH' + String(order.ma_don_hang).padStart(4, '0')}`;
 
             // Tìm đoạn hiển thị thông tin ngân hàng trong hàm viewOrderDetail
 // Sửa thành như thế này:
 
 const userInfo = order.nguoi_dung || {}; // Lấy thông tin user
+
+let paymentMethodText = order.phuong_thuc_thanh_toan || 'Chưa rõ';
+if (paymentMethodText === 'cod' || paymentMethodText === 'tien_mat') paymentMethodText = 'Thanh toán khi nhận hàng (COD)';
+else if (paymentMethodText === 'banking' || paymentMethodText === 'chuyen_khoan') paymentMethodText = 'Chuyển khoản Ngân hàng';
+else if (paymentMethodText === 'momo' || paymentMethodText === 'vi_dien_tu') paymentMethodText = 'Ví Momo';
+
+let paymentStatusText = order.trang_thai_thanh_toan === 'da_thanh_toan' 
+    ? '<span style="color: #10b981; font-weight: bold;">Đã thanh toán</span>' 
+    : '<span style="color: #ef4444; font-weight: bold;">Chưa thanh toán</span>';
+
 let detailsHTML = `
     <div class="order-info-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
         <div class="order-info-section">
@@ -400,6 +415,8 @@ let detailsHTML = `
         <div class="order-info-section">
             <h4>Thông tin đơn hàng</h4>
             <p><strong>Trạng thái:</strong> <span class="status-badge ${statusInfo.class}">${statusInfo.label}</span></p>
+            <p><strong>Thanh toán:</strong> ${paymentStatusText}</p>
+            <p><strong>Phương thức:</strong> ${paymentMethodText}</p>
             <p><strong>Ngày đặt:</strong> ${formatDate(order.ngay_dat)}</p>
             <p><strong>Tổng tiền:</strong> <span class="text-bold" style="color: #7c5cfc;">${formatCurrency(order.tong_thanh_toan)}</span></p>
             ${order.ghi_chu ? `<p><strong>Ghi chú:</strong> ${escapeHtml(order.ghi_chu)}</p>` : ''}
@@ -548,7 +565,8 @@ function getStatusInfo(status) {
         'da_huy': { label: 'Đã hủy', class: 'status-badge--danger' },
         'dang_tra_hang': { label: 'Yêu cầu trả', class: 'status-badge--warning' },
         'da_tra_hang': { label: 'Đã trả hàng', class: 'status-badge--secondary' },
-        'tu_choi_tra_hang': { label: 'Từ chối trả', class: 'status-badge--danger' } // ĐÃ THÊM
+        'tu_choi_tra_hang': { label: 'Từ chối trả', class: 'status-badge--danger' },
+        'khong_du_dieu_kien': { label: 'Không đủ điều kiện', class: 'status-badge--danger' }
     };
     return map[status] || { label: status, class: '' };
 }
