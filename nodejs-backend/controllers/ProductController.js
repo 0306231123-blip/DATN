@@ -589,42 +589,64 @@ exports.bulkCreateProducts = async (req, res) => {
 
     let successCount = 0;
     
+    // Tìm ID lớn nhất hiện tại để tránh lỗi AUTO_INCREMENT bị lệch (PRIMARY must be unique)
+    const maxProduct = await SanPham.findOne({ order: [['ma_san_pham', 'DESC']], transaction: t });
+    let nextId = maxProduct ? maxProduct.ma_san_pham + 1 : 1;
+    
     for (const item of products) {
-      // Map các cột Excel với model (cần map theo tên cột trong file Excel, giả sử tên cột trùng field name hoặc dùng tiếng Việt)
-      // Ví dụ tên cột Excel: "Tên sản phẩm", "Giá", "Tồn kho", "Thương hiệu"...
-      const tenSp = item['Tên sản phẩm'] || item['ten_san_pham'];
-      if (!tenSp) continue; // Bỏ qua nếu không có tên
+      // Hàm helper tìm key bất chấp chữ hoa/chữ thường
+      const findVal = (keywords) => {
+        const key = Object.keys(item).find(k => keywords.some(kw => k.toLowerCase().includes(kw)));
+        return key ? item[key] : null;
+      };
+
+      let tenSp = findVal(['tên', 'ten_san_pham', 'name']);
+      if (tenSp === null || tenSp === undefined || String(tenSp).trim() === '') {
+         continue; // Bỏ qua nếu không có tên
+      }
+      tenSp = String(tenSp).trim();
       
-      const gia = parseFloat(item['Giá'] || item['gia']) || 0;
-      const soLuong = parseInt(item['Tồn kho'] || item['so_luong_ton']) || 0;
-      const thuongHieu = item['Thương hiệu'] || item['thuong_hieu'] || null;
-      const danhMucName = item['Danh mục'] || item['danh_muc'] || null;
+      const giaStr = findVal(['giá', 'gia', 'price']);
+      let gia = 0;
+      if (giaStr !== null && giaStr !== undefined) {
+         const cleanGia = String(giaStr).replace(/[^\d]/g, '');
+         gia = parseFloat(cleanGia) || 0;
+      }
+      
+      const soLuongStr = findVal(['tồn', 'ton', 'số lượng', 'so luong', 'sl', 'stock']);
+      const soLuong = soLuongStr ? parseInt(String(soLuongStr).replace(/[^\d]/g, '')) || 0 : 0;
+      
+      const thuongHieu = findVal(['thương', 'thuong', 'brand']);
+      const danhMucName = findVal(['danh', 'danh mục', 'category']);
+      const sku = findVal(['sku', 'mã', 'ma_sp']);
       
       let maDanhMuc = null;
       if (danhMucName) {
-        // Tìm hoặc tạo danh mục (logic đơn giản)
-        let category = await DanhMuc.findOne({ where: { ten_danh_muc: danhMucName } });
+        let category = await DanhMuc.findOne({ where: { ten_danh_muc: String(danhMucName).trim() } });
         if (category) {
           maDanhMuc = category.ma_danh_muc;
         }
       }
 
       // Kiểm tra trùng lặp
-      const existing = await SanPham.findOne({ where: { ten_san_pham: tenSp.trim() } });
+      const existing = await SanPham.findOne({ where: { ten_san_pham: tenSp }, transaction: t });
       if (existing) continue; // Bỏ qua nếu đã tồn tại
 
       await SanPham.create({
-        ten_san_pham: tenSp.trim(),
+        ma_san_pham: nextId,
+        ten_san_pham: tenSp,
         co_bien_the: false,
-        gia: gia,
-        gia_max: gia,
-        so_luong_ton: soLuong,
-        thuong_hieu: thuongHieu,
+        gia: gia > 0 ? gia : 0,
+        gia_max: gia > 0 ? gia : 0,
+        so_luong_ton: soLuong > 0 ? soLuong : 0,
+        thuong_hieu: thuongHieu ? String(thuongHieu).trim() : null,
         ma_danh_muc: maDanhMuc,
+        sku: sku ? String(sku).trim() : null,
         trang_thai: 'dang_ban',
         ngay_tao: new Date(),
       }, { transaction: t });
       
+      nextId++;
       successCount++;
     }
 
@@ -644,9 +666,19 @@ exports.bulkCreateProducts = async (req, res) => {
   } catch (error) {
     if (t) await t.rollback();
     console.error('Bulk create product error:', error);
+    
+    let errDetails = error.message;
+    if (error.errors && Array.isArray(error.errors)) {
+      errDetails += " - " + error.errors.map(e => `${e.path}: ${e.message}`).join(", ");
+    }
+    
+    try {
+      require('fs').writeFileSync('c:/xampp/htdocs/cosmetic-shop/debug_error.txt', errDetails + '\n' + error.stack);
+    } catch(e) {}
+    
     res.status(500).json({
       status: 'error',
-      message: 'Lỗi khi nhập sản phẩm hàng loạt.',
+      message: errDetails,
       error: error.message,
     });
   }
@@ -762,4 +794,6 @@ exports.getAIRecommendation = async (req, res) => {
       res.status(500).json({ success: false, message: 'Hệ thống AI đang bảo trì' });
   }
 };
+
+
 // ==========================================

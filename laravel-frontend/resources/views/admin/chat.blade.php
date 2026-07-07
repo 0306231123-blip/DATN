@@ -329,7 +329,7 @@
 
     // 1. Tải danh sách user
     async function loadUserList() {
-        const token = localStorage.getItem('token');
+        const token = localStorage.getItem('admin_token');
         if (!token) return;
 
         try {
@@ -402,7 +402,7 @@
 
     async function loadMessages() {
         if (!currentUserId) return;
-        const token = localStorage.getItem('token');
+        const token = localStorage.getItem('admin_token');
         
         try {
             const res = await fetch(`${API_URL}/chat/admin/${currentUserId}`, {
@@ -453,7 +453,7 @@
         const text = chatInputEl.value.trim();
         if (!text && !selectedChatImage) return;
 
-        const token = localStorage.getItem('token');
+        const token = localStorage.getItem('admin_token');
         chatInputEl.value = '';
         chatImagePreviewContainer.style.display = 'none';
 

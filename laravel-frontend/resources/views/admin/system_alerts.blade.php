@@ -40,7 +40,7 @@
     
     async function loadAlerts() {
         try {
-            const token = localStorage.getItem('token');
+            const token = localStorage.getItem('admin_token');
             if(!token) return;
 
             const res = await fetch(API_ALERTS_URL, {
@@ -99,7 +99,7 @@
 
     async function markAsRead(id) {
         try {
-            const token = localStorage.getItem('token');
+            const token = localStorage.getItem('admin_token');
             const res = await fetch(`${API_ALERTS_URL}/${id}/read`, {
                 method: 'PUT',
                 headers: { 'Authorization': `Bearer ${token}` }

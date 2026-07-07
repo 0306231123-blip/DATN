@@ -34,8 +34,8 @@
 
     <!-- Kiểm tra quyền truy cập Admin -->
     <script>
-        const token = localStorage.getItem('token');
-        const userStr = localStorage.getItem('user');
+        const token = localStorage.getItem('admin_token');
+        const userStr = localStorage.getItem('admin_user');
 
         if (!token || !userStr) {
             window.location.href = '/login';
@@ -51,7 +51,7 @@
         }
 
         if (token) {
-            document.cookie = 'token=' + encodeURIComponent(token) + '; path=/; max-age=604800; SameSite=Lax';
+            document.cookie = 'admin_token=' + encodeURIComponent(token) + '; path=/; max-age=604800; SameSite=Lax';
         }
 
         window.ADMIN_API_BASE_URL = 'http://localhost:3000/api';
@@ -59,7 +59,7 @@
         window.fetch = (resource, options = {}) => {
             const requestUrl = typeof resource === 'string' ? resource : resource?.url;
             if (requestUrl && requestUrl.startsWith(window.ADMIN_API_BASE_URL)) {
-                const authToken = localStorage.getItem('token');
+                const authToken = localStorage.getItem('admin_token');
                 const headers = new Headers(options.headers || (resource instanceof Request ? resource.headers : undefined));
                 if (authToken && !headers.has('Authorization')) {
                     headers.set('Authorization', `Bearer ${authToken}`);
@@ -392,9 +392,9 @@
                     isPrompt: false
                 });
                 if (confirmLogout) {
-                    localStorage.removeItem('token');
-                    localStorage.removeItem('user');
-                    document.cookie = 'token=; path=/; max-age=0; SameSite=Lax';
+                    localStorage.removeItem('admin_token');
+                    localStorage.removeItem('admin_user');
+                    document.cookie = 'admin_token=; path=/; max-age=0; SameSite=Lax';
                     window.location.href = '/login';
                 }
             });
@@ -588,7 +588,7 @@
             async function fetchAlerts() {
                 try {
                     const settings = window.getGlobalSettings();
-                    const token = localStorage.getItem('token');
+                    const token = localStorage.getItem('admin_token');
                     if(!token) return;
                     const apiUrl = typeof API_BASE_URL !== 'undefined' ? `${API_BASE_URL}/alerts?lowStockThreshold=${settings.lowStockThreshold}` : `http://localhost:3000/api/alerts?lowStockThreshold=${settings.lowStockThreshold}`;
                     const res = await fetch(apiUrl, {
@@ -629,7 +629,7 @@
                 const settings = window.getGlobalSettings();
                 if (settings.autoRefresh === 1) {
                     try {
-                        const token = localStorage.getItem('token');
+                        const token = localStorage.getItem('admin_token');
                         const apiUrl = typeof API_BASE_URL !== 'undefined' ? `${API_BASE_URL}/notifications/recent` : 'http://localhost:3000/api/notifications/recent';
                         const res = await fetch(apiUrl, {
                             headers: { 'Authorization': `Bearer ${token}` }

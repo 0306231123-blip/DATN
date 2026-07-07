@@ -124,21 +124,30 @@
             const data = await response.json();
 
             if (data.success) {
-                // Lưu token và thông tin user vào localStorage
-                localStorage.setItem('token', data.data.token);
-                localStorage.setItem('user', JSON.stringify(data.data.user));
-                document.cookie = 'token=' + encodeURIComponent(data.data.token) + '; path=/; max-age=604800; SameSite=Lax';
+                if (data.data.user.vai_tro === 'quan_tri_vien') {
+                    // Lưu token và thông tin user vào localStorage dành riêng cho admin
+                    localStorage.setItem('admin_token', data.data.token);
+                    localStorage.setItem('admin_user', JSON.stringify(data.data.user));
+                    // Admin dùng cookie khác nếu cần thiết (hoặc không dùng cookie, tuỳ thiết kế, ở đây giữ nguyên cookie cho đồng bộ)
+                    document.cookie = 'admin_token=' + encodeURIComponent(data.data.token) + '; path=/; max-age=604800; SameSite=Lax';
 
-                showAlert('Đăng nhập thành công! Đang chuyển hướng...', false);
+                    showAlert('Đăng nhập thành công! Đang chuyển hướng...', false);
 
-                // Điều hướng theo vai trò
-                setTimeout(() => {
-                    if (data.data.user.vai_tro === 'quan_tri_vien') {
+                    setTimeout(() => {
                         window.location.href = '/admin/dashboard';
-                    } else {
+                    }, 1000);
+                } else {
+                    // Lưu token và thông tin user vào localStorage
+                    localStorage.setItem('token', data.data.token);
+                    localStorage.setItem('user', JSON.stringify(data.data.user));
+                    document.cookie = 'token=' + encodeURIComponent(data.data.token) + '; path=/; max-age=604800; SameSite=Lax';
+
+                    showAlert('Đăng nhập thành công! Đang chuyển hướng...', false);
+
+                    setTimeout(() => {
                         window.location.href = '/user/home';
-                    }
-                }, 1000);
+                    }, 1000);
+                }
             } else {
                 showAlert(data.message);
             }

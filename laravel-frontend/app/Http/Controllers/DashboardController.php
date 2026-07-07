@@ -19,7 +19,7 @@ class DashboardController extends Controller
     public function index(Request $request)
     {
         try {
-            $token = $request->cookie('token');
+            $token = $request->cookie('admin_token') ?? $request->cookie('token');
             $client = Http::timeout(10);
 
             if ($token) {

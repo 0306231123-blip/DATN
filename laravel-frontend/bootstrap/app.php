@@ -13,6 +13,7 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware) {
         $middleware->encryptCookies(except: [
             'token',
+            'admin_token',
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {
