@@ -27,9 +27,13 @@
                 <span>Đang giao</span>
                 <span class="tab-count" id="count-dang_giao">0</span>
             </button>
-            <button class="status-tab" data-status="giao_thanh_cong" id="tab-completed">
-                <span>Hoàn thành</span>
+            <button class="status-tab" data-status="giao_thanh_cong" id="tab-delivered">
+                <span>Giao thành công</span>
                 <span class="tab-count" id="count-giao_thanh_cong">0</span>
+            </button>
+            <button class="status-tab" data-status="hoan_thanh" id="tab-completed">
+                <span>Hoàn thành</span>
+                <span class="tab-count" id="count-hoan_thanh">0</span>
             </button>
             <button class="status-tab" data-status="da_huy" id="tab-cancelled">
                 <span>Đã hủy</span>
@@ -148,6 +152,7 @@ async function loadStats() {
             document.getElementById('count-da_xac_nhan').textContent = s.da_xac_nhan;
             document.getElementById('count-dang_giao').textContent = s.dang_giao;
             document.getElementById('count-giao_thanh_cong').textContent = s.giao_thanh_cong;
+            if(document.getElementById('count-hoan_thanh')) document.getElementById('count-hoan_thanh').textContent = s.hoan_thanh || 0;
             document.getElementById('count-da_huy').textContent = s.da_huy;
             document.getElementById('count-dang_tra_hang').textContent = s.dang_tra_hang || 0;
             document.getElementById('count-da_tra_hang').textContent = s.da_tra_hang || 0;

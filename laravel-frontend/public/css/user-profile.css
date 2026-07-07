@@ -259,7 +259,7 @@
     background-color: var(--user-pink-600);
 }
 
-/* === Order Filters === */
+/*===Order Filters===*/
 .profile-order-filters {
     display: flex;
     flex-wrap: wrap;
@@ -566,10 +566,3 @@
 .refund-modal__btn-submit:hover {
     background-color: var(--user-pink-700);
 }
-/ *  
- = = =  
- O r d e r  
- F i l t e r s  
- = = =  
- * /  
- 

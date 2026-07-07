@@ -318,6 +318,7 @@ class OrderController {
       const daXacNhan = await DonHang.count({ where: { trang_thai_don: 'da_xac_nhan' } });
       const dangGiao = await DonHang.count({ where: { trang_thai_don: 'dang_giao' } });
       const giaoThanhCong = await DonHang.count({ where: { trang_thai_don: 'giao_thanh_cong' } });
+      const hoanThanh = await DonHang.count({ where: { trang_thai_don: 'hoan_thanh' } });
       const daHuy = await DonHang.count({ where: { trang_thai_don: 'da_huy' } });
       const dangTraHang = await DonHang.count({ where: { trang_thai_don: 'dang_tra_hang' } });
       const daTraHang = await DonHang.count({ where: { trang_thai_don: 'da_tra_hang' } });
@@ -326,14 +327,14 @@ class OrderController {
       const [revenueResult] = await sequelize.query(
         `SELECT COALESCE(SUM(tong_thanh_toan), 0) AS tong_doanh_thu 
          FROM don_hang 
-         WHERE trang_thai_don = 'giao_thanh_cong'`,
+         WHERE trang_thai_don = 'giao_thanh_cong' OR trang_thai_don = 'hoan_thanh'`,
         { type: QueryTypes.SELECT }
       );
 
       const [monthResult] = await sequelize.query(
         `SELECT 
            COUNT(*) AS don_thang_nay,
-           COALESCE(SUM(CASE WHEN trang_thai_don = 'giao_thanh_cong' THEN tong_thanh_toan ELSE 0 END), 0) AS doanh_thu_thang
+           COALESCE(SUM(CASE WHEN trang_thai_don = 'giao_thanh_cong' OR trang_thai_don = 'hoan_thanh' THEN tong_thanh_toan ELSE 0 END), 0) AS doanh_thu_thang
          FROM don_hang 
          WHERE MONTH(ngay_dat) = MONTH(CURRENT_DATE()) 
            AND YEAR(ngay_dat) = YEAR(CURRENT_DATE())`,
@@ -348,6 +349,7 @@ class OrderController {
           da_xac_nhan: daXacNhan,
           dang_giao: dangGiao,
           giao_thanh_cong: giaoThanhCong,
+          hoan_thanh: hoanThanh,
           da_huy: daHuy,
           dang_tra_hang: dangTraHang,
           da_tra_hang: daTraHang,
