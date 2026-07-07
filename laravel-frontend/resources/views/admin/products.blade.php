@@ -1692,16 +1692,6 @@ async function handleExcelUpload(event) {
     const file = event.target.files[0];
     if (!file) return;
 
-    // Lấy token
-    const token = document.cookie.split('; ').find(row => row.startsWith('token='));
-    const tokenValue = token ? token.split('=')[1] : null;
-
-    if (!tokenValue) {
-        showAlert('Vui lòng đăng nhập để thực hiện chức năng này', 'error');
-        event.target.value = ''; // Reset input
-        return;
-    }
-
     const reader = new FileReader();
     reader.onload = async function (e) {
         try {
@@ -1728,8 +1718,7 @@ async function handleExcelUpload(event) {
             const res = await fetch(`${API_BASE_URL}/products/bulk`, {
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${tokenValue}`
+                    'Content-Type': 'application/json'
                 },
                 body: JSON.stringify({ products: jsonData })
             });

@@ -36,6 +36,7 @@ const verifyToken = (req, res, next) => {
 
 const requireAdmin = (req, res, next) => {
   if (!req.user || req.user.vai_tro !== 'quan_tri_vien') {
+    console.error("REQUIRE ADMIN FAILED. req.user:", req.user, "authHeader:", req.headers.authorization);
     return res.status(403).json({
       success: false,
       status: 'error',
