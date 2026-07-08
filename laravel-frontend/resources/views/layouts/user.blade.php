@@ -6,96 +6,117 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>@yield('title', 'Trang chủ - Hệ thống Mỹ Phẩm')</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css" />
-    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.tailwindcss.com">
+            // Load AI Chat History
+            window.addEventListener('DOMContentLoaded', () => {
+                const savedAiHistory = localStorage.getItem(('ai_chat_history_' + (() => { try { return JSON.parse(localStorage.getItem('user')).ma_nguoi_dung; } catch(e) { return 'guest'; } })()));
+                if (savedAiHistory) {
+                    const aiChatMsgEl = document.getElementById('ai-chat-messages');
+                    if (aiChatMsgEl) {
+                        aiChatMsgEl.innerHTML = savedAiHistory;
+                        // wait a bit for images/render before scrolling
+                        setTimeout(() => aiChatMsgEl.scrollTop = aiChatMsgEl.scrollHeight, 100);
+                    }
+                }
+            });
+
+</script>
     <link rel="stylesheet" href="{{ asset('css/user.css') }}">
     @yield('styles')
 </head>
-<body class="bg-[#fdf0e6] flex flex-col min-h-screen text-gray-800">
+<body class="bg-[#f5f5f5] flex flex-col min-h-screen text-gray-800">
 
-    <header class="bg-white/90 backdrop-blur-md py-4 px-4 md:px-8 sticky top-0 z-50 border-b-2 border-pink-500 shadow-sm transition-all duration-300">
-        <div class="max-w-7xl mx-auto flex items-center justify-between">
+            <header class="bg-gradient-to-b from-pink-500 to-pink-600 pt-2 pb-4 sticky top-0 z-50 shadow-md">
+        <!-- Top Navbar (Navigation and Account) -->
+        <div class="max-w-[1200px] mx-auto px-4 flex justify-between items-center text-white/90 text-[13px] mb-3 hidden md:flex font-light">
+            <!-- Left: Main Nav Links -->
+            <div class="flex items-center space-x-4">
+                <a href="/user/home" class="hover:text-white transition">Trang chủ</a>
+                <span class="border-l border-white/40 h-3"></span>
+                <a href="/user/product" class="hover:text-white transition">Sản phẩm</a>
+                <span class="border-l border-white/40 h-3"></span>
+                <a href="/user/sale" class="hover:text-white transition">Khuyến mãi</a>
+                <span class="border-l border-white/40 h-3"></span>
+                <a href="/user/bestseller" class="hover:text-white transition">Bán chạy</a>
+            </div>
             
-            <button id="mobile-menu-btn" class="md:hidden text-gray-700 hover:text-pink-500 focus:outline-none">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-7 w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
-                </svg>
-            </button>
-
-            <a href="/user/home" class="flex items-center">
-                <img src="{{ asset('images/logo.jpg') }}" alt="Logo Trang Chủ" class="w-12 h-12 md:w-14 md:h-14 rounded-full object-cover shadow-sm border border-gray-200">
-            </a>
-
-            <nav class="hidden md:flex space-x-4 lg:space-x-6">
-                <a href="/user/home" class="text-gray-700 font-bold hover:text-pink-500 transition">Trang chủ</a>
-                <a href="/user/product" class="text-gray-700 font-bold hover:text-pink-500 transition">Sản phẩm</a>
-                <a href="/user/sale" class="text-gray-700 font-bold hover:text-pink-500 transition">Khuyến mãi</a>
-                <a href="/user/bestseller" class="text-gray-700 font-bold hover:text-pink-500 transition">Bán chạy</a>
-            </nav>
-
-            <div class="flex items-center space-x-4 md:space-x-6">
-                
-                <div class="relative hidden lg:block">
-                    <input type="text" id="search-input" autocomplete="off" placeholder="Tìm kiếm tên sản phẩm, thương hiệu..." class="pl-4 pr-10 py-1.5 rounded-full border-none focus:outline-none focus:ring-2 focus:ring-pink-400 w-80 xl:w-[450px] transition-all shadow-inner text-gray-700">
-                    <button class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500">
-                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" /></svg>
+            <!-- Right: Notifications and Account -->
+            <div class="flex items-center space-x-4">
+                <!-- Notifications -->
+                <div class="relative items-center hidden md:flex group" id="nav-notification-container">
+                    <button id="nav-notification" class="relative flex items-center space-x-1 hover:text-white transition focus:outline-none">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4"><path stroke-linecap="round" stroke-linejoin="round" d="M14.857 17.082a23.848 23.848 0 005.454-1.31A8.967 8.967 0 0118 9.75v-.7V9A6 6 0 006 9v.75a8.967 8.967 0 01-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 01-5.714 0m5.714 0a3 3 0 11-5.714 0" /></svg>
+                        <span>Thông báo</span>
+                        <span id="notification-badge" class="absolute -top-2 -right-2 bg-white text-pink-600 border border-pink-500 text-[10px] font-bold px-1.5 py-0.5 rounded-full hidden">0</span>
                     </button>
-                    <div id="search-dropdown" class="absolute left-0 top-full mt-2 w-full bg-white rounded-2xl shadow-2xl border border-gray-100 hidden overflow-hidden z-50 max-h-[400px] overflow-y-auto"></div>
-                </div>
-
-                <div class="flex items-center space-x-3 text-gray-700">
-                    <button id="mobile-search-btn" class="lg:hidden hover:text-pink-500 transition">
-                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" /></svg>
-                    </button>
-
-                    <a href="/user/cart" id="nav-cart" class="relative hover:text-pink-500 transition hidden">
-                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 3h1.386c.51 0 .955.343 1.087.835l.383 1.437M7.5 14.25a3 3 0 00-3 3h15.75m-12.75-3h11.218c1.121-2.3 2.1-4.684 2.924-7.138a60.114 60.114 0 00-16.536-1.84M7.5 14.25L5.106 5.272M6 20.25a.75.75 0 11-1.5 0 .75.75 0 011.5 0zm12.75 0a.75.75 0 11-1.5 0 .75.75 0 011.5 0z" /></svg>
-                        <span id="cart-badge" class="absolute -top-2 -right-2 bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full hidden">0</span>
-                    </a>
-
-                    <!-- Notifications -->
-                    <div class="relative hidden items-center" id="nav-notification-container">
-                        <button id="nav-notification" class="relative flex items-center justify-center hover:text-pink-500 transition focus:outline-none">
-                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6"><path stroke-linecap="round" stroke-linejoin="round" d="M14.857 17.082a23.848 23.848 0 005.454-1.31A8.967 8.967 0 0118 9.75v-.7V9A6 6 0 006 9v.75a8.967 8.967 0 01-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 01-5.714 0m5.714 0a3 3 0 11-5.714 0" /></svg>
-                            <span id="notification-badge" class="absolute -top-2 -right-2 bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full hidden">0</span>
-                        </button>
-                        <div id="notification-dropdown" class="absolute right-[-10px] sm:right-0 top-full mt-5 w-[90vw] max-w-[340px] sm:w-80 bg-white rounded-2xl shadow-2xl border border-gray-100 hidden flex-col overflow-hidden z-[60]">
-                            <div class="p-4 border-b border-gray-100 flex justify-between items-center bg-gray-50">
-                                <h3 class="font-bold text-gray-800">Thông báo</h3>
-                                <div>
-                                    <button id="mark-all-read" class="text-xs text-pink-500 hover:text-pink-600 font-medium mr-3" title="Đánh dấu đã đọc">✔ Đã đọc</button>
-                                    <button id="delete-read-notifs" class="text-xs text-red-500 hover:text-red-600 font-medium" title="Xóa thông báo đã đọc">🗑 Xóa</button>
-                                </div>
-                            </div>
-                            <div id="notification-list" class="max-h-80 overflow-y-auto custom-scrollbar">
-                                <div class="p-4 text-center text-sm text-gray-500">Đang tải...</div>
+                    <!-- Dropdown -->
+                    <div id="notification-dropdown" class="absolute right-0 top-full mt-2 w-[340px] bg-white rounded-sm shadow-xl border border-gray-200 hidden flex-col overflow-hidden z-[60]">
+                        <div class="p-3 border-b border-gray-100 flex justify-between items-center bg-gray-50 text-gray-800">
+                            <h3 class="font-semibold text-sm">Thông báo mới nhận</h3>
+                            <div>
+                                <button id="mark-all-read" class="text-xs text-pink-500 hover:text-pink-600 mr-2">Đã đọc</button>
+                                <button id="delete-read-notifs" class="text-xs text-red-500 hover:text-red-600">Xóa</button>
                             </div>
                         </div>
+                        <div id="notification-list" class="max-h-80 overflow-y-auto custom-scrollbar text-gray-800">
+                            <div class="p-4 text-center text-sm text-gray-500">Đang tải...</div>
+                        </div>
                     </div>
-                    
-                    <a href="/user/profileuser" id="nav-profile" class="hover:text-pink-500 transition hidden">
-                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" /></svg>
+                </div>
+                
+                <!-- Account -->
+                <div class="flex items-center space-x-3 ml-2">
+                    <a href="/login" id="nav-login" class="hover:text-white font-medium transition">Đăng nhập</a>
+                    <a href="/user/profileuser" id="nav-profile" class="hover:text-white font-medium transition hidden flex items-center space-x-1">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" /></svg>
+                        <span>Tài khoản</span>
                     </a>
-                    <a href="/login" id="nav-login" class="hover:text-pink-500 transition">
-                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15M12 9l-3 3m0 0l3 3m-3-3h12.75" /></svg>
-                    </a>
-                    <a href="javascript:void(0)" onclick="logout(event)" id="nav-logout" class="hover:text-red-500 transition hidden" title="Đăng xuất">
-                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15m3 0l3-3m0 0l-3-3m3 3H9" /></svg>
+                    <a href="javascript:void(0)" onclick="logout(event)" id="nav-logout" class="hover:text-white transition hidden" title="Đăng xuất">
+                        Đăng xuất
                     </a>
                 </div>
             </div>
         </div>
 
-        <div id="mobile-menu" class="hidden md:hidden mt-4 pb-4 border-t border-gray-300">
-            <nav class="flex flex-col space-y-4 pt-4 px-2">
-                <a href="/user/home" class="text-gray-700 font-bold hover:text-pink-500">Trang chủ</a>
-                <a href="/user/product" class="text-gray-700 font-bold hover:text-pink-500">Sản phẩm</a>
-                <a href="/user/sale" class="text-gray-700 font-bold hover:text-pink-500">Khuyến mãi</a>
-                <a href="/user/bestseller" class="text-gray-700 font-bold hover:text-pink-500">Bán chạy</a>
-            </nav>
-        </div>
+        <!-- Main Header -->
+        <div class="max-w-[1200px] mx-auto px-4 flex items-center justify-between gap-6 md:gap-10">
+            <!-- Mobile Menu Btn -->
+            <button id="mobile-menu-btn" class="md:hidden text-white hover:opacity-80 focus:outline-none">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+                </svg>
+            </button>
 
-        <div id="mobile-search-bar" class="hidden lg:hidden mt-4 pb-2">
-            <input type="text" id="mobile-search-input" placeholder="Tìm kiếm sản phẩm..." class="w-full pl-4 pr-10 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-pink-400">
+            <!-- Logo -->
+            <a href="/user/home" class="flex items-center shrink-0">
+                <img src="{{ asset('images/logo.jpg') }}" alt="Logo Trang Chủ" class="w-12 h-12 md:w-16 md:h-16 rounded-full object-cover border-2 border-white shadow-sm bg-white">
+                <span class="text-white text-2xl font-bold ml-3 tracking-wide hidden lg:block">Cosmetics</span>
+            </a>
+
+            <!-- Search Bar -->
+            <div class="flex-grow max-w-[840px] relative hidden md:block">
+                <div class="flex bg-white rounded-sm p-1 shadow-sm">
+                    <input type="text" id="search-input" autocomplete="off" placeholder="Tìm kiếm tên sản phẩm, thương hiệu..." class="w-full px-3 py-2 text-gray-800 focus:outline-none rounded-sm text-sm">
+                    <button class="bg-pink-600 hover:bg-pink-700 text-white px-6 py-2 rounded-sm transition flex items-center justify-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" /></svg>
+                    </button>
+                </div>
+                <!-- Dropdown Search -->
+                <div id="search-dropdown" class="absolute left-0 top-full mt-1 w-full bg-white rounded-sm shadow-xl border border-gray-100 hidden overflow-hidden z-50 max-h-[400px] overflow-y-auto"></div>
+            </div>
+
+            <!-- Mobile Search Icon -->
+            <button id="mobile-search-btn" class="md:hidden text-white hover:opacity-80 transition">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-7 h-7"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" /></svg>
+            </button>
+
+            <!-- Cart -->
+            <div class="flex items-center shrink-0 pr-4">
+                <a href="/user/cart" id="nav-cart" class="relative text-white hover:opacity-80 transition hidden flex items-center justify-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-8 h-8"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 3h1.386c.51 0 .955.343 1.087.835l.383 1.437M7.5 14.25a3 3 0 00-3 3h15.75m-12.75-3h11.218c1.121-2.3 2.1-4.684 2.924-7.138a60.114 60.114 0 00-16.536-1.84M7.5 14.25L5.106 5.272M6 20.25a.75.75 0 11-1.5 0 .75.75 0 011.5 0zm12.75 0a.75.75 0 11-1.5 0 .75.75 0 011.5 0z" /></svg>
+                    <span id="cart-badge" class="absolute -top-1 -right-2 bg-white text-pink-600 border border-pink-500 text-[11px] font-bold px-1.5 py-0.5 rounded-full hidden">0</span>
+                </a>
+            </div>
         </div>
     </header>
 
@@ -656,11 +677,40 @@
             const chatCloseBtn = document.getElementById('chat-close-btn');
             const chatBox = document.getElementById('chat-box');
             const chatMessages = document.getElementById('chat-messages');
+            const aiChatMessages = document.getElementById('ai-chat-messages');
             const chatInput = document.getElementById('chat-input');
             const chatSendBtn = document.getElementById('chat-send-btn');
             
+            const tabCskh = document.getElementById('tab-cskh');
+            const tabAi = document.getElementById('tab-ai');
+            const chatAttachBtnElem = document.getElementById('chat-attach-btn');
+            
             let chatInterval = null;
             let lastMessageCount = 0;
+            let currentChatTab = 'cskh';
+
+            if (tabCskh && tabAi) {
+                tabCskh.addEventListener('click', () => {
+                    currentChatTab = 'cskh';
+                    tabCskh.classList.replace('text-gray-400', 'text-pink-500');
+                    tabCskh.classList.replace('border-transparent', 'border-pink-500');
+                    tabAi.classList.replace('text-pink-500', 'text-gray-400');
+                    tabAi.classList.replace('border-pink-500', 'border-transparent');
+                    chatMessages.classList.remove('hidden');
+                    aiChatMessages.classList.add('hidden');
+                    if (chatAttachBtnElem) chatAttachBtnElem.classList.remove('hidden');
+                });
+                tabAi.addEventListener('click', () => {
+                    currentChatTab = 'ai';
+                    tabAi.classList.replace('text-gray-400', 'text-pink-500');
+                    tabAi.classList.replace('border-transparent', 'border-pink-500');
+                    tabCskh.classList.replace('text-pink-500', 'text-gray-400');
+                    tabCskh.classList.replace('border-pink-500', 'border-transparent');
+                    aiChatMessages.classList.remove('hidden');
+                    chatMessages.classList.add('hidden');
+                    if (chatAttachBtnElem) chatAttachBtnElem.classList.remove('hidden');
+                });
+            }
 
             function formatChatTime(dateString) {
                 const date = new Date(dateString);
@@ -725,61 +775,167 @@
                 }
             }
 
-            let selectedChatImage = null;
+            let selectedChatImages = [];
 
             async function sendMessage() {
                 const token = localStorage.getItem('token');
                 if (!token) return;
                 
                 const text = chatInput.value.trim();
-                if (!text && !selectedChatImage) return;
+                if (!text && selectedChatImages.length === 0) return;
                 
                 chatInput.value = '';
                 document.getElementById('chat-image-preview-container').classList.add('hidden');
-                
-                let hinh_anh = null;
-                
-                if (selectedChatImage) {
-                    const formData = new FormData();
-                    formData.append('image', selectedChatImage);
-                    try {
-                        const uploadRes = await fetch('http://localhost:3000/api/chat/upload', {
-                            method: 'POST',
-                            headers: { 'Authorization': `Bearer ${token}` },
-                            body: formData
-                        });
-                        const uploadData = await uploadRes.json();
-                        if (uploadData.success) {
-                            hinh_anh = 'http://localhost:8000' + uploadData.url; 
-                        } else {
-                            alert('Lỗi upload ảnh: ' + uploadData.message);
-                            return;
+
+                if (currentChatTab === 'ai') {
+                    let base64Images = [];
+                    let uploadedUrls = [];
+                    if (selectedChatImages.length > 0) {
+                        for (let file of selectedChatImages) {
+                            // Base64 for Python AI
+                            let b64 = await new Promise((resolve) => {
+                                const reader = new FileReader();
+                                reader.onload = (e) => resolve(e.target.result);
+                                reader.readAsDataURL(file);
+                            });
+                            base64Images.push(b64);
+                            
+                            // Upload to Node.js for lightweight localStorage
+                            const formData = new FormData();
+                            formData.append('image', file);
+                            try {
+                                const uploadRes = await fetch('http://localhost:3000/api/chat/upload', {
+                                    method: 'POST',
+                                    headers: { 'Authorization': `Bearer ${token}` },
+                                    body: formData
+                                });
+                                const uploadData = await uploadRes.json();
+                                if (uploadData.success) {
+                                    uploadedUrls.push('http://localhost:8000' + uploadData.url); 
+                                }
+                            } catch (e) {
+                                console.error('Lỗi upload ảnh:', e);
+                            }
                         }
-                    } catch (e) {
-                        console.error('Lỗi upload:', e);
-                        return;
+                        selectedChatImages = []; // reset
+                        chatImagePreviewContainer.classList.add('hidden');
+                        chatImagePreviewContainer.innerHTML = '';
+                    }
+
+                    let imgHtml = '';
+                    if (uploadedUrls.length > 0) {
+                        imgHtml = uploadedUrls.map(url => `<img src="${url}" class="w-full max-w-xs rounded mb-2" />`).join('');
+                    } else if (base64Images.length > 0) {
+                        // Fallback in case upload fails
+                        imgHtml = base64Images.map(b64 => `<img src="${b64}" class="w-full max-w-xs rounded mb-2" />`).join('');
+                    }
+
+                    const userHtml = `
+                        <div class="flex items-end gap-2 justify-end">
+                            <div class="bg-gradient-to-r from-pink-500 to-pink-400 text-white p-3 rounded-2xl rounded-br-sm shadow-sm max-w-[80%] text-sm">
+                                ${imgHtml}
+                                ${text ? text.replace(/\n/g, '<br>') : ''}
+                            </div>
+                        </div>`;
+                    aiChatMessages.insertAdjacentHTML('beforeend', userHtml);
+                    aiChatMessages.scrollTop = aiChatMessages.scrollHeight;
+                    localStorage.setItem(('ai_chat_history_' + (() => { try { return JSON.parse(localStorage.getItem('user')).ma_nguoi_dung; } catch(e) { return 'guest'; } })()), aiChatMessages.innerHTML);
+
+                    const loadingId = 'ai-loading-' + Date.now();
+                    const loadingHtml = `
+                        <div id="${loadingId}" class="flex items-start gap-2 justify-start">
+                            <div class="w-8 h-8 rounded-full bg-white shadow-sm flex items-center justify-center shrink-0 border border-gray-100">
+                                <span class="text-sm">✨</span>
+                            </div>
+                            <div class="bg-white text-gray-700 p-3 rounded-2xl rounded-bl-sm shadow-sm border border-gray-100 max-w-[80%] text-sm">
+                                <span class="animate-pulse">Đang trả lời...</span>
+                            </div>
+                        </div>`;
+                    aiChatMessages.insertAdjacentHTML('beforeend', loadingHtml);
+                    aiChatMessages.scrollTop = aiChatMessages.scrollHeight;
+
+                    try {
+                        const res = await fetch('http://localhost:5000/api/ai-chat', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ message: text, images: base64Images })
+                        });
+                        const data = await res.json();
+                        document.getElementById(loadingId)?.remove();
+
+                        const botHtml = `
+                            <div class="flex items-start gap-2 justify-start">
+                                <div class="w-8 h-8 rounded-full bg-white shadow-sm flex items-center justify-center shrink-0 border border-gray-100">
+                                    <span class="text-sm">✨</span>
+                                </div>
+                                <div class="bg-white text-gray-700 p-3 rounded-2xl rounded-bl-sm shadow-sm border border-gray-100 max-w-[80%] text-sm" style="line-height: 1.6;">
+                                    ${(() => {
+                                        let m = data.data || "Xin lỗi, AI đang gặp sự cố.";
+                                        m = m.replace(/\[([^\]]+)\]\s*\(([^)]+)\)/g, '<a href="$2" target="_blank" class="text-pink-600 font-bold underline hover:text-pink-700">$1</a>');
+                                        m = m.replace(/\*\*(.*?)\*\*/g, '<b>$1</b>');
+                                        return m.replace(/\n/g, '<br>');
+                                    })()}
+                                </div>
+                            </div>`;
+                        aiChatMessages.insertAdjacentHTML('beforeend', botHtml);
+                        aiChatMessages.scrollTop = aiChatMessages.scrollHeight;
+                        localStorage.setItem(('ai_chat_history_' + (() => { try { return JSON.parse(localStorage.getItem('user')).ma_nguoi_dung; } catch(e) { return 'guest'; } })()), aiChatMessages.innerHTML);
+                    } catch (err) {
+                        console.error(err);
+                        document.getElementById(loadingId)?.remove();
+                        aiChatMessages.insertAdjacentHTML('beforeend', '<div class="text-center text-xs text-red-500 my-2">Lỗi kết nối đến máy chủ AI.</div>');
+                    }
+                    return;
+                }
+                
+                let uploadedUrls = [];
+                if (selectedChatImages.length > 0) {
+                    for (let file of selectedChatImages) {
+                        const formData = new FormData();
+                        formData.append('image', file);
+                        try {
+                            const uploadRes = await fetch('http://localhost:3000/api/chat/upload', {
+                                method: 'POST',
+                                headers: { 'Authorization': `Bearer ${token}` },
+                                body: formData
+                            });
+                            const uploadData = await uploadRes.json();
+                            if (uploadData.success) {
+                                uploadedUrls.push('http://localhost:8000' + uploadData.url); 
+                            } else {
+                                alert('Lỗi upload ảnh: ' + uploadData.message);
+                            }
+                        } catch (e) {
+                            console.error('Lỗi upload:', e);
+                        }
                     }
                 }
                 
-                selectedChatImage = null;
+                selectedChatImages = [];
                 document.getElementById('chat-image-input').value = '';
+                chatImagePreviewContainer.classList.add('hidden');
+                chatImagePreviewContainer.innerHTML = '';
                 
                 try {
-                    const res = await fetch('http://localhost:3000/api/chat', {
-                        method: 'POST',
-                        headers: {
-                            'Authorization': `Bearer ${token}`,
-                            'Content-Type': 'application/json'
-                        },
-                        body: JSON.stringify({ noi_dung: text, hinh_anh })
-                    });
-                    
-                    const result = await res.json();
-                    if (result.success) {
-                        loadChatMessages();
+                    // Send messages. One with text + first image, others with just image
+                    if (uploadedUrls.length === 0) {
+                        // Just text
+                        const res = await fetch('http://localhost:3000/api/chat', {
+                            method: 'POST',
+                            headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ noi_dung: text, hinh_anh: null })
+                        });
                     } else {
-                        alert(result.message);
+                        for (let i = 0; i < uploadedUrls.length; i++) {
+                            const msgText = (i === 0) ? text : '';
+                            await fetch('http://localhost:3000/api/chat', {
+                                method: 'POST',
+                                headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+                                body: JSON.stringify({ noi_dung: msgText, hinh_anh: uploadedUrls[i] })
+                            });
+                        }
                     }
+                    loadChatMessages();
                 } catch (error) {
                     console.error('Lỗi gửi tin nhắn:', error);
                 }
@@ -830,20 +986,32 @@
             
             if (chatImageInput) {
                 chatImageInput.addEventListener('change', (e) => {
-                    const file = e.target.files[0];
-                    if (file) {
-                        selectedChatImage = file;
-                        chatImagePreview.src = URL.createObjectURL(file);
+                    let files = Array.from(e.target.files);
+                    if (files.length > 5) {
+                        alert("Bạn chỉ được chọn tối đa 5 hình ảnh mỗi lần gửi!");
+                        files = files.slice(0, 5);
+                    }
+                    if (files.length > 0) {
+                        selectedChatImages = files;
+                        chatImagePreviewContainer.innerHTML = '';
+                        files.forEach((file, index) => {
+                            const img = document.createElement('img');
+                            img.src = URL.createObjectURL(file);
+                            img.className = "h-16 rounded shadow-sm border border-gray-200 inline-block mr-2 mb-2";
+                            chatImagePreviewContainer.appendChild(img);
+                        });
+                        const closeBtn = document.createElement('button');
+                        closeBtn.className = "absolute top-1 right-2 w-5 h-5 bg-gray-400 hover:bg-gray-600 rounded-full text-white flex items-center justify-center text-xs font-bold";
+                        closeBtn.innerHTML = '&times;';
+                        closeBtn.onclick = () => {
+                            selectedChatImages = [];
+                            chatImageInput.value = '';
+                            chatImagePreviewContainer.classList.add('hidden');
+                            chatImagePreviewContainer.innerHTML = '';
+                        };
+                        chatImagePreviewContainer.appendChild(closeBtn);
                         chatImagePreviewContainer.classList.remove('hidden');
                     }
-                });
-            }
-
-            if (chatRemoveImageBtn) {
-                chatRemoveImageBtn.addEventListener('click', () => {
-                    selectedChatImage = null;
-                    chatImageInput.value = '';
-                    chatImagePreviewContainer.classList.add('hidden');
                 });
             }
 
@@ -862,7 +1030,80 @@
             }
 
         });
-    </script>
+    
+            // Load AI Chat History & Restock Suggestion
+            window.addEventListener('DOMContentLoaded', () => {
+                let userId = 'guest';
+                try {
+                    const userStr = localStorage.getItem('user');
+                    if (userStr) {
+                        userId = JSON.parse(userStr).ma_nguoi_dung;
+                    }
+                } catch(e) {}
+                
+                const savedAiHistory = localStorage.getItem('ai_chat_history_' + userId);
+                const aiChatMsgEl = document.getElementById('ai-chat-messages');
+                
+                if (savedAiHistory && aiChatMsgEl) {
+                    aiChatMsgEl.innerHTML = savedAiHistory;
+                    // wait a bit for images/render before scrolling
+                    setTimeout(() => aiChatMsgEl.scrollTop = aiChatMsgEl.scrollHeight, 100);
+                }
+                
+                // Fetch AI Restock Suggestion
+                if (userId !== 'guest' && !sessionStorage.getItem('ai_restock_suggested_' + userId)) {
+                    sessionStorage.setItem('ai_restock_suggested_' + userId, 'true');
+                    setTimeout(async () => {
+                        try {
+                            const res = await fetch('http://localhost:5000/api/ai-suggest-restock', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({ user_id: userId })
+                            });
+                            const data = await res.json();
+                            if (data.success && data.has_suggestion) {
+                                let botMsg = data.message;
+                                botMsg = botMsg.replace(/\[([^\]]+)\]\s*\(([^)]+)\)/g, '<a href="$2" target="_blank" class="text-pink-600 font-bold underline hover:text-pink-700">$1</a>');
+                                botMsg = botMsg.replace(/\*\*(.*?)\*\*/g, '<b>$1</b>');
+                                botMsg = botMsg.replace(/\\n/g, '<br>');
+                                
+                                const botHtml = `
+                                    <div class="flex items-start gap-2 justify-start mt-4">
+                                        <div class="w-8 h-8 rounded-full bg-pink-100 flex items-center justify-center shrink-0 border border-pink-200">
+                                            <span class="text-sm">🤖</span>
+                                        </div>
+                                        <div class="bg-white text-gray-700 p-3 rounded-2xl rounded-bl-sm shadow-sm border border-pink-200 max-w-[80%] text-sm relative">
+                                            ${botMsg}
+                                        </div>
+                                    </div>`;
+                                
+                                if (aiChatMsgEl) {
+                                    aiChatMsgEl.insertAdjacentHTML('beforeend', botHtml);
+                                    aiChatMsgEl.scrollTop = aiChatMsgEl.scrollHeight;
+                                    localStorage.setItem('ai_chat_history_' + userId, aiChatMsgEl.innerHTML);
+                                    
+                                    const chatBox = document.getElementById('chat-box');
+                                    if (chatBox && chatBox.classList.contains('hidden')) {
+                                        const badge = document.getElementById('chat-unread-badge');
+                                        if (badge) badge.classList.remove('hidden');
+                                        
+                                        // Optional: Add a little animation to the toggle button
+                                        const toggleBtn = document.getElementById('chat-toggle-btn');
+                                        if (toggleBtn) {
+                                            toggleBtn.classList.add('animate-bounce');
+                                            setTimeout(() => toggleBtn.classList.remove('animate-bounce'), 3000);
+                                        }
+                                    }
+                                }
+                            }
+                        } catch (e) {
+                            console.error("Lỗi lấy gợi ý AI:", e);
+                        }
+                    }, 2000); // Wait 2s
+                }
+            });
+
+</script>
 
     <!-- Chat Widget -->
     <div id="customer-chat-widget" class="fixed bottom-6 right-6 z-[100]">
@@ -875,15 +1116,15 @@
         <!-- Chat Box -->
         <div id="chat-box" class="hidden absolute bottom-0 right-0 w-80 sm:w-96 bg-white rounded-2xl shadow-2xl border border-gray-100 flex flex-col overflow-hidden" style="height: 480px;">
             <!-- Header -->
-            <div class="bg-gradient-to-r from-pink-500 to-pink-400 text-white p-4 flex justify-between items-center shadow-sm">
+            <div class="bg-gradient-to-r from-pink-500 to-pink-400 text-white p-3 flex justify-between items-center shadow-sm">
                 <div class="flex items-center gap-3">
-                    <div class="w-10 h-10 bg-white rounded-full flex items-center justify-center shadow-inner">
-                        <span class="text-xl">👩‍💻</span>
+                    <div class="w-8 h-8 bg-white rounded-full flex items-center justify-center shadow-inner">
+                        <span class="text-lg">💬</span>
                     </div>
                     <div>
-                        <h4 class="font-bold text-sm tracking-wide">CSKH Natural</h4>
+                        <h4 class="font-bold text-sm tracking-wide">Hỗ Trợ & Tư Vấn</h4>
                         <p class="text-[11px] text-pink-100 flex items-center gap-1">
-                            <span class="w-2 h-2 bg-green-400 rounded-full inline-block"></span> Đang hoạt động
+                            <span class="w-2 h-2 bg-green-400 rounded-full inline-block"></span> Trực tuyến
                         </p>
                     </div>
                 </div>
@@ -892,9 +1133,20 @@
                 </button>
             </div>
             
-            <!-- Messages Area -->
+            <!-- Tabs -->
+            <div class="flex border-b border-gray-200 bg-white">
+                <button id="tab-cskh" class="flex-1 py-2 text-sm font-semibold text-pink-500 border-b-2 border-pink-500 focus:outline-none transition">Chat với Shop</button>
+                <button id="tab-ai" class="flex-1 py-2 text-sm font-semibold text-gray-400 border-b-2 border-transparent hover:text-pink-500 focus:outline-none transition">Trợ Lý AI</button>
+            </div>
+
+            <!-- Messages Area CSKH -->
             <div id="chat-messages" class="flex-1 p-4 overflow-y-auto bg-gray-50 flex flex-col gap-3" style="scroll-behavior: smooth;">
-                <div class="text-center text-xs text-gray-400 my-2">Bắt đầu cuộc trò chuyện</div>
+                <div class="text-center text-xs text-gray-400 my-2">Bắt đầu cuộc trò chuyện với Shop</div>
+            </div>
+
+            <!-- Messages Area AI -->
+            <div id="ai-chat-messages" class="hidden flex-1 p-4 overflow-y-auto bg-gray-50 flex flex-col gap-3" style="scroll-behavior: smooth;">
+                <div class="text-center text-xs text-gray-400 my-2">Hãy hỏi chuyên gia AI về làm đẹp và tình trạng da của bạn!</div>
             </div>
 
             <!-- Image Preview Area -->
@@ -905,7 +1157,7 @@
 
             <!-- Input Area -->
             <div class="p-3 bg-white border-t border-gray-100 flex items-center gap-2">
-                <input type="file" id="chat-image-input" class="hidden" accept="image/*">
+                <input type="file" id="chat-image-input" class="hidden" accept="image/*" multiple>
                 <button id="chat-attach-btn" class="text-gray-400 hover:text-pink-500 transition focus:outline-none p-2">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
                 </button>

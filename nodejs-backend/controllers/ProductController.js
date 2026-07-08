@@ -749,13 +749,16 @@ exports.getAIRecommendation = async (req, res) => {
       const loaiDaUser = (user && user.loai_da) ? user.loai_da : 'da_thuong'; 
       // ==========================================================
 
-      // Gọi sang cổng 5000 của Python
+      // Gọi sang cổng 5000 của Python (Tạm tắt do đang đập đi xây lại)
+      /*
       const pythonResponse = await axios.post('http://localhost:5000/api/recommend', {
           loai_da: loaiDaUser,
           ma_nguoi_dung: decoded.ma_nguoi_dung
       });
-
       const aiData = pythonResponse.data.data;
+      */
+      
+      const aiData = { low_stock: [], next_step: [], skin_type: [] };
 
       // Gom tất cả ID lại để query 1 lần cho nhẹ DB
       const allProductIds = new Set([

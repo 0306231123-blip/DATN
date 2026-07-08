@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\SanPham; // Gọi Model Sản Phẩm vào đây
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Cache;
 
 class ProductController extends Controller
 {
@@ -219,6 +220,15 @@ class ProductController extends Controller
                                 ->take(6) // Lấy đúng 6 sản phẩm thôi để xếp 2 hàng ngang cho đẹp
                                 ->get();
                                 
+        // Lấy 10 sản phẩm ngẫu nhiên cho mục DAILY DISCOVER (Sản phẩm hôm nay)
+        // Cache lại 1 ngày để F5 không bị đổi, sang ngày mới (hết 24h) mới bốc 10 sản phẩm khác
+        $sanPhamHomNay = Cache::remember('daily_discover_products', now()->endOfDay(), function () {
+            return SanPham::where('trang_thai', 'dang_ban')
+                          ->inRandomOrder()
+                          ->take(10)
+                          ->get();
+        });
+                                
         // Lấy danh sách danh mục để hiển thị ra trang chủ
         $danhMucs = DB::table('danh_muc')->orderBy('thu_tu_hien_thi', 'asc')->get();
         foreach($danhMucs as $dm) {
@@ -230,7 +240,7 @@ class ProductController extends Controller
                 ->count();
         }
                                 
-        return view('page_user.home', compact('sanPhamNoiBat', 'danhMucs'));
+        return view('page_user.home', compact('sanPhamNoiBat', 'danhMucs', 'sanPhamHomNay'));
     }
 
     /**

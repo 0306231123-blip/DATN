@@ -15,49 +15,50 @@
             </a>
         </div>
 
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            <!-- Cột trái: Danh sách sản phẩm (70%) -->
-            <div class="lg:col-span-2">
-                <!-- Nút chọn tất cả (Chuyển xuống đây) -->
-                <div class="bg-[#fefcf8] p-4 rounded-2xl shadow-sm mb-4 flex items-center border border-pink-100">
-                    <input type="checkbox" id="check-all" class="w-5 h-5 accent-pink-500 rounded-lg cursor-pointer mr-4" onchange="toggleCheckAll(this)">
-                    <label for="check-all" class="font-bold text-gray-800 cursor-pointer">Chọn tất cả (<span id="selected-count">0</span> sản phẩm)</label>
+                <div class="flex flex-col space-y-4">
+            
+            <!-- Table Header (Shopee style) -->
+            <div class="bg-white p-4 shadow-sm border border-gray-100 hidden md:flex items-center text-gray-500 text-sm font-medium mt-4">
+                <div class="w-12 flex justify-center">
+                    <input type="checkbox" id="check-all-top" class="w-4 h-4 accent-pink-500 rounded-sm cursor-pointer" onchange="toggleCheckAll(this)">
                 </div>
-                
-                <!-- Container chứa sản phẩm -->
-                <div id="cart-container" class="space-y-4"></div>
+                <div class="flex-1 ml-4">Sản Phẩm</div>
+                <div class="w-32 text-center">Đơn Giá</div>
+                <div class="w-32 text-center">Số Lượng</div>
+                <div class="w-32 text-center">Số Tiền</div>
+                <div class="w-24 text-center">Thao Tác</div>
+            </div>
+
+            <!-- Container chứa sản phẩm -->
+            <div id="cart-container" class="space-y-4 md:space-y-0 shadow-sm border border-gray-100 bg-white"></div>
+
+            <!-- Checkout Bottom Bar (Sticky) -->
+            <div class="bg-white p-4 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)] border-t border-gray-200 sticky bottom-0 z-40 flex flex-col md:flex-row items-center justify-between gap-4 mt-8 w-full">
+                <!-- Select all -->
+                <div class="flex items-center space-x-6">
+                    <div class="flex items-center">
+                        <input type="checkbox" id="check-all" class="w-4 h-4 accent-pink-500 rounded-sm cursor-pointer mr-2" onchange="toggleCheckAll(this)">
+                        <label for="check-all" class="text-gray-800 cursor-pointer text-sm">Chọn Tất Cả (<span id="selected-count">0</span>)</label>
+                    </div>
+                </div>
+
+                <!-- Price and Checkout -->
+                <div class="flex items-center space-x-4">
+                    <div class="text-right flex items-center space-x-2 md:space-x-4">
+                        <span class="text-gray-800 text-sm hidden md:inline">Tổng thanh toán (<span id="selected-count-2">0</span> Sản phẩm):</span>
+                        <div class="flex flex-col">
+                            <span id="total-price" class="text-pink-600 text-xl font-medium">0 đ</span>
+                            <span id="subtotal-price" class="hidden">0 đ</span>
+                        </div>
+                    </div>
+                    <button onclick="proceedToCheckout()" class="bg-pink-500 hover:bg-pink-600 text-white font-medium py-2 px-8 text-sm transition rounded-sm">
+                        Mua Hàng
+                    </button>
+                </div>
             </div>
             
-            <!-- Cột phải: Box Thanh toán (30%) - Sticky -->
-            <div class="lg:col-span-1">
-                <div class="bg-white p-6 rounded-3xl shadow-md border border-gray-100 sticky top-28">
-                    <h3 class="text-xl font-black text-gray-800 mb-4 pb-4 border-b border-gray-100">Tổng Đơn Hàng</h3>
-                    
-                    <div class="space-y-3 mb-6">
-                        <div class="flex justify-between text-gray-600">
-                            <span>Tạm tính</span>
-                            <span id="subtotal-price" class="font-bold">0 VNĐ</span>
-                        </div>
-                    </div>
-                    
-                    <div class="flex justify-between items-end mb-6 pt-4 border-t border-gray-100">
-                        <span class="text-gray-800 font-bold text-lg">Tổng tiền</span>
-                        <div class="text-right">
-                            <span id="total-price" class="text-pink-600 text-2xl font-black block">0 VNĐ</span>
-                            <span class="text-xs text-gray-500">(Đã bao gồm VAT)</span>
-                        </div>
-                    </div>
-                    
-                    <button onclick="proceedToCheckout()" class="w-full bg-pink-500 hover:bg-pink-600 text-white font-bold py-4 rounded-xl transition shadow-lg transform hover:-translate-y-1 text-lg">
-                        THANH TOÁN
-                    </button>
-                    
-                    <div class="mt-4 flex items-center justify-center space-x-2 text-xs text-gray-400">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" /></svg>
-                        <span>Thanh toán bảo mật & an toàn</span>
-                    </div>
-                </div>
-            </div>
+        </div>
+    </div>
         </div>
     </div>
 </section>
@@ -65,7 +66,7 @@
 <script>
     // Hàm Format Tiền (Bỏ .00, dùng dấu chấm)
     function formatPrice(price) {
-        return new Intl.NumberFormat('vi-VN').format(price) + ' VNĐ'; 
+        return new Intl.NumberFormat('vi-VN').format(price) + ' đ'; 
     }
 
     // 1. GỌI API ĐỂ LOAD GIỎ HÀNG
@@ -97,46 +98,55 @@
 
                     // HTML CHO MỖI SẢN PHẨM
                     cartContainer.innerHTML += `
-                        <div class="flex items-center bg-[#fefcf8] p-4 rounded-2xl border border-pink-50 shadow-sm hover:shadow-md transition duration-300 mb-4">
-                            <input type="checkbox" class="cart-item-check w-5 h-5 accent-pink-500 mr-4 rounded cursor-pointer" 
-                                data-id="${item.ma_san_pham}" 
-                                data-price="${gia}" 
-                                onchange="calculateTotal()">
-                            
-                            <img src="${linkAnh}" alt="${sanPham.ten_san_pham}" class="w-20 h-20 object-cover rounded-xl border border-gray-100">
-                            
-                            <div class="flex-1 ml-4">
-                                <h3 class="font-bold text-gray-800 text-lg hover:text-pink-600 transition cursor-pointer">${sanPham.ten_san_pham}</h3>
-                                <p class="text-sm text-gray-500 mt-1">Còn lại: ${soLuongTon} SP</p>
-                                <p class="text-xs text-gray-400 mt-1">Đã thêm: ${new Date(item.ngay_them).toLocaleString('vi-VN')}</p>
+                        <div class="flex flex-col md:flex-row items-center bg-white p-4 border-b border-gray-100 hover:bg-gray-50 transition duration-200">
+                            <div class="w-12 flex justify-center mb-3 md:mb-0">
+                                <input type="checkbox" class="cart-item-check w-4 h-4 accent-pink-500 rounded-sm cursor-pointer" 
+                                    data-id="${item.ma_san_pham}" 
+                                    data-price="${gia}" 
+                                    onchange="calculateTotal()">
                             </div>
                             
-                            <div class="w-32 text-center font-black text-pink-600 text-lg">
+                            <div class="flex-1 flex items-center ml-0 md:ml-4 mb-3 md:mb-0 w-full md:w-auto">
+                                <img src="${linkAnh}" alt="${sanPham.ten_san_pham}" class="w-20 h-20 object-cover border border-gray-100">
+                                <div class="ml-3 flex-1">
+                                    <h3 class="text-gray-800 text-sm hover:text-pink-600 transition cursor-pointer line-clamp-2">${sanPham.ten_san_pham}</h3>
+                                    <p class="text-xs text-gray-500 mt-1">Còn lại: ${soLuongTon}</p>
+                                    <p class="text-[10px] text-gray-400 mt-1">Đã thêm: ${new Date(item.ngay_them).toLocaleString('vi-VN')}</p>
+                                </div>
+                            </div>
+                            
+                            <div class="w-full md:w-32 text-center text-gray-600 text-sm mb-3 md:mb-0 hidden md:block">
                                 ${formatPrice(gia)}
                             </div>
                             
-                            <div class="flex items-center justify-center space-x-2 w-32 ml-4">
-                                <button onclick="updateQty(${item.ma_san_pham}, -1, ${soLuongTon})" class="w-8 h-8 bg-pink-50 rounded-full text-pink-600 hover:bg-pink-100 font-bold transition flex items-center justify-center">-</button>
+                            <div class="flex items-center justify-center space-x-0 w-full md:w-32 mb-3 md:mb-0">
+                                <button onclick="updateQty(${item.ma_san_pham}, -1, ${soLuongTon})" class="w-8 h-8 border border-gray-200 text-gray-500 hover:bg-gray-50 transition flex items-center justify-center rounded-none">-</button>
                                 
                                 <input type="number" id="qty-${item.ma_san_pham}" 
                                     value="${item.so_luong}" 
                                     min="1" max="${soLuongTon}" 
                                     onchange="handleManualInput(${item.ma_san_pham}, ${soLuongTon})"
-                                    class="w-12 h-8 text-center bg-white rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-pink-300 font-bold text-gray-800">
+                                    class="w-12 h-8 text-center border-t border-b border-transparent border-t-gray-200 border-b-gray-200 focus:outline-none focus:border-pink-300 text-gray-800 text-sm rounded-none">
                                     
-                                <button onclick="updateQty(${item.ma_san_pham}, 1, ${soLuongTon})" class="w-8 h-8 bg-pink-50 rounded-full text-pink-600 hover:bg-pink-100 font-bold transition flex items-center justify-center">+</button>
+                                <button onclick="updateQty(${item.ma_san_pham}, 1, ${soLuongTon})" class="w-8 h-8 border border-gray-200 text-gray-500 hover:bg-gray-50 transition flex items-center justify-center rounded-none">+</button>
                             </div>
                             
-                            <button onclick="removeItem(${item.ma_san_pham})" class="ml-6 text-gray-400 hover:text-red-500 transition bg-gray-50 hover:bg-red-50 p-2 rounded-full">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
-                            </button>
+                            <div class="w-full md:w-32 text-center text-pink-600 text-sm font-medium mb-3 md:mb-0 hidden md:block">
+                                ${formatPrice(gia * item.so_luong)}
+                            </div>
+                            
+                            <div class="w-full md:w-24 text-center">
+                                <button onclick="removeItem(${item.ma_san_pham})" class="text-gray-600 hover:text-pink-600 transition text-sm">
+                                    Xóa
+                                </button>
+                            </div>
                         </div>
                     `;
                 });
                 
                 updateCartIconBadge(); // Cập nhật số đỏ trên Navbar
             } else {
-                cartContainer.innerHTML = '<div class="bg-[#fefcf8] p-10 rounded-3xl border border-pink-100 shadow-sm text-center"><span class="text-5xl mb-4 block">🛒</span><p class="text-xl font-bold text-gray-800 mb-4">Giỏ hàng của bạn đang trống.</p><a href="/user/product" class="inline-block bg-pink-500 text-white font-bold py-3 px-8 rounded-full hover:bg-pink-600 transition shadow-md">Tiếp tục mua sắm</a></div>';
+                cartContainer.innerHTML = '<div class="bg-white p-10 shadow-sm text-center py-20"><span class="text-5xl mb-4 block">🛒</span><p class="text-gray-500 mb-4 font-medium">Giỏ hàng của bạn còn trống.</p><a href="/user/product" class="inline-block bg-pink-500 text-white font-medium py-2 px-8 rounded-sm hover:bg-pink-600 transition shadow-sm uppercase text-sm">Mua ngay</a></div>';
             }
         } catch (err) {
             console.error(err);
@@ -237,6 +247,10 @@
         checkboxes.forEach(cb => {
             cb.checked = source.checked;
         });
+        
+        if (document.getElementById('check-all-top')) document.getElementById('check-all-top').checked = source.checked;
+        if (document.getElementById('check-all')) document.getElementById('check-all').checked = source.checked;
+        
         calculateTotal();
     }
 

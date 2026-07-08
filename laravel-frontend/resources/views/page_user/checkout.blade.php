@@ -2,7 +2,7 @@
 @section('title', 'Checkout')
 
 @section('styles')
-<link rel="stylesheet" href="{{ asset('css/user-checkout.css') }}">
+<link rel="stylesheet" href="{{ asset('css/user-checkout.css') }}?v={{ time() }}">
 @endsection
 
 @section('content')
@@ -15,139 +15,158 @@
         </a>
     </div>
 
-    <div class="checkout-grid">
+    
+    <div class="flex flex-col gap-4 max-w-6xl mx-auto">
         
-        {{-- Left Column --}}
-        <div class="checkout-column">
-            {{-- Personal Info Form --}}
-            <div class="checkout-address">
-                <label class="checkout-address__label">
-                    Thông tin người nhận <span class="checkout-address__label-required">*</span>
-                </label>
-                
-                <div class="checkout-address__fields mb-6">
-                    <div>
-                        <input type="text" id="ho_ten" placeholder="Họ và tên người nhận..." class="checkout-address__input">
-                    </div>
-                    <div>
-                        <input type="text" id="so_dien_thoai" placeholder="Số điện thoại người nhận..." class="checkout-address__input">
-                    </div>
+        <!-- Address Section -->
+        <div class="bg-white p-6 shadow-[0_1px_1px_0_rgba(0,0,0,0.05)] border-t-[3px] border-t-pink-500">
+            <h2 class="text-pink-600 text-lg flex items-center mb-4">
+                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                Địa Chỉ Nhận Hàng
+            </h2>
+            <div class="flex flex-col md:flex-row gap-4 mb-4">
+                <div class="w-full md:w-1/3">
+                    <input type="text" id="ho_ten" placeholder="Họ và tên..." class="w-full border border-gray-200 px-4 py-2 text-sm focus:outline-none focus:border-pink-500 rounded-sm">
                 </div>
-
-                <hr class="my-6 border-pink-100">
-
-                <label class="checkout-address__label">
-                    Địa chỉ giao hàng <span class="checkout-address__label-required">*</span>
-                    <span class="checkout-address__label-hint">Bắt buộc nhập đầy đủ thông tin bên dưới</span>
-                </label>
-                
-                <div class="checkout-address__fields">
-                    <div>
-                        <select id="province" required class="checkout-address__select">
-                            <option value="" disabled selected>1. Chọn Tỉnh / Thành phố (Chuẩn mới)</option>
-                        </select>
-                    </div>
-                    <div>
-                        <select id="ward" required class="checkout-address__select cursor-pointer">
-                            <option value="" disabled selected>2. Chọn Phường / Xã</option>
-                        </select>
-                    </div>
-                    <div>
-                        <input type="text" id="street" required placeholder="3. Nhập số nhà, tên đường..." class="checkout-address__input">
-                    </div>
+                <div class="w-full md:w-1/3">
+                    <input type="text" id="so_dien_thoai" placeholder="Số điện thoại..." class="w-full border border-gray-200 px-4 py-2 text-sm focus:outline-none focus:border-pink-500 rounded-sm">
                 </div>
             </div>
-
-            {{-- Selected Products Form --}}
-            <div class="checkout-address">
-                <label class="checkout-address__label mb-4">
-                    Sản phẩm đã chọn
-                </label>
-                <div id="checkout-products-list" class="flex flex-col">
-                    <p class="text-gray-500 text-sm italic py-2">Đang tải...</p>
+            <div class="flex flex-col md:flex-row gap-4">
+                <div class="w-full md:w-1/3">
+                    <select id="province" required class="w-full border border-gray-200 px-4 py-2 text-sm focus:outline-none focus:border-pink-500 rounded-sm">
+                        <option value="" disabled selected>Chọn Tỉnh / Thành phố</option>
+                    </select>
+                </div>
+                <div class="w-full md:w-1/3">
+                    <select id="ward" required class="w-full border border-gray-200 px-4 py-2 text-sm focus:outline-none focus:border-pink-500 rounded-sm">
+                        <option value="" disabled selected>Chọn Phường / Xã</option>
+                    </select>
+                </div>
+                <div class="w-full md:w-1/3">
+                    <input type="text" id="street" required placeholder="Số nhà, đường..." class="w-full border border-gray-200 px-4 py-2 text-sm focus:outline-none focus:border-pink-500 rounded-sm">
                 </div>
             </div>
         </div>
 
-        {{-- Right Column --}}
-        <div class="checkout-column">
-            {{-- Payment Summary --}}
-            <div class="checkout-summary" style="width: 100%;">
-                <div class="checkout-summary__title">Tổng thanh toán</div>
-                
-                <div class="checkout-summary__rows">
-                    <div class="checkout-summary__row">
-                        <span>Tạm tính:</span>
-                        <span id="sub-total-price">Đang tính...</span>
+        <!-- Products Section -->
+        <div class="bg-white shadow-[0_1px_1px_0_rgba(0,0,0,0.05)] mt-2">
+            <div class="p-6 hidden md:flex items-center text-gray-500 text-sm">
+                <div class="flex-1 text-gray-800 font-medium text-base">Sản Phẩm</div>
+                <div class="w-32 text-center">Đơn Giá</div>
+                <div class="w-24 text-center">Số Lượng</div>
+                <div class="w-32 text-center">Thành Tiền</div>
+            </div>
+            <div id="checkout-products-list" class="flex flex-col">
+                <p class="text-gray-500 text-sm italic py-4 px-6">Đang tải...</p>
+            </div>
+        </div>
+
+        <!-- Voucher Section -->
+        <div class="bg-white shadow-[0_1px_1px_0_rgba(0,0,0,0.05)] mt-2 p-6 flex flex-col md:flex-row justify-between md:items-center border-b border-gray-50">
+            <div class="flex items-center gap-2 mb-4 md:mb-0">
+                <svg class="w-6 h-6 text-pink-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z"></path></svg>
+                <span class="text-gray-800 font-medium">Voucher (Mã giảm giá)</span>
+            </div>
+            <div class="flex flex-col sm:flex-row items-center gap-2">
+                <input type="text" id="voucher-code" class="border border-gray-200 px-4 py-2 text-sm focus:outline-none focus:border-pink-500 rounded-sm w-full sm:w-48" placeholder="Nhập mã...">
+                <div class="flex gap-2 w-full sm:w-auto">
+                    <button id="btn-apply-voucher" class="bg-gray-800 text-white px-4 py-2 text-sm rounded-sm hover:bg-gray-700 w-full sm:w-auto whitespace-nowrap">Áp dụng</button>
+                    <button id="btn-show-vouchers" class="text-pink-500 font-medium px-4 py-2 hover:bg-pink-50 rounded-sm transition whitespace-nowrap">Chọn Voucher</button>
+                </div>
+                <p id="voucher-msg" class="hidden text-sm ml-2"></p>
+            </div>
+        </div>
+
+        <!-- Payment Methods & Summary Block -->
+        <div class="bg-white shadow-[0_1px_1px_0_rgba(0,0,0,0.05)] mt-2">
+            <!-- Payment Methods -->
+            <div class="p-6 border-b border-gray-50 flex flex-col md:flex-row md:items-center gap-4">
+                <h3 class="w-48 text-gray-800 font-medium shrink-0">Phương thức thanh toán</h3>
+                <div class="flex flex-wrap gap-3">
+                    <label class="cursor-pointer">
+                        <input type="radio" name="payment" value="banking" class="peer hidden" checked>
+                        <div class="border border-gray-200 px-4 py-2 text-sm text-gray-800 peer-checked:border-pink-500 peer-checked:text-pink-500 hover:border-pink-500 transition relative bg-white">
+                            Banking
+                            <div class="hidden peer-checked:block absolute bottom-0 right-0 w-4 h-4 overflow-hidden">
+                                <div class="w-8 h-8 bg-pink-500 transform rotate-45 translate-x-4 translate-y-4"></div>
+                                <svg class="absolute bottom-0 right-0 text-white w-2.5 h-2.5 mb-0.5 mr-0.5" fill="currentColor" viewBox="0 0 20 20"><path d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"/></svg>
+                            </div>
+                        </div>
+                    </label>
+                    <label class="cursor-pointer">
+                        <input type="radio" name="payment" value="momo" class="peer hidden">
+                        <div class="border border-gray-200 px-4 py-2 text-sm text-gray-800 peer-checked:border-pink-500 peer-checked:text-pink-500 hover:border-pink-500 transition relative bg-white">
+                            Momo
+                            <div class="hidden peer-checked:block absolute bottom-0 right-0 w-4 h-4 overflow-hidden">
+                                <div class="w-8 h-8 bg-pink-500 transform rotate-45 translate-x-4 translate-y-4"></div>
+                                <svg class="absolute bottom-0 right-0 text-white w-2.5 h-2.5 mb-0.5 mr-0.5" fill="currentColor" viewBox="0 0 20 20"><path d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"/></svg>
+                            </div>
+                        </div>
+                    </label>
+                    <label class="cursor-pointer">
+                        <input type="radio" name="payment" value="cod" class="peer hidden">
+                        <div class="border border-gray-200 px-4 py-2 text-sm text-gray-800 peer-checked:border-pink-500 peer-checked:text-pink-500 hover:border-pink-500 transition relative bg-white">
+                            Thanh toán khi nhận hàng
+                            <div class="hidden peer-checked:block absolute bottom-0 right-0 w-4 h-4 overflow-hidden">
+                                <div class="w-8 h-8 bg-pink-500 transform rotate-45 translate-x-4 translate-y-4"></div>
+                                <svg class="absolute bottom-0 right-0 text-white w-2.5 h-2.5 mb-0.5 mr-0.5" fill="currentColor" viewBox="0 0 20 20"><path d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"/></svg>
+                            </div>
+                        </div>
+                    </label>
+                </div>
+            </div>
+
+            <!-- Summary Table -->
+            <div class="p-6 bg-orange-50/20 flex flex-col items-end">
+                <div class="w-full sm:w-96">
+                    <div class="flex justify-between items-center py-2 text-sm">
+                        <span class="text-gray-500">Tổng tiền hàng</span>
+                        <span id="sub-total-price" class="text-gray-800">Đang tính...</span>
                     </div>
-                    <div id="discount-row" class="checkout-summary__row checkout-summary__row--discount hidden">
-                        <span>Mã giảm giá (<span id="applied-voucher-name"></span>):</span>
-                        <span id="discount-amount">-0 VNĐ</span>
+                    <div class="flex justify-between items-center py-2 text-sm">
+                        <span class="text-gray-500">Phí vận chuyển</span>
+                        <span id="shipping-fee" class="text-gray-800">Chưa tính</span>
                     </div>
-                    <div class="checkout-summary__row">
-                        <span>Phí giao hàng:</span>
-                        <span id="shipping-fee">Chưa tính</span>
+                    <div class="flex justify-between items-center py-2 text-sm" id="discount-row">
+                        <span class="text-gray-500">Mã giảm giá <span id="applied-voucher-name" class="text-pink-500 font-medium"></span></span>
+                        <span id="discount-amount" class="text-gray-800">-0 đ</span>
                     </div>
-                    <div class="checkout-summary__row checkout-summary__row--total">
-                        <span class="checkout-summary__total-label">Cần thanh toán:</span>
-                        <span id="final-price" class="checkout-summary__total-value">Đang tính...</span>
+                    <div class="flex justify-between items-center py-4 mt-2">
+                        <span class="text-gray-500">Tổng thanh toán:</span>
+                        <span id="final-price" class="text-pink-500 text-3xl font-medium">Đang tính...</span>
                     </div>
                 </div>
+            </div>
 
-                <div class="checkout-voucher">
-                    <div class="flex justify-between items-center mb-2">
-                        <label class="checkout-voucher__label mb-0">Mã khuyến mãi (Voucher)</label>
-                        <button id="btn-show-vouchers" class="text-pink-500 text-sm font-bold hover:text-pink-600 transition flex items-center">
-                            <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z"></path></svg>
-                            Chọn Voucher
-                        </button>
-                    </div>
-                    <div class="checkout-voucher__input-group">
-                        <input type="text" id="voucher-code" class="checkout-voucher__input" placeholder="Nhập mã giảm giá...">
-                        <button id="btn-apply-voucher" class="checkout-voucher__btn">
-                            Áp dụng
-                        </button>
-                    </div>
-                    <p id="voucher-msg" class="checkout-voucher__msg hidden"></p>
+            <div class="border-t border-dashed border-gray-200"></div>
+
+            <!-- Place Order Row -->
+            <div class="p-6 bg-orange-50/20 flex flex-col md:flex-row justify-between items-center gap-4">
+                <div class="text-sm text-gray-500">
+                    Nhấn "Đặt hàng" đồng nghĩa với việc bạn đồng ý tuân theo <a href="#" class="text-blue-600 hover:underline">Điều khoản của Cosmetics</a>.
                 </div>
+                <button id="btn-confirm-pay" class="bg-pink-500 hover:bg-pink-600 text-white font-medium py-3 px-10 text-sm transition rounded-sm flex items-center justify-center min-w-[200px] shadow-sm">
+                    <span id="btn-text">Đặt hàng</span>
+                    <svg id="loading-icon" class="checkout-spinner hidden ml-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" style="width: 20px; height: 20px;">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                </button>
             </div>
+        </div>
 
-            <div class="checkout-payment-title" style="width: 100%;">Phương thức thanh toán (Payment Method)</div>
-            
-            <div class="checkout-payment-methods" style="width: 100%;">
-                <label class="checkout-payment-option">
-                    <span class="checkout-payment-option__label checkout-payment-option__label--active">Banking</span>
-                    <input type="radio" name="payment" value="banking" class="checkout-payment-option__radio" checked>
-                </label>
-                <label class="checkout-payment-option">
-                    <span class="checkout-payment-option__label">Momo</span>
-                    <input type="radio" name="payment" value="momo" class="checkout-payment-option__radio">
-                </label>
-                <label class="checkout-payment-option">
-                    <span class="checkout-payment-option__label">Thanh toán khi nhận hàng (COD)</span>
-                    <input type="radio" name="payment" value="cod" class="checkout-payment-option__radio">
-                </label>
-            </div>
-
-            <div class="checkout-qr hidden">
-                <img src="" class="checkout-qr__img">
-                <span class="checkout-qr__text"></span>
-            </div>
-            
-            <button id="btn-confirm-pay" class="w-full bg-pink-500 hover:bg-pink-600 text-white font-bold py-4 rounded-xl transition shadow-lg mt-6 text-lg flex justify-center items-center">
-                <span id="btn-text">Xác nhận đặt hàng</span>
-                <svg id="loading-icon" class="checkout-spinner hidden ml-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" style="width: 20px; height: 20px;">
-                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                </svg>
-            </button>
+        <div class="checkout-qr hidden">
+            <img src="" class="checkout-qr__img">
+            <span class="checkout-qr__text"></span>
         </div>
 
     </div>
 
+
     {{-- Success Popup --}}
     <div id="success-popup" class="checkout-success-overlay hidden">
-        <div class="checkout-success-popup relative max-w-2xl w-full" id="popup-content">
+        <div class="checkout-success-popup relative w-full" style="max-width: 800px; padding: 2rem;" id="popup-content">
             <button id="btn-cancel-qr" class="absolute top-4 right-4 text-gray-400 hover:text-red-500 transition-colors hidden z-50">
                 <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
             </button>
@@ -159,28 +178,30 @@
                     </div>
                     <h3 class="checkout-success-popup__title w-full text-center" id="success-title" style="text-align: center;">Thành công!</h3>
                     <p class="checkout-success-popup__desc w-full text-center" id="success-desc" style="text-align: center;">Cảm ơn bạn. Đơn hàng của bạn đã được đặt thành công và đang được xử lý.</p>
-                    <a href="/user/profileuser?tab=orders" id="btn-view-history" class="btn-dark mt-6" style="width: 100%; text-align: center; text-transform: uppercase; letter-spacing: 0.05em;">
+                    <a href="/user/profileuser?tab=orders" id="btn-view-history" class="bg-gray-800 hover:bg-gray-700 text-white font-medium py-3 rounded-sm mt-6 transition w-full text-center uppercase text-sm block">
                         Xem lịch sử đơn hàng
                     </a>
                 </div>
             </div>
 
-            <div id="bill-section" class="hidden">
-                <h3 class="text-2xl font-black text-center text-gray-800 mb-6 uppercase tracking-wide">Hóa Đơn Của Bạn</h3>
-                <div class="text-left text-base text-gray-700 space-y-3 mb-6 bg-gray-50 p-6 rounded-2xl border border-gray-200 shadow-sm">
-                    <p class="flex justify-between"><strong class="text-gray-800">Khách hàng:</strong> <span id="bill-name" class="font-medium"></span></p>
-                    <p class="flex justify-between"><strong class="text-gray-800">SĐT:</strong> <span id="bill-phone" class="font-medium"></span></p>
-                    <p class="flex justify-between"><strong class="text-gray-800">Địa chỉ:</strong> <span id="bill-address" class="font-medium text-right w-2/3"></span></p>
-                    <div class="mt-4 border-t border-gray-200 pt-4">
-                        <strong class="block mb-3 text-pink-600 text-lg">Sản phẩm:</strong>
+            <div id="bill-section" class="hidden w-full">
+                <h3 class="text-xl font-bold text-center text-gray-800 mb-6 uppercase tracking-wide">Hóa Đơn Của Bạn</h3>
+                <div class="text-left text-sm text-gray-700 space-y-3 mb-6 bg-white p-6 border border-gray-100 shadow-sm">
+                    <p class="flex justify-between items-center"><strong class="text-gray-800 font-medium">Khách hàng:</strong> <span id="bill-name" class="font-medium"></span></p>
+                    <p class="flex justify-between items-center"><strong class="text-gray-800 font-medium">SĐT:</strong> <span id="bill-phone" class="font-medium"></span></p>
+                    <p class="flex justify-between items-start"><strong class="text-gray-800 font-medium shrink-0">Địa chỉ:</strong> <span id="bill-address" class="font-medium text-right ml-4 line-clamp-2 w-2/3"></span></p>
+                    
+                    <div class="mt-4 border-t border-gray-100 pt-4">
+                        <strong class="block mb-3 text-gray-800 font-medium">Sản phẩm:</strong>
                         <div id="bill-products" class="max-h-60 overflow-y-auto custom-scrollbar pr-2 space-y-3"></div>
                     </div>
-                    <div class="mt-4 border-t border-gray-300 pt-4 flex justify-between items-center font-bold text-xl text-gray-800">
-                        <span>Tổng tiền:</span>
-                        <span id="bill-total" class="text-pink-600 text-2xl"></span>
+                    
+                    <div class="mt-4 border-t border-gray-100 pt-4 flex justify-between items-center text-base text-gray-800">
+                        <span class="font-medium">Tổng tiền:</span>
+                        <span id="bill-total" class="text-pink-600 font-bold text-xl"></span>
                     </div>
                 </div>
-                <button id="btn-proceed-pay" class="w-full bg-pink-500 hover:bg-pink-600 text-white font-bold py-4 rounded-xl transition shadow-lg text-lg uppercase">
+                <button id="btn-proceed-pay" class="w-full bg-pink-500 hover:bg-pink-600 text-white font-medium py-3 rounded-sm transition flex items-center justify-center uppercase text-sm">
                     Thanh toán
                 </button>
             </div>
@@ -188,7 +209,7 @@
             <div id="qr-payment-section" class="hidden flex-col items-center">
                 <h3 class="checkout-success-popup__title" id="qr-title">Quét mã để thanh toán!</h3>
                 <p id="qr-instruction" class="text-gray-800 font-bold mb-3 text-center">Vui lòng quét mã QR để thanh toán</p>
-                <img id="popup-qr-img" src="" class="w-64 h-auto rounded-xl shadow-sm border border-gray-100 mb-2">
+                <img id="popup-qr-img" src="" class="w-64 h-auto rounded-sm border border-gray-200 mb-2">
                 <p class="text-xs text-red-500 font-medium text-center px-4 mb-2" id="qr-countdown-text">Đơn hàng sẽ tự động hủy sau <span id="qr-countdown" class="font-bold text-lg">03:00</span> phút nếu không nhận được thanh toán.</p>
                 <p class="checkout-success-popup__desc text-gray-600">Sau khi quét mã thanh toán thành công, hệ thống sẽ tự động tạo đơn hàng cho bạn.</p>
                 <button id="btn-done-qr" class="hidden">Đã thanh toán (Test)</button>
@@ -198,9 +219,9 @@
 
     {{-- Voucher List Modal --}}
     <div id="voucher-modal" class="fixed inset-0 bg-black/40 backdrop-blur-sm z-[100] hidden items-center justify-center p-4 transition-opacity duration-300">
-        <div class="bg-white rounded-3xl w-full max-w-md p-6 shadow-2xl transform transition-transform scale-100">
+        <div class="bg-white rounded-sm w-full max-w-md p-6 shadow-xl transform transition-transform scale-100">
             <div class="flex justify-between items-center mb-6">
-                <h3 class="text-xl font-black text-gray-800 uppercase tracking-wide">🎁 Chọn Voucher</h3>
+                <h3 class="text-lg font-bold text-gray-800 uppercase tracking-wide">Chọn Voucher</h3>
                 <button id="close-voucher-modal" class="text-gray-400 hover:text-pink-500 bg-gray-50 hover:bg-pink-50 p-2 rounded-full transition">
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
                 </button>
@@ -329,7 +350,7 @@
             } else {
                 currentShippingFee = 35000;
             }
-            document.getElementById('shipping-fee').textContent = currentShippingFee > 0 ? '+ ' + currentShippingFee.toLocaleString() + ' VNĐ' : 'Miễn phí';
+            document.getElementById('shipping-fee').textContent = currentShippingFee > 0 ? '+ ' + currentShippingFee.toLocaleString() + ' đ' : 'Miễn phí';
             updateFinalPrice();
 
             wardSelect.innerHTML = '<option value="" disabled selected>2. Chọn Phường / Xã</option>';
@@ -360,6 +381,7 @@
                     baseTotal = 0;
                     let hasValidItems = false;
                     let productsHtml = '';
+                    window.checkoutSelectedItems = [];
                     result.data.forEach(item => {
                         // Chỉ tính những sản phẩm được check ở giỏ hàng (hoặc tính hết nếu URL không có items)
                         if (selectedItems.length === 0 || selectedItems.includes(item.ma_san_pham)) {
@@ -371,21 +393,30 @@
                             const gia = item.san_pham.gia_khuyen_mai || item.san_pham.gia;
                             baseTotal += gia * item.so_luong;
                             hasValidItems = true;
+                            window.checkoutSelectedItems.push(item);
 
                             const mangAnh = item.san_pham.danh_sach_anh; 
                             const linkAnh = (mangAnh && mangAnh.length > 0) ? mangAnh[0].duong_dan_anh : '/images/logo.jpg';
 
                             productsHtml += `
-                                <div class="flex items-center gap-4 py-3 border-b border-gray-100 last:border-0">
-                                    <div class="w-16 h-16 flex-shrink-0 bg-gray-50 rounded-lg overflow-hidden border border-gray-100">
-                                        <img src="${linkAnh}" alt="${item.san_pham.ten_san_pham}" class="w-full h-full object-cover">
-                                    </div>
-                                    <div class="flex-grow min-w-0">
-                                        <h4 class="font-bold text-gray-800 text-sm truncate" title="${item.san_pham.ten_san_pham}">${item.san_pham.ten_san_pham}</h4>
-                                        <div class="flex items-center justify-between mt-1">
-                                            <span class="text-sm font-medium text-pink-600">${new Intl.NumberFormat('vi-VN').format(gia)} VNĐ</span>
-                                            <span class="text-sm text-gray-500 font-medium">x${item.so_luong}</span>
+                                <div class="flex flex-col md:flex-row items-center bg-white py-4 px-6 border-t border-dashed border-gray-200 hover:bg-gray-50 transition duration-200">
+                                    <div class="flex-1 flex items-center mb-3 md:mb-0 w-full md:w-auto">
+                                        <img src="${linkAnh}" alt="${item.san_pham.ten_san_pham}" class="w-12 h-12 object-cover border border-gray-100">
+                                        <div class="ml-4 flex-1">
+                                            <h4 class="text-gray-800 text-sm line-clamp-2">${item.san_pham.ten_san_pham}</h4>
                                         </div>
+                                    </div>
+                                    
+                                    <div class="w-full md:w-32 text-center text-gray-600 text-sm mb-3 md:mb-0 hidden md:block">
+                                        ${new Intl.NumberFormat('vi-VN').format(gia)} đ
+                                    </div>
+                                    
+                                    <div class="w-full md:w-24 text-center text-gray-600 text-sm mb-3 md:mb-0 hidden md:block">
+                                        ${item.so_luong}
+                                    </div>
+                                    
+                                    <div class="w-full md:w-32 text-center text-gray-800 text-sm font-medium mb-3 md:mb-0 hidden md:block">
+                                        ${new Intl.NumberFormat('vi-VN').format(gia * item.so_luong)} đ
                                     </div>
                                 </div>
                             `;
@@ -401,7 +432,7 @@
                     }
                     
                     // Cập nhật giao diện
-                    subTotalEl.textContent = baseTotal.toLocaleString() + ' VNĐ';
+                    subTotalEl.textContent = baseTotal.toLocaleString() + ' đ';
                     
                     // Cập nhật lại phí ship nếu đang chọn tỉnh
                     if (provinceSelect.value) {
@@ -422,7 +453,7 @@
         function updateFinalPrice() {
             let final = baseTotal + currentShippingFee - currentDiscount;
             if (final < 0) final = 0; // Không để âm tiền
-            finalPriceEl.textContent = final.toLocaleString() + ' VNĐ';
+            finalPriceEl.textContent = final.toLocaleString() + ' đ';
         }
 
         loadCartTotal(); // Khởi chạy lúc mở trang
@@ -466,7 +497,7 @@
                     // Hiện dòng giảm giá
                     discountRow.classList.remove('hidden');
                     appliedVoucherNameEl.textContent = code;
-                    discountAmountEl.textContent = '-' + currentDiscount.toLocaleString() + ' VNĐ';
+                    discountAmountEl.textContent = '-' + currentDiscount.toLocaleString() + ' đ';
                     
                     // Cập nhật lại tổng tiền
                     updateFinalPrice();
@@ -521,13 +552,13 @@
                     let html = '';
                     result.data.forEach(v => {
                         let desc = v.loai_giam === 'tien_mat' ? 
-                                   `Giảm ${v.gia_tri.toLocaleString()} VNĐ` : 
-                                   `Giảm ${v.gia_tri}% (Tối đa ${(v.giam_toi_da||0).toLocaleString()} VNĐ)`;
+                                   `Giảm ${v.gia_tri.toLocaleString()} đ` : 
+                                   `Giảm ${v.gia_tri}% (Tối đa ${(v.giam_toi_da||0).toLocaleString()} đ)`;
                         
                         let outOfStock = v.so_luong <= 0;
                         let percentUsed = Math.round(Math.max(5, 100 - Math.sqrt(v.so_luong) * 3));
                         if (outOfStock) percentUsed = 100;
-                        let minOrder = `Đơn tối thiểu: ${v.don_toi_thieu.toLocaleString()} VNĐ`;
+                        let minOrder = `Đơn tối thiểu: ${v.don_toi_thieu.toLocaleString()} đ`;
                         let isEligible = baseTotal >= v.don_toi_thieu && !outOfStock;
                         
                         let btnClass = isEligible ? 'bg-pink-500 hover:bg-pink-600 text-white shadow-sm' : 'bg-gray-100 text-gray-400 cursor-not-allowed';
@@ -676,29 +707,32 @@
                 document.getElementById('bill-phone').textContent = sdt;
                 document.getElementById('bill-address').textContent = pendingAddress;
                 
-                const checkoutImages = document.querySelectorAll('#checkout-products-list img');
-                const checkoutProducts = document.querySelectorAll('#checkout-products-list .flex-grow h4');
-                const checkoutPrices = document.querySelectorAll('#checkout-products-list .flex-grow .text-pink-600');
-                const checkoutQtys = document.querySelectorAll('#checkout-products-list .flex-grow .text-gray-500');
-                
-                let billProductsHtml = '';
-                for(let i=0; i<checkoutProducts.length; i++){
-                    let imgSrc = checkoutImages[i] ? checkoutImages[i].src : '/images/logo.jpg';
+                                let billProductsHtml = '';
+                (window.checkoutSelectedItems || []).forEach(item => {
+                    let hinhAnhObj = item.san_pham.hinh_anh && item.san_pham.hinh_anh.find(img => img.is_primary == 1) || (item.san_pham.hinh_anh && item.san_pham.hinh_anh[0]);
+                    let linkAnh = hinhAnhObj ? (hinhAnhObj.hinh_anh_url.startsWith('http') ? hinhAnhObj.hinh_anh_url : 'http://localhost:8000/storage/' + hinhAnhObj.hinh_anh_url) : '/images/logo.jpg';
+                    
+                    // Thử lấy danh_sach_anh (vì API cart lúc trước trả về danh_sach_anh)
+                    if (!hinhAnhObj && item.san_pham.danh_sach_anh && item.san_pham.danh_sach_anh.length > 0) {
+                        linkAnh = item.san_pham.danh_sach_anh[0].duong_dan_anh;
+                    }
+
+                    let gia = item.san_pham.gia_khuyen_mai ? item.san_pham.gia_khuyen_mai : (item.san_pham.gia_ban || item.san_pham.gia);
                     billProductsHtml += `
                         <div class="flex items-center gap-3 py-2 border-b border-gray-100 last:border-0">
-                            <div class="w-12 h-12 flex-shrink-0 bg-gray-50 rounded-md overflow-hidden border border-gray-200">
-                                <img src="${imgSrc}" class="w-full h-full object-cover">
+                            <div class="w-12 h-12 flex-shrink-0 bg-gray-50 rounded-sm overflow-hidden border border-gray-200">
+                                <img src="${linkAnh}" class="w-full h-full object-cover">
                             </div>
                             <div class="flex-grow min-w-0">
-                                <div class="text-sm font-medium text-gray-800 truncate" title="${checkoutProducts[i].textContent}">${checkoutProducts[i].textContent}</div>
+                                <div class="text-sm font-medium text-gray-800 line-clamp-1" title="${item.san_pham.ten_san_pham}">${item.san_pham.ten_san_pham}</div>
                                 <div class="flex justify-between mt-1 text-sm">
-                                    <span class="text-gray-500">SL: ${checkoutQtys[i].textContent.replace('x', '')}</span>
-                                    <span class="text-pink-600 font-bold">${checkoutPrices[i].textContent}</span>
+                                    <span class="text-gray-500">SL: ${item.so_luong}</span>
+                                    <span class="text-pink-600 font-bold">${new Intl.NumberFormat('vi-VN').format(gia * item.so_luong)} đ</span>
                                 </div>
                             </div>
                         </div>
                     `;
-                }
+                });
                 document.getElementById('bill-products').innerHTML = billProductsHtml;
                 document.getElementById('bill-total').textContent = document.getElementById('final-price').textContent;
 
@@ -721,7 +755,7 @@
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
-                        html_content: `<html><body style="font-family:sans-serif;text-align:center;padding:50px;background:#fdf2f8;"><h1 style="color:#db2777;font-size:30px">✅ Thanh toán thành công!</h1><p style="font-size:24px;font-weight:bold;color:#db2777;margin:15px 0">${amount.toLocaleString('vi-VN')} VNĐ</p><p style="font-size:18px">Đơn hàng <strong>${orderId}</strong> của bạn sẽ được xác nhận sớm!!</p><p style="color:#666">Vui lòng kiểm tra màn hình máy tính.</p></body></html>`
+                        html_content: `<html><body style="font-family:sans-serif;text-align:center;padding:50px;background:#fdf2f8;"><h1 style="color:#db2777;font-size:30px">✅ Thanh toán thành công!</h1><p style="font-size:24px;font-weight:bold;color:#db2777;margin:15px 0">${amount.toLocaleString('vi-VN')} đ</p><p style="font-size:18px">Đơn hàng <strong>${orderId}</strong> của bạn sẽ được xác nhận sớm!!</p><p style="color:#666">Vui lòng kiểm tra màn hình máy tính.</p></body></html>`
                     })
                 })
                 .then(res => res.json())

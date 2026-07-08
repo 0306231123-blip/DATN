@@ -3,52 +3,64 @@
 <style>
     .product-layout {
         display: flex;
-        gap: 30px;
+        gap: 20px;
         align-items: flex-start;
     }
     .filter-sidebar {
-        width: 250px;
+        width: 200px;
         flex-shrink: 0;
-        background: #fefcf8;
-        padding: 20px;
-        border-radius: 16px;
-        border: 1px solid #fce7f3;
+        background: transparent;
+        padding: 0;
+        border: none;
         position: sticky;
-        top: 20px;
+        top: 100px;
     }
     .product-main {
         flex-grow: 1;
     }
-    .filter-title {
-        font-weight: 900;
-        color: #1f2937;
-        margin-bottom: 15px;
-        font-size: 1.1rem;
+    .filter-main-title {
+        font-weight: 700;
+        color: #000000;
         text-transform: uppercase;
-        border-bottom: 2px dashed #fce7f3;
-        padding-bottom: 10px;
+        font-size: 1rem;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 15px;
+    }
+    .filter-title {
+        font-weight: 500;
+        color: #000000;
+        margin-bottom: 12px;
+        margin-top: 24px;
+        font-size: 0.95rem;
+        text-transform: capitalize;
+        border: none;
+        padding: 0;
     }
     .filter-item {
-        margin-bottom: 10px;
+        margin-bottom: 8px;
     }
     .filter-label {
         display: flex;
         align-items: center;
-        gap: 10px;
+        gap: 8px;
         cursor: pointer;
-        color: #4b5563;
-        font-weight: 500;
+        color: #000000;
+        font-weight: 400;
+        font-size: 0.85rem;
         transition: all 0.2s;
     }
     .filter-label:hover {
         color: #ec4899;
     }
     .filter-checkbox {
-        width: 18px;
-        height: 18px;
-        border-radius: 4px;
+        width: 14px;
+        height: 14px;
+        border-radius: 2px;
         accent-color: #ec4899;
         cursor: pointer;
+        border: 1px solid #d1d5db;
     }
     @media (max-width: 768px) {
         .product-layout {
@@ -80,28 +92,27 @@
     }
     .range-slider input[type="range"]::-webkit-slider-thumb {
         pointer-events: all;
-        width: 16px;
-        height: 16px;
+        width: 14px;
+        height: 14px;
         -webkit-appearance: none;
         background: #ec4899;
         border-radius: 50%;
         cursor: pointer;
-        box-shadow: 0 1px 3px rgba(0,0,0,0.3);
     }
     .slider-track {
         position: absolute;
         width: 100%;
-        height: 4px;
+        height: 2px;
         background: #e5e7eb;
-        border-radius: 4px;
+        border-radius: 2px;
         top: 6px;
         z-index: 1;
     }
     .slider-range-fill {
         position: absolute;
-        height: 4px;
+        height: 2px;
         background: #ec4899;
-        border-radius: 4px;
+        border-radius: 2px;
         top: 6px;
         z-index: 1;
     }

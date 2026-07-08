@@ -19,7 +19,7 @@
                     @forelse($danhSachKhuyenMai as $sp)
                         @include('components.product-card', ['sp' => $sp])
                     @empty
-                        <div class="col-span-full text-center py-10 text-gray-500 font-medium bg-gray-50 rounded-2xl border border-gray-100" style="grid-column: 1 / -1;">
+                        <div class="col-span-full text-center py-10 text-gray-500 font-medium bg-white rounded-sm border border-gray-100" style="grid-column: 1 / -1;">
                             Không tìm thấy sản phẩm khuyến mãi nào phù hợp!
                         </div>
                     @endforelse

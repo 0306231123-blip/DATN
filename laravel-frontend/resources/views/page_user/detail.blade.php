@@ -7,6 +7,12 @@
 @section('content')
 <section class="user-section">
     <div class="user-container">
+        <div class="mb-4">
+            <a href="javascript:history.back()" class="inline-flex items-center text-gray-500 hover:text-pink-600 transition font-medium text-sm">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" /></svg>
+                Quay lại
+            </a>
+        </div>
         <div class="detail-grid">
             {{-- Gallery Column --}}
             <div class="detail-gallery">
