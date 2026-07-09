@@ -300,7 +300,8 @@
             <div class="form-row">
                 <div class="form-group">
                     <label for="thuong_hieu">Thương hiệu</label>
-                    <input type="text" id="thuong_hieu" name="thuong_hieu" class="form-control">
+                    <input type="text" id="thuong_hieu" name="thuong_hieu" class="form-control" list="danh_sach_thuong_hieu">
+                    <datalist id="danh_sach_thuong_hieu"></datalist>
                 </div>
                 <div class="form-group">
                     <label for="xuat_xu">Xuất xứ</label>
@@ -619,6 +620,7 @@ const API_BASE_URL = 'http://localhost:3000/api';
 
 let products = [];
 let categories = [];
+let allBrands = [];
 let currentEditId = null;
 let galleryImages = []; // cached gallery images
 
@@ -678,6 +680,28 @@ function updateCategorySelects() {
             `<option value="${cat.ma_danh_muc}">${escapeHtml(cat.ten_danh_muc)}</option>`
         ).join('');
     select.innerHTML = options;
+}
+
+async function loadBrandsList() {
+    try {
+        const response = await fetch(`${API_BASE_URL}/products/brands`);
+        const result = await response.json();
+        if (result.status === 'success' || result.success) {
+            allBrands = result.data;
+            updateBrandDatalist();
+        }
+    } catch (error) {
+        console.error('Error loading brands:', error);
+    }
+}
+
+function updateBrandDatalist() {
+    const datalist = document.getElementById('danh_sach_thuong_hieu');
+    if (!datalist) return;
+    const options = allBrands.map(brand => 
+        `<option value="${escapeHtml(brand)}"></option>`
+    ).join('');
+    datalist.innerHTML = options;
 }
 
 async function loadProducts(search = '', status = 'all', page = 1) {
@@ -1307,6 +1331,7 @@ if (btnRemoveImage) {
 document.addEventListener('DOMContentLoaded', async function() {
     if (window.lucide) lucide.createIcons();
     await loadCategories();
+    await loadBrandsList();
     await loadProducts();
 });
 // ==================== NEW JS FOR VARIANTS & INVENTORY ====================

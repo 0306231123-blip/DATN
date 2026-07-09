@@ -33,12 +33,12 @@
             <div class="stats-date-inputs">
                 <div class="date-input-group">
                     <label>Từ ngày</label>
-                    <input type="date" id="filter-start-date" title="Từ ngày">
+                    <input type="date" id="filter-start-date" title="Từ ngày" max="{{ date('Y-m-d') }}">
                 </div>
                 <span class="date-separator"><i data-lucide="arrow-right" class="icon-xs"></i></span>
                 <div class="date-input-group">
                     <label>Đến ngày</label>
-                    <input type="date" id="filter-end-date" title="Đến ngày">
+                    <input type="date" id="filter-end-date" title="Đến ngày" max="{{ date('Y-m-d') }}">
                 </div>
             </div>
         </div>

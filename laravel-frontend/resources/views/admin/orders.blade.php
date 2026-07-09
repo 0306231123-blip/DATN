@@ -55,6 +55,13 @@
         </div>
     </div>
     <div class="action-bar-right">
+        <div class="date-filter" style="display: flex; align-items: center; gap: 8px; margin-right: 15px; border-right: 1px solid var(--border-color); padding-right: 15px;">
+            <span style="font-size: 13px; color: var(--text-muted);">Ngày đặt:</span>
+            <input type="date" id="order-start-date" class="form-control" style="width: auto; padding: 6px 10px; height: 36px; border-radius: 6px; font-size: 13px;" title="Từ ngày" max="{{ date('Y-m-d') }}">
+            <span style="color: var(--text-muted);">-</span>
+            <input type="date" id="order-end-date" class="form-control" style="width: auto; padding: 6px 10px; height: 36px; border-radius: 6px; font-size: 13px;" title="Đến ngày" max="{{ date('Y-m-d') }}">
+            <button class="btn btn-secondary" onclick="goToPage(1)" style="height: 36px; padding: 0 12px; font-size: 13px;"><i data-lucide="filter" class="icon-xs" style="margin-right: 4px;"></i>Lọc</button>
+        </div>
         <div class="search-box" id="search-orders">
             <i data-lucide="search" class="icon-xs search-icon"></i>
             <input type="text" placeholder="Mã đơn, tên khách..." class="search-input search-input--sm" id="order-search-input">
@@ -120,6 +127,11 @@ async function loadOrders(search = '', status = 'all', page = 1) {
         let url = `${API_BASE_URL}/orders?per_page=15&page=${page}`;
         if (search) url += `&search=${encodeURIComponent(search)}`;
         if (status !== 'all') url += `&trang_thai=${status}`;
+
+        const startDate = document.getElementById('order-start-date')?.value;
+        const endDate = document.getElementById('order-end-date')?.value;
+        if (startDate) url += `&start_date=${startDate}`;
+        if (endDate) url += `&end_date=${endDate}`;
 
         const response = await fetch(url);
         const result = await response.json();
