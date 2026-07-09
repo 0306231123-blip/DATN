@@ -677,40 +677,13 @@
             const chatCloseBtn = document.getElementById('chat-close-btn');
             const chatBox = document.getElementById('chat-box');
             const chatMessages = document.getElementById('chat-messages');
-            const aiChatMessages = document.getElementById('ai-chat-messages');
+            
             const chatInput = document.getElementById('chat-input');
             const chatSendBtn = document.getElementById('chat-send-btn');
-            
-            const tabCskh = document.getElementById('tab-cskh');
-            const tabAi = document.getElementById('tab-ai');
-            const chatAttachBtnElem = document.getElementById('chat-attach-btn');
             
             let chatInterval = null;
             let lastMessageCount = 0;
             let currentChatTab = 'cskh';
-
-            if (tabCskh && tabAi) {
-                tabCskh.addEventListener('click', () => {
-                    currentChatTab = 'cskh';
-                    tabCskh.classList.replace('text-gray-400', 'text-pink-500');
-                    tabCskh.classList.replace('border-transparent', 'border-pink-500');
-                    tabAi.classList.replace('text-pink-500', 'text-gray-400');
-                    tabAi.classList.replace('border-pink-500', 'border-transparent');
-                    chatMessages.classList.remove('hidden');
-                    aiChatMessages.classList.add('hidden');
-                    if (chatAttachBtnElem) chatAttachBtnElem.classList.remove('hidden');
-                });
-                tabAi.addEventListener('click', () => {
-                    currentChatTab = 'ai';
-                    tabAi.classList.replace('text-gray-400', 'text-pink-500');
-                    tabAi.classList.replace('border-transparent', 'border-pink-500');
-                    tabCskh.classList.replace('text-pink-500', 'text-gray-400');
-                    tabCskh.classList.replace('border-pink-500', 'border-transparent');
-                    aiChatMessages.classList.remove('hidden');
-                    chatMessages.classList.add('hidden');
-                    if (chatAttachBtnElem) chatAttachBtnElem.classList.remove('hidden');
-                });
-            }
 
             function formatChatTime(dateString) {
                 const date = new Date(dateString);
@@ -787,107 +760,6 @@
                 chatInput.value = '';
                 document.getElementById('chat-image-preview-container').classList.add('hidden');
 
-                if (currentChatTab === 'ai') {
-                    let base64Images = [];
-                    let uploadedUrls = [];
-                    if (selectedChatImages.length > 0) {
-                        for (let file of selectedChatImages) {
-                            // Base64 for Python AI
-                            let b64 = await new Promise((resolve) => {
-                                const reader = new FileReader();
-                                reader.onload = (e) => resolve(e.target.result);
-                                reader.readAsDataURL(file);
-                            });
-                            base64Images.push(b64);
-                            
-                            // Upload to Node.js for lightweight localStorage
-                            const formData = new FormData();
-                            formData.append('image', file);
-                            try {
-                                const uploadRes = await fetch('http://localhost:3000/api/chat/upload', {
-                                    method: 'POST',
-                                    headers: { 'Authorization': `Bearer ${token}` },
-                                    body: formData
-                                });
-                                const uploadData = await uploadRes.json();
-                                if (uploadData.success) {
-                                    uploadedUrls.push('http://localhost:8000' + uploadData.url); 
-                                }
-                            } catch (e) {
-                                console.error('Lỗi upload ảnh:', e);
-                            }
-                        }
-                        selectedChatImages = []; // reset
-                        chatImagePreviewContainer.classList.add('hidden');
-                        chatImagePreviewContainer.innerHTML = '';
-                    }
-
-                    let imgHtml = '';
-                    if (uploadedUrls.length > 0) {
-                        imgHtml = uploadedUrls.map(url => `<img src="${url}" class="w-full max-w-xs rounded mb-2" />`).join('');
-                    } else if (base64Images.length > 0) {
-                        // Fallback in case upload fails
-                        imgHtml = base64Images.map(b64 => `<img src="${b64}" class="w-full max-w-xs rounded mb-2" />`).join('');
-                    }
-
-                    const userHtml = `
-                        <div class="flex items-end gap-2 justify-end">
-                            <div class="bg-gradient-to-r from-pink-500 to-pink-400 text-white p-3 rounded-2xl rounded-br-sm shadow-sm max-w-[80%] text-sm">
-                                ${imgHtml}
-                                ${text ? text.replace(/\n/g, '<br>') : ''}
-                            </div>
-                        </div>`;
-                    aiChatMessages.insertAdjacentHTML('beforeend', userHtml);
-                    aiChatMessages.scrollTop = aiChatMessages.scrollHeight;
-                    localStorage.setItem(('ai_chat_history_' + (() => { try { return JSON.parse(localStorage.getItem('user')).ma_nguoi_dung; } catch(e) { return 'guest'; } })()), aiChatMessages.innerHTML);
-
-                    const loadingId = 'ai-loading-' + Date.now();
-                    const loadingHtml = `
-                        <div id="${loadingId}" class="flex items-start gap-2 justify-start">
-                            <div class="w-8 h-8 rounded-full bg-white shadow-sm flex items-center justify-center shrink-0 border border-gray-100">
-                                <span class="text-sm">✨</span>
-                            </div>
-                            <div class="bg-white text-gray-700 p-3 rounded-2xl rounded-bl-sm shadow-sm border border-gray-100 max-w-[80%] text-sm">
-                                <span class="animate-pulse">Đang trả lời...</span>
-                            </div>
-                        </div>`;
-                    aiChatMessages.insertAdjacentHTML('beforeend', loadingHtml);
-                    aiChatMessages.scrollTop = aiChatMessages.scrollHeight;
-
-                    try {
-                        const res = await fetch('http://localhost:5000/api/ai-chat', {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ message: text, images: base64Images })
-                        });
-                        const data = await res.json();
-                        document.getElementById(loadingId)?.remove();
-
-                        const botHtml = `
-                            <div class="flex items-start gap-2 justify-start">
-                                <div class="w-8 h-8 rounded-full bg-white shadow-sm flex items-center justify-center shrink-0 border border-gray-100">
-                                    <span class="text-sm">✨</span>
-                                </div>
-                                <div class="bg-white text-gray-700 p-3 rounded-2xl rounded-bl-sm shadow-sm border border-gray-100 max-w-[80%] text-sm" style="line-height: 1.6;">
-                                    ${(() => {
-                                        let m = data.data || "Xin lỗi, AI đang gặp sự cố.";
-                                        m = m.replace(/\[([^\]]+)\]\s*\(([^)]+)\)/g, '<a href="$2" target="_blank" class="text-pink-600 font-bold underline hover:text-pink-700">$1</a>');
-                                        m = m.replace(/\*\*(.*?)\*\*/g, '<b>$1</b>');
-                                        return m.replace(/\n/g, '<br>');
-                                    })()}
-                                </div>
-                            </div>`;
-                        aiChatMessages.insertAdjacentHTML('beforeend', botHtml);
-                        aiChatMessages.scrollTop = aiChatMessages.scrollHeight;
-                        localStorage.setItem(('ai_chat_history_' + (() => { try { return JSON.parse(localStorage.getItem('user')).ma_nguoi_dung; } catch(e) { return 'guest'; } })()), aiChatMessages.innerHTML);
-                    } catch (err) {
-                        console.error(err);
-                        document.getElementById(loadingId)?.remove();
-                        aiChatMessages.insertAdjacentHTML('beforeend', '<div class="text-center text-xs text-red-500 my-2">Lỗi kết nối đến máy chủ AI.</div>');
-                    }
-                    return;
-                }
-                
                 let uploadedUrls = [];
                 if (selectedChatImages.length > 0) {
                     for (let file of selectedChatImages) {
@@ -1031,77 +903,7 @@
 
         });
     
-            // Load AI Chat History & Restock Suggestion
-            window.addEventListener('DOMContentLoaded', () => {
-                let userId = 'guest';
-                try {
-                    const userStr = localStorage.getItem('user');
-                    if (userStr) {
-                        userId = JSON.parse(userStr).ma_nguoi_dung;
-                    }
-                } catch(e) {}
-                
-                const savedAiHistory = localStorage.getItem('ai_chat_history_' + userId);
-                const aiChatMsgEl = document.getElementById('ai-chat-messages');
-                
-                if (savedAiHistory && aiChatMsgEl) {
-                    aiChatMsgEl.innerHTML = savedAiHistory;
-                    // wait a bit for images/render before scrolling
-                    setTimeout(() => aiChatMsgEl.scrollTop = aiChatMsgEl.scrollHeight, 100);
-                }
-                
-                // Fetch AI Restock Suggestion
-                if (userId !== 'guest' && !sessionStorage.getItem('ai_restock_suggested_' + userId)) {
-                    sessionStorage.setItem('ai_restock_suggested_' + userId, 'true');
-                    setTimeout(async () => {
-                        try {
-                            const res = await fetch('http://localhost:5000/api/ai-suggest-restock', {
-                                method: 'POST',
-                                headers: { 'Content-Type': 'application/json' },
-                                body: JSON.stringify({ user_id: userId })
-                            });
-                            const data = await res.json();
-                            if (data.success && data.has_suggestion) {
-                                let botMsg = data.message;
-                                botMsg = botMsg.replace(/\[([^\]]+)\]\s*\(([^)]+)\)/g, '<a href="$2" target="_blank" class="text-pink-600 font-bold underline hover:text-pink-700">$1</a>');
-                                botMsg = botMsg.replace(/\*\*(.*?)\*\*/g, '<b>$1</b>');
-                                botMsg = botMsg.replace(/\\n/g, '<br>');
-                                
-                                const botHtml = `
-                                    <div class="flex items-start gap-2 justify-start mt-4">
-                                        <div class="w-8 h-8 rounded-full bg-pink-100 flex items-center justify-center shrink-0 border border-pink-200">
-                                            <span class="text-sm">🤖</span>
-                                        </div>
-                                        <div class="bg-white text-gray-700 p-3 rounded-2xl rounded-bl-sm shadow-sm border border-pink-200 max-w-[80%] text-sm relative">
-                                            ${botMsg}
-                                        </div>
-                                    </div>`;
-                                
-                                if (aiChatMsgEl) {
-                                    aiChatMsgEl.insertAdjacentHTML('beforeend', botHtml);
-                                    aiChatMsgEl.scrollTop = aiChatMsgEl.scrollHeight;
-                                    localStorage.setItem('ai_chat_history_' + userId, aiChatMsgEl.innerHTML);
-                                    
-                                    const chatBox = document.getElementById('chat-box');
-                                    if (chatBox && chatBox.classList.contains('hidden')) {
-                                        const badge = document.getElementById('chat-unread-badge');
-                                        if (badge) badge.classList.remove('hidden');
-                                        
-                                        // Optional: Add a little animation to the toggle button
-                                        const toggleBtn = document.getElementById('chat-toggle-btn');
-                                        if (toggleBtn) {
-                                            toggleBtn.classList.add('animate-bounce');
-                                            setTimeout(() => toggleBtn.classList.remove('animate-bounce'), 3000);
-                                        }
-                                    }
-                                }
-                            }
-                        } catch (e) {
-                            console.error("Lỗi lấy gợi ý AI:", e);
-                        }
-                    }, 2000); // Wait 2s
-                }
-            });
+            
 
 </script>
 
@@ -1135,18 +937,12 @@
             
             <!-- Tabs -->
             <div class="flex border-b border-gray-200 bg-white">
-                <button id="tab-cskh" class="flex-1 py-2 text-sm font-semibold text-pink-500 border-b-2 border-pink-500 focus:outline-none transition">Chat với Shop</button>
-                <button id="tab-ai" class="flex-1 py-2 text-sm font-semibold text-gray-400 border-b-2 border-transparent hover:text-pink-500 focus:outline-none transition">Trợ Lý AI</button>
+                <button id="tab-cskh" class="w-full py-2 text-sm font-semibold text-pink-500 border-b-2 border-pink-500 focus:outline-none transition">Chat với Shop</button>
             </div>
 
             <!-- Messages Area CSKH -->
             <div id="chat-messages" class="flex-1 p-4 overflow-y-auto bg-gray-50 flex flex-col gap-3" style="scroll-behavior: smooth;">
                 <div class="text-center text-xs text-gray-400 my-2">Bắt đầu cuộc trò chuyện với Shop</div>
-            </div>
-
-            <!-- Messages Area AI -->
-            <div id="ai-chat-messages" class="hidden flex-1 p-4 overflow-y-auto bg-gray-50 flex flex-col gap-3" style="scroll-behavior: smooth;">
-                <div class="text-center text-xs text-gray-400 my-2">Hãy hỏi chuyên gia AI về làm đẹp và tình trạng da của bạn!</div>
             </div>
 
             <!-- Image Preview Area -->

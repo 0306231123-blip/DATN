@@ -272,7 +272,7 @@ async function updateStatus(orderId, selectElement, oldStatus) {
         const lyDoMacDinh = "Yêu cầu trả hàng không đáp ứng đủ các điều kiện/quy định đổi trả của Shop (thiếu video, đã bóc tem, hoặc quá hạn).";
 
         try {
-            const response = await fetch(`${API_BASE_URL}/orders/${orderId}/status`, {
+            const response = await fetch(`${API_BASE_URL}/orders/${encodeURIComponent(orderId)}/status`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ 
@@ -321,7 +321,7 @@ async function updateStatus(orderId, selectElement, oldStatus) {
     }
 
     try {
-        const response = await fetch(`${API_BASE_URL}/orders/${orderId}/status`, {
+        const response = await fetch(`${API_BASE_URL}/orders/${encodeURIComponent(orderId)}/status`, {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ trang_thai_don: newStatus }),
@@ -381,7 +381,7 @@ async function viewOrderDetail(orderId) {
         document.getElementById('modal-overlay').style.display = 'block';
         document.getElementById('order-detail-body').innerHTML = '<p style="text-align: center; padding: 20px;">Đang tải...</p>';
 
-        const response = await fetch(`${API_BASE_URL}/orders/${orderId}`);
+        const response = await fetch(`${API_BASE_URL}/orders/${encodeURIComponent(orderId)}`);
         const result = await response.json();
 
         if (result.status === 'success') {

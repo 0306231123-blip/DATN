@@ -718,7 +718,7 @@
                 // Cuộn đến đơn hàng nếu có hash trên URL
                 if (window.location.hash) {
                     setTimeout(() => {
-                        const target = document.querySelector(window.location.hash);
+                        const target = document.getElementById(window.location.hash.substring(1));
                         if (target) {
                             target.scrollIntoView({ behavior: 'smooth', block: 'center' });
                             target.style.boxShadow = '0 0 0 2px #f472b6'; // pink-400 highlight
@@ -982,7 +982,7 @@ function applyFilters(tab) {
 window.addEventListener('hashchange', function() {
     if (window.location.hash) {
         setTimeout(() => {
-            const target = document.querySelector(window.location.hash);
+            const target = document.getElementById(window.location.hash.substring(1));
             if (target) {
                 target.scrollIntoView({ behavior: 'smooth', block: 'center' });
                 target.style.boxShadow = '0 0 0 2px #f472b6'; // pink-400 highlight

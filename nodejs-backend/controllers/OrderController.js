@@ -155,8 +155,8 @@ class OrderController {
     try {
       const { id } = req.params;
 
-      const orderId = parseInt(id);
-      if (isNaN(orderId) || orderId <= 0) {
+      const orderId = id;
+      if (!orderId) {
         return res.status(400).json({
           status: 'error',
           message: 'ID đơn hàng không hợp lệ.',
@@ -219,8 +219,8 @@ class OrderController {
       const { id } = req.params;
       const { trang_thai_don, ly_do_tu_choi_tra } = req.body;
 
-      const orderId = parseInt(id);
-      if (isNaN(orderId) || orderId <= 0) {
+      const orderId = id;
+      if (!orderId) {
         return res.status(400).json({
           status: 'error',
           message: 'ID đơn hàng không hợp lệ.',
