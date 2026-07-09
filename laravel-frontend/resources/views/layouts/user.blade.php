@@ -440,7 +440,7 @@
                             <div class="relative block border-b border-gray-100 hover:bg-gray-50 transition ${isUnreadClass}" data-notif-id="${notifId}" data-is-read="${isRead}">
                                 <a href="/user/profileuser?tab=${targetTab}#order-${order.ma_don_hang}" class="block p-4 pr-10" onclick="markNotificationRead(${timeVal})">
                                     <div class="flex justify-between items-start mb-1">
-                                        <span class="font-bold text-gray-800 text-sm">Đơn hàng ${order.ma_don_hang_custom || '#' + order.ma_don_hang}</span>
+                                        <span class="font-bold text-gray-800 text-sm">Đơn hàng ${order.ma_don_hang}</span>
                                         <span class="text-[11px] text-gray-400">${timeStr}</span>
                                     </div>
                                     <p class="text-sm font-medium ${colorClass}">${msg}</p>

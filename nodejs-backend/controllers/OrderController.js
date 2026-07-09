@@ -451,7 +451,7 @@ class OrderController {
 
         // 4. Lệnh tạo đơn hàng (Đã sửa lại biến user cho chuẩn)
         const donHangMoi = await DonHang.create({
-            ma_don_hang_custom: customOrderCode,
+            ma_don_hang: customOrderCode,
             ma_nguoi_dung: maNguoiDung, 
             ho_ten_nguoi_nhan: req.body.ho_ten || (user ? user.ho_ten : 'Khách hàng'), 
             so_dien_thoai_nhan: so_dien_thoai || (user ? user.so_dien_thoai : '0123456789'), 

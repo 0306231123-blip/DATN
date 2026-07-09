@@ -134,7 +134,7 @@
                                 $trangThai = $trangThaiMap[$dh['trang_thai_don']] ?? $defaultTrangThai;
                             @endphp
                             <tr>
-                                <td class="ro-id">{{ !empty($dh['ma_don_hang_custom']) ? '#' . $dh['ma_don_hang_custom'] : '#DH' . str_pad($dh['ma_don_hang'] ?? 0, 4, '0', STR_PAD_LEFT) }}</td>
+                                <td class="ro-id">{{ $dh['ma_don_hang'] }}</td>
                                 <td>{{ $dh['ho_ten_nguoi_nhan'] }}</td>
                                 <td>{{ $formatTien($dh['tong_thanh_toan']) }}</td>
                                 <td><span class="order-badge order-badge--sm {{ $trangThai['class'] }}">{{ $trangThai['text'] }}</span></td>

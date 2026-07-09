@@ -193,12 +193,12 @@ function renderTable(orders) {
 
         return `
             <tr>
-                <td><span class="order-id-link" onclick="viewOrderDetail(${order.ma_don_hang})">${order.ma_don_hang_custom || '#DH' + String(order.ma_don_hang).padStart(4, '0')}</span></td>
+                <td><span class="order-id-link" onclick="viewOrderDetail('${order.ma_don_hang}')">${order.ma_don_hang}</span></td>
                 <td><span class="text-bold">${escapeHtml(customerName)}</span></td>
                 <td><span class="text-secondary">${soSanPham} sản phẩm</span></td>
                 <td><span class="text-bold">${totalFormatted}</span></td>
                 <td>
-                    <select class="status-select" onchange="updateStatus(${order.ma_don_hang}, this, '${order.trang_thai_don}')" style="padding: 6px 10px; border-radius: 6px; border: 1px solid #e5e7eb; background: #f9fafb; font-size: 13px; cursor: pointer; outline: none; font-weight: 500; color: #374151;">
+                    <select class="status-select" onchange="updateStatus('${order.ma_don_hang}', this, '${order.trang_thai_don}')" style="padding: 6px 10px; border-radius: 6px; border: 1px solid #e5e7eb; background: #f9fafb; font-size: 13px; cursor: pointer; outline: none; font-weight: 500; color: #374151;">
                         <option value="cho_xac_nhan" ${order.trang_thai_don === 'cho_xac_nhan' ? 'selected' : ''}>Chờ xác nhận</option>
                         <option value="da_xac_nhan" ${order.trang_thai_don === 'da_xac_nhan' ? 'selected' : ''}>Đã xác nhận</option>
                         <option value="dang_giao" ${order.trang_thai_don === 'dang_giao' ? 'selected' : ''}>Đang giao</option>
@@ -214,7 +214,7 @@ function renderTable(orders) {
                 <td><span class="text-secondary">${dateFormatted}</span></td>
                 <td>
                     <div class="action-btns">
-                        <button class="icon-action-btn" title="Xem chi tiết" onclick="viewOrderDetail(${order.ma_don_hang})">
+                        <button class="icon-action-btn" title="Xem chi tiết" onclick="viewOrderDetail('${order.ma_don_hang}')">
                             <i data-lucide="eye" class="icon-xs"></i>
                         </button>
                         ${actionButtons}
@@ -381,7 +381,7 @@ async function viewOrderDetail(orderId) {
             const customerPhone = order.so_dien_thoai_nhan || (order.nguoi_dung ? order.nguoi_dung.so_dien_thoai : '');
 
             document.getElementById('modal-order-title').textContent =
-                `Đơn hàng ${order.ma_don_hang_custom || '#DH' + String(order.ma_don_hang).padStart(4, '0')}`;
+                `Đơn hàng ${order.ma_don_hang}`;
 
             // Tìm đoạn hiển thị thông tin ngân hàng trong hàm viewOrderDetail
 // Sửa thành như thế này:

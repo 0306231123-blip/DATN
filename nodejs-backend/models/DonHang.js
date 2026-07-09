@@ -3,14 +3,14 @@ const sequelize = require('../config/database');
 const NguoiDung = require('./NguoiDung'); // Nhúng model NguoiDung để làm khóa ngoại
 
 const DonHang = sequelize.define('don_hang', {
-  ma_don_hang: {
+  stt: {
     type: DataTypes.INTEGER,
-    primaryKey: true,
     autoIncrement: true,
+    unique: true,
   },
-  ma_don_hang_custom: {
+  ma_don_hang: {
     type: DataTypes.STRING(20),
-    allowNull: true,
+    primaryKey: true,
   },
   ma_nguoi_dung: {
     type: DataTypes.INTEGER,

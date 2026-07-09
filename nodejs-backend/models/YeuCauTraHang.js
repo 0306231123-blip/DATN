@@ -9,7 +9,7 @@ const YeuCauTraHang = sequelize.define('yeu_cau_tra_hang', {
     autoIncrement: true,
   },
   ma_don_hang: {
-    type: DataTypes.INTEGER,
+    type: DataTypes.STRING(20),
     allowNull: false,
     references: {
       model: DonHang,

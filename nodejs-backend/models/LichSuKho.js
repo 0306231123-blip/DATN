@@ -51,7 +51,7 @@ const LichSuKho = sequelize.define('lich_su_kho', {
     }
   },
   ma_don_hang: {
-    type: DataTypes.INTEGER,
+    type: DataTypes.STRING(20),
     allowNull: true,
   },
   ghi_chu: {

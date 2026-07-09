@@ -15,8 +15,8 @@ const DanhGia = sequelize.define('danh_gia', {
         type: DataTypes.INTEGER, 
         allowNull: false 
     },
-    ma_don_hang: { 
-        type: DataTypes.INTEGER,
+    ma_don_hang: {
+    type: DataTypes.STRING(20),
         allowNull: true // Cho phép null nếu chưa cần ép buộc phải mua hàng mới được đánh giá
     },
     diem_so: { 

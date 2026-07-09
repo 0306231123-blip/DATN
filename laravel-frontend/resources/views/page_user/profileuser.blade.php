@@ -573,10 +573,10 @@
                             if (diffDays <= 3) {
                                 actionBtnHtml = `
                                     <div class="flex space-x-3 mt-4 w-full">
-                                        <button onclick="updateOrderStatus(${order.ma_don_hang}, 'hoan_thanh')" class="w-1/2 bg-gray-800 hover:bg-black text-white font-bold py-2 px-4 rounded-lg transition text-sm shadow">
+                                        <button onclick="updateOrderStatus('${order.ma_don_hang}', 'hoan_thanh')" class="w-1/2 bg-gray-800 hover:bg-black text-white font-bold py-2 px-4 rounded-lg transition text-sm shadow">
                                             Đã nhận được hàng
                                         </button>
-                                        <button onclick="updateOrderStatus(${order.ma_don_hang}, 'tra_hang_hoan_tien')" class="w-1/2 bg-white border-2 border-gray-200 hover:border-yellow-500 hover:text-yellow-600 text-gray-600 font-bold py-2 px-4 rounded-lg transition text-sm">
+                                        <button onclick="updateOrderStatus('${order.ma_don_hang}', 'tra_hang_hoan_tien')" class="w-1/2 bg-white border-2 border-gray-200 hover:border-yellow-500 hover:text-yellow-600 text-gray-600 font-bold py-2 px-4 rounded-lg transition text-sm">
                                             Yêu cầu Trả hàng
                                         </button>
                                     </div>
@@ -615,10 +615,10 @@
                         }
 
                         htmlHistory += `
-                            <div class="profile-order-card" id="order-${order.ma_don_hang}" data-status="${order.trang_thai_don}" data-date="${dateISO}" data-products="${productNames}" onclick="showOrderDetails(${order.ma_don_hang}, event)" style="cursor: pointer;">
+                            <div class="profile-order-card" id="order-${order.ma_don_hang}" data-status="${order.trang_thai_don}" data-date="${dateISO}" data-products="${productNames}" onclick="showOrderDetails('${order.ma_don_hang}', event)" style="cursor: pointer;">
                                 <div class="profile-order-card__header">
                                     <div>
-                                        <p class="profile-order-card__id">Đơn hàng ${order.ma_don_hang_custom || '#' + order.ma_don_hang}</p>
+                                        <p class="profile-order-card__id">Đơn hàng ${order.ma_don_hang}</p>
                                         <p class="profile-order-card__date">Ngày đặt: ${date}</p>
                                         <p class="profile-order-card__date mt-1 text-pink-600">Thanh toán: <span class="font-medium">${paymentMethodText}</span></p>
                                     </div>
@@ -653,7 +653,7 @@
                             
                             if (diffMinutes <= 30) {
                                 actionBtnHtml = `
-                                    <button onclick="updateOrderStatus(${order.ma_don_hang}, 'da_huy')" class="mt-4 w-full bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded-lg transition text-sm shadow">
+                                    <button onclick="updateOrderStatus('${order.ma_don_hang}', 'da_huy')" class="mt-4 w-full bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded-lg transition text-sm shadow">
                                         Hủy đơn hàng
                                     </button>
                                     <p class="text-xs text-center text-gray-400 mt-2">Bạn có thể hủy đơn trong vòng 30 phút (còn lại ${30 - diffMinutes} phút)</p>`;
@@ -677,10 +677,10 @@
                             actionBtnHtml = `<div class="mt-4 text-sm text-left text-red-600 bg-red-50 p-3 rounded-lg w-full border border-red-200">Yêu cầu trả hàng của bạn đã bị từ chối vì lý do sai quy định hoàn trả.</div>`;
                         }
                             htmlOrders += `
-                            <div class="profile-order-card" id="order-${order.ma_don_hang}" data-status="${order.trang_thai_don}" data-date="${dateISO}" data-products="${productNames}" onclick="showOrderDetails(${order.ma_don_hang}, event)" style="cursor: pointer;">
+                            <div class="profile-order-card" id="order-${order.ma_don_hang}" data-status="${order.trang_thai_don}" data-date="${dateISO}" data-products="${productNames}" onclick="showOrderDetails('${order.ma_don_hang}', event)" style="cursor: pointer;">
                                 <div class="profile-order-card__header" style="align-items: center; margin-bottom: 1rem;">
                                     <div>
-                                        <p class="profile-order-card__id">Đơn hàng ${order.ma_don_hang_custom || '#' + order.ma_don_hang}</p>
+                                        <p class="profile-order-card__id">Đơn hàng ${order.ma_don_hang}</p>
                                         <p class="profile-order-card__date">Ngày đặt: ${date}</p>
                                         <p class="profile-order-card__date mt-1 text-pink-600">Thanh toán: <span class="font-medium">${paymentMethodText}</span></p>
                                     </div>
@@ -765,7 +765,7 @@ function showOrderDetails(orderId, event) {
     const order = window.ordersMap[orderId];
     if(!order) return;
 
-    document.getElementById('modal-order-id').textContent = order.ma_don_hang_custom || '#' + order.ma_don_hang;
+    document.getElementById('modal-order-id').textContent = order.ma_don_hang;
     
     const orderDateFull = new Date(order.ngay_dat);
     document.getElementById('modal-order-date').textContent = orderDateFull.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }) + ' - ' + orderDateFull.toLocaleDateString('vi-VN');

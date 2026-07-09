@@ -8,7 +8,7 @@ const ChiTietDonHang = sequelize.define('chi_tiet_don_hang', {
     autoIncrement: true,
   },
   ma_don_hang: {
-    type: DataTypes.INTEGER,
+    type: DataTypes.STRING(20),
     allowNull: false,
   },
   ma_san_pham: {
