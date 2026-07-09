@@ -151,6 +151,8 @@ sequelize
         try { await sequelize.query('ALTER TABLE khuyen_mai ADD COLUMN ma_danh_muc INT NULL AFTER ma_san_pham'); console.log('Added ma_danh_muc'); } catch(e) {}
         try { await sequelize.query('ALTER TABLE khuyen_mai ADD CONSTRAINT fk_km_sp FOREIGN KEY (ma_san_pham) REFERENCES san_pham(ma_san_pham) ON DELETE CASCADE'); console.log('Added fk_km_sp'); } catch(e) {}
         try { await sequelize.query('ALTER TABLE khuyen_mai ADD CONSTRAINT fk_km_dm FOREIGN KEY (ma_danh_muc) REFERENCES danh_muc(ma_danh_muc) ON DELETE CASCADE'); console.log('Added fk_km_dm'); } catch(e) {}
+        try { await sequelize.query('ALTER TABLE san_pham ADD COLUMN gia_nhap DECIMAL(12,2) NULL'); console.log('Added gia_nhap to san_pham'); } catch(e) {}
+        try { await sequelize.query('ALTER TABLE bien_the_san_pham ADD COLUMN gia_nhap DECIMAL(12,2) NULL'); console.log('Added gia_nhap to bien_the_san_pham'); } catch(e) {}
         // --- END TEMPORARY MIGRATIONS ---
 
       } catch (err) {

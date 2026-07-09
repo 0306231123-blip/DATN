@@ -51,6 +51,7 @@ exports.importInventory = async (req, res) => {
         const variant = await BienTheSanPham.findByPk(ma_bien_the, { transaction: t });
         if (variant) {
           variant.so_luong_ton += amount;
+          if (gia_nhap) variant.gia_nhap = parseFloat(gia_nhap);
           ton_kho_cuoi = variant.so_luong_ton;
           await variant.save({ transaction: t });
           
@@ -58,6 +59,7 @@ exports.importInventory = async (req, res) => {
           const product = await SanPham.findByPk(ma_san_pham, { transaction: t });
           if (product) {
             product.so_luong_ton += amount;
+            if (gia_nhap) product.gia_nhap = parseFloat(gia_nhap);
             await product.save({ transaction: t });
           }
         }
@@ -65,6 +67,7 @@ exports.importInventory = async (req, res) => {
         const product = await SanPham.findByPk(ma_san_pham, { transaction: t });
         if (product) {
           product.so_luong_ton += amount;
+          if (gia_nhap) product.gia_nhap = parseFloat(gia_nhap);
           ton_kho_cuoi = product.so_luong_ton;
           await product.save({ transaction: t });
         }

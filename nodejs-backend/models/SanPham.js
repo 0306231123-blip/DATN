@@ -44,6 +44,10 @@ const SanPham = sequelize.define('san_pham', {
     type: DataTypes.DECIMAL(12, 2),
     allowNull: true,
   },
+  gia_nhap: {
+    type: DataTypes.DECIMAL(12, 2),
+    allowNull: true,
+  },
   so_luong_ton: {
     type: DataTypes.INTEGER,
     allowNull: false,
@@ -83,6 +87,10 @@ const SanPham = sequelize.define('san_pham', {
   trang_thai: {
     type: DataTypes.ENUM('dang_ban', 'ngung_ban', 'het_hang'),
     defaultValue: 'dang_ban',
+  },
+  hien_thi_web: {
+    type: DataTypes.BOOLEAN,
+    defaultValue: false,
   },
   ngay_tao: {
     type: DataTypes.DATE,

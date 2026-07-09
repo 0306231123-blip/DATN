@@ -15,15 +15,10 @@
 <div id="view-products">
 <div class="page-action-bar" id="products-action-bar">
     <div class="action-bar-left">
-        <button class="btn btn-primary" id="btn-add-product">
+        <button class="btn btn-primary" id="btn-publish-product" onclick="openPublishModal()">
             <i data-lucide="plus" class="icon-xs"></i>
-            <span>Thêm sản phẩm</span>
+            <span>Đăng bán từ Kho</span>
         </button>
-        <button class="btn" onclick="document.getElementById('excel-upload').click()" style="margin-left: 10px; background-color: #10b981; color: white; border-color: #10b981;">
-            <i data-lucide="file-spreadsheet" class="icon-xs"></i>
-            <span>Nhập từ Excel</span>
-        </button>
-        <input type="file" id="excel-upload" accept=".xlsx, .xls, .csv" style="display: none;" onchange="handleExcelUpload(event)">
         <div class="search-box" id="search-products">
             <i data-lucide="search" class="icon-xs search-icon"></i>
             <input type="text" placeholder="Tìm kiếm sản phẩm..." class="search-input" id="product-search-input">
@@ -49,7 +44,7 @@
                 <tr>
                     <th>Sản phẩm</th>
                     <th>Danh mục</th>
-                    <th>Giá</th>
+                    <th>Giá bán</th>
                     <th>Kho</th>
                     <th>Trạng thái</th>
                     <th>Thao tác</th>
@@ -102,6 +97,14 @@
     <div class="page-action-bar">
         <div class="action-bar-left">
             <h3>Quản lý Tồn Kho</h3>
+            <button class="btn btn-primary" onclick="showModal('Thêm sản phẩm gốc')" style="margin-left: 15px;">
+                <i data-lucide="plus" class="icon-xs"></i> Thêm sản phẩm mới
+            </button>
+            <button class="btn" onclick="document.getElementById('excel-upload').click()" style="margin-left: 10px; background-color: #10b981; color: white; border-color: #10b981;">
+                <i data-lucide="file-spreadsheet" class="icon-xs"></i>
+                <span>Nhập từ Excel</span>
+            </button>
+            <input type="file" id="excel-upload" accept=".xlsx, .xls, .csv" style="display: none;" onchange="handleExcelUpload(event)">
         </div>
         <div class="action-bar-right">
             <button class="btn btn-secondary" onclick="viewAllLogs()" style="margin-right: 10px;">
@@ -122,6 +125,7 @@
                     <th>SKU</th>
                     <th>Sản phẩm / Biến thể</th>
                     <th>Tồn kho</th>
+                    <th>Giá nhập</th>
                     <th>Thao tác</th>
                 </tr>
             </thead>
@@ -296,7 +300,8 @@
             <div class="form-row">
                 <div class="form-group">
                     <label for="thuong_hieu">Thương hiệu</label>
-                    <input type="text" id="thuong_hieu" name="thuong_hieu" class="form-control">
+                    <input type="text" id="thuong_hieu" name="thuong_hieu" class="form-control" list="danh_sach_thuong_hieu">
+                    <datalist id="danh_sach_thuong_hieu"></datalist>
                 </div>
                 <div class="form-group">
                     <label for="xuat_xu">Xuất xứ</label>
@@ -371,10 +376,85 @@
     </div>
 </div>
 
+<!-- Modal Publish Product (Multi-select) -->
+<div class="modal" id="modal-publish" style="display: none; z-index: 1002;">
+    <div class="modal-content modal-content--wide">
+        <div class="modal-header">
+            <h2>Đăng bán sản phẩm từ Kho</h2>
+            <button class="modal-close" type="button" onclick="closePublishModal()">&times;</button>
+        </div>
+        <form id="form-publish" class="form">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                <span style="font-size: 14px; color: var(--text-muted);">Chọn sản phẩm và điền giá bán để đăng lên trang web.</span>
+                <label style="display: flex; align-items: center; gap: 6px; cursor: pointer; font-size: 13px; color: var(--primary-color);">
+                    <input type="checkbox" id="publish-select-all" onchange="togglePublishSelectAll(this.checked)" style="width: 16px; height: 16px;">
+                    Chọn tất cả
+                </label>
+            </div>
+            <div class="table-wrapper" style="max-height: 400px; overflow-y: auto; margin-bottom: 15px;">
+                <table class="admin-table">
+                    <thead>
+                        <tr>
+                            <th style="width: 40px;"></th>
+                            <th>Sản phẩm</th>
+                            <th>Tồn kho</th>
+                            <th style="width: 160px;">Giá bán (VNĐ) *</th>
+                            <th style="width: 160px;">Giá KM (Tùy chọn)</th>
+                        </tr>
+                    </thead>
+                    <tbody id="publish-tbody">
+                        <tr><td colspan="5" style="text-align: center;">Đang tải...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" onclick="closePublishModal()">Hủy</button>
+                <button type="submit" class="btn btn-primary">Xác nhận đăng bán</button>
+            </div>
+        </form>
+    </div>
+</div>
+
 <!-- Modal Overlay -->
 <div class="modal-overlay" id="modal-overlay" style="display: none;" onclick="closeAllModals()"></div>
 
-<!-- Modal Nhập Kho Hàng Loạt -->
+<!-- Modal Nhập/Xuất Kho Đơn Lẻ -->
+<div class="modal" id="modal-inv-single" style="display: none; z-index: 1002;">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2 id="inv-single-title">Nhập kho</h2>
+            <button class="modal-close" type="button" onclick="closeInvModal()">&times;</button>
+        </div>
+        <form id="form-inv-single" class="form">
+            <input type="hidden" id="inv-single-sp-id">
+            <input type="hidden" id="inv-single-bt-id">
+            <input type="hidden" id="inv-single-type">
+            <div class="form-group">
+                <label>Sản phẩm</label>
+                <input type="text" id="inv-single-name" class="form-control" readonly style="background: #f8fafc;">
+            </div>
+            <div class="form-row">
+                <div class="form-group" style="flex: 1;">
+                    <label>Số lượng *</label>
+                    <input type="number" id="inv-single-sl" class="form-control" min="1" placeholder="Nhập số lượng...">
+                </div>
+                <div class="form-group" id="inv-single-gia-group" style="flex: 1;">
+                    <label>Giá nhập (VNĐ)</label>
+                    <input type="number" id="inv-single-gia" class="form-control" min="0" placeholder="Tùy chọn...">
+                </div>
+            </div>
+            <div class="form-group">
+                <label>Ghi chú</label>
+                <input type="text" id="inv-single-note" class="form-control" placeholder="Ví dụ: Nhập hàng từ nhà cung cấp X...">
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" onclick="closeInvModal()">Hủy</button>
+                <button type="submit" class="btn btn-primary" id="inv-single-submit-btn">Xác nhận Nhập Kho</button>
+            </div>
+        </form>
+    </div>
+</div>
+
 <div class="modal" id="modal-bulk-import" style="display: none; z-index: 1002;">
     <div class="modal-content modal-content--wide">
         <div class="modal-header">
@@ -400,17 +480,9 @@
                     </tbody>
                 </table>
             </div>
-            <div class="form-row">
-                <div class="form-group" style="flex: 1;">
-                    <label>Nhà cung cấp (Tùy chọn)</label>
-                    <select id="bulk-supplier" class="form-control">
-                        <option value="">-- Chọn nhà cung cấp --</option>
-                    </select>
-                </div>
-                <div class="form-group" style="flex: 2;">
-                    <label>Ghi chú</label>
-                    <input type="text" id="bulk-note" class="form-control" placeholder="Ví dụ: Nhập hàng tháng 10...">
-                </div>
+            <div class="form-group">
+                <label>Ghi chú</label>
+                <input type="text" id="bulk-note" class="form-control" placeholder="Ví dụ: Nhập hàng tháng 10...">
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" onclick="closeBulkImportModal()">Hủy</button>
@@ -548,6 +620,7 @@ const API_BASE_URL = 'http://localhost:3000/api';
 
 let products = [];
 let categories = [];
+let allBrands = [];
 let currentEditId = null;
 let galleryImages = []; // cached gallery images
 
@@ -609,6 +682,28 @@ function updateCategorySelects() {
     select.innerHTML = options;
 }
 
+async function loadBrandsList() {
+    try {
+        const response = await fetch(`${API_BASE_URL}/products/brands`);
+        const result = await response.json();
+        if (result.status === 'success' || result.success) {
+            allBrands = result.data;
+            updateBrandDatalist();
+        }
+    } catch (error) {
+        console.error('Error loading brands:', error);
+    }
+}
+
+function updateBrandDatalist() {
+    const datalist = document.getElementById('danh_sach_thuong_hieu');
+    if (!datalist) return;
+    const options = allBrands.map(brand => 
+        `<option value="${escapeHtml(brand)}"></option>`
+    ).join('');
+    datalist.innerHTML = options;
+}
+
 async function loadProducts(search = '', status = 'all', page = 1) {
     try {
         const settings = window.getGlobalSettings ? window.getGlobalSettings() : { perPage: 15, lowStockThreshold: 20 };
@@ -653,7 +748,12 @@ function renderTable() {
 
     tbody.innerHTML = products.map(product => {
         const catName = categories.find(c => c.ma_danh_muc === product.ma_danh_muc)?.ten_danh_muc || '--';
-        const imgPath = product.anh_san_pham ? (product.anh_san_pham.startsWith('http') ? product.anh_san_pham : product.anh_san_pham) : '/images/logo.jpg';
+        
+        let primaryImage = product.anh_san_pham;
+        if (!primaryImage && product.danh_sach_anh && product.danh_sach_anh.length > 0) {
+            primaryImage = product.danh_sach_anh[0].duong_dan_anh;
+        }
+        const imgPath = getImageUrl(primaryImage);
 
         const settings = window.getGlobalSettings ? window.getGlobalSettings() : { lowStockThreshold: 20 };
         let statusBadge = '';
@@ -681,13 +781,16 @@ function renderTable() {
             <td><span class="text-secondary">${escapeHtml(catName)}</span></td>
             <td>
                 <div class="price-cell">
-                    ${product.co_bien_the ? `<span>${Number(product.gia).toLocaleString('vi-VN')}đ - ${Number(product.gia_max).toLocaleString('vi-VN')}đ</span>` : (product.gia_khuyen_mai ? `<span class="price-original">${Number(product.gia).toLocaleString('vi-VN')}đ</span><span class="price-sale">${Number(product.gia_khuyen_mai).toLocaleString('vi-VN')}đ</span>` : `<span>${Number(product.gia).toLocaleString('vi-VN')}đ</span>`)}
+                    ${product.co_bien_the ? `<span>${Number(product.gia).toLocaleString('vi-VN')} VNĐ - ${Number(product.gia_max).toLocaleString('vi-VN')} VNĐ</span>` : (product.gia_khuyen_mai ? `<span class="price-original">${Number(product.gia).toLocaleString('vi-VN')} VNĐ</span><span class="price-sale">${Number(product.gia_khuyen_mai).toLocaleString('vi-VN')} VNĐ</span>` : `<span>${Number(product.gia).toLocaleString('vi-VN')} VNĐ</span>`)}
                 </div>
             </td>
             <td>${product.so_luong_ton}</td>
             <td>${statusBadge}</td>
             <td>
                 <div class="action-btns">
+                    <button class="icon-action-btn" title="Ngừng hiển thị" onclick="unpublishProduct(${product.ma_san_pham})">
+                        <i data-lucide="eye-off" class="icon-xs"></i>
+                    </button>
                     <button class="icon-action-btn" title="Sửa" onclick="editProduct(${product.ma_san_pham})">
                         <i data-lucide="pencil" class="icon-xs"></i>
                     </button>
@@ -738,6 +841,27 @@ function escapeHtml(text) {
     return div.innerHTML;
 }
 
+function getImageUrl(path) {
+    if (!path) return '/images/logo.jpg';
+    
+    // Nếu là ảnh data: base64 thì giữ nguyên
+    if (path.startsWith('data:')) return path;
+
+    // Loại bỏ hostname nếu path là URL tuyệt đối (vd: http://localhost:3000/images/...)
+    if (path.startsWith('http://') || path.startsWith('https://')) {
+        try {
+            path = new URL(path).pathname;
+        } catch(e) {}
+    }
+    
+    // Nếu path đã có /images/ hoặc images/ thì chỉ cần thêm / nếu thiếu
+    if (path.startsWith('/images/')) return path;
+    if (path.startsWith('images/')) return '/' + path;
+    
+    // Nếu chỉ lưu tên file (vd: cerave.jpg), cần thêm /images/
+    return '/images/' + (path.startsWith('/') ? path.substring(1) : path);
+}
+
 // ========== IMAGE PICKER ==========
 
 // Set selected image URL into hidden input & show preview
@@ -749,7 +873,7 @@ function setSelectedImage(url, filename) {
     const name = document.getElementById('image-preview-name');
 
     if (url) {
-        img.src = url;
+        img.src = getImageUrl(url);
         name.textContent = filename || url.split('/').pop();
         section.style.display = 'block';
         // highlight gallery item if visible
@@ -907,9 +1031,10 @@ function renderGallery(filter = '') {
     }
 
     grid.innerHTML = filtered.map(img => {
-        const selected = currentUrl === img.url ? 'selected' : '';
-        return `<div class="gallery-item ${selected}" data-url="${escapeHtml(img.url)}" data-filename="${escapeHtml(img.filename)}" onclick="selectGalleryImage(this)">
-            <img src="${escapeHtml(img.url)}" alt="${escapeHtml(img.filename)}" loading="lazy" onerror="this.parentElement.style.display='none'">
+        const fullUrl = getImageUrl(img.url);
+        const selected = currentUrl === fullUrl ? 'selected' : '';
+        return `<div class="gallery-item ${selected}" data-url="${escapeHtml(fullUrl)}" data-filename="${escapeHtml(img.filename)}" onclick="selectGalleryImage(this)">
+            <img src="${escapeHtml(fullUrl)}" alt="${escapeHtml(img.filename)}" loading="lazy" onerror="this.parentElement.style.display='none'">
         </div>`;
     }).join('');
 }
@@ -1206,6 +1331,7 @@ if (btnRemoveImage) {
 document.addEventListener('DOMContentLoaded', async function() {
     if (window.lucide) lucide.createIcons();
     await loadCategories();
+    await loadBrandsList();
     await loadProducts();
 });
 // ==================== NEW JS FOR VARIANTS & INVENTORY ====================
@@ -1283,7 +1409,7 @@ async function loadInventory(page = 1) {
     tbody.innerHTML = '<tr><td colspan="4" style="text-align: center;">Đang tải...</td></tr>';
     try {
         const settings = window.getGlobalSettings ? window.getGlobalSettings() : { perPage: 15 };
-        const response = await fetch(`${API_BASE_URL}/products?per_page=${settings.perPage}&page=${page}`);
+        const response = await fetch(`${API_BASE_URL}/products?per_page=${settings.perPage}&page=${page}&is_inventory=true`);
         const result = await response.json();
         if (result.status === 'success' || result.success) {
             let html = '';
@@ -1297,10 +1423,17 @@ async function loadInventory(page = 1) {
                             <td>${escapeHtml(v.sku || '--')}</td>
                             <td>${escapeHtml(p.ten_san_pham)} - <strong>${escapeHtml(v.ten_bien_the)}</strong></td>
                             <td>${v.so_luong_ton}</td>
+                            <td>${v.gia_nhap ? Number(v.gia_nhap).toLocaleString('vi-VN') + ' VNĐ' : '--'}</td>
                             <td>
-                                <button class="btn btn-sm btn-primary" onclick="openInvModal(${p.ma_san_pham}, ${v.ma_bien_the}, 'import', '${escapeHtml(p.ten_san_pham)} - ${escapeHtml(v.ten_bien_the)}')">Nhập</button>
-                                <button class="btn btn-sm btn-secondary" onclick="openInvModal(${p.ma_san_pham}, ${v.ma_bien_the}, 'export', '${escapeHtml(p.ten_san_pham)} - ${escapeHtml(v.ten_bien_the)}')">Xuất</button>
-                                <button class="btn btn-sm btn-secondary" onclick="viewLogs(${p.ma_san_pham}, ${v.ma_bien_the})">Lịch sử</button>
+                                <div class="action-btns">
+                                    <button class="btn btn-sm btn-primary" onclick="openInvModal(${p.ma_san_pham}, ${v.ma_bien_the}, 'import', '${escapeHtml(p.ten_san_pham)} - ${escapeHtml(v.ten_bien_the)}')" style="display:inline-flex;align-items:center;gap:4px;"><i data-lucide="package-plus" style="width:14px;height:14px;"></i> Nhập kho</button>
+                                    <button class="icon-action-btn icon-action-btn--danger" title="Xóa" onclick="deleteInventoryProduct(${p.ma_san_pham})">
+                                        <i data-lucide="trash-2" class="icon-xs"></i>
+                                    </button>
+                                    <button class="icon-action-btn" title="Lịch sử" onclick="viewLogs(${p.ma_san_pham}, ${v.ma_bien_the})">
+                                        <i data-lucide="clock" class="icon-xs"></i>
+                                    </button>
+                                </div>
                             </td>
                         </tr>`;
                     });
@@ -1309,13 +1442,23 @@ async function loadInventory(page = 1) {
                         <td>${escapeHtml(p.sku || '--')}</td>
                         <td>${escapeHtml(p.ten_san_pham)}</td>
                         <td>${p.so_luong_ton}</td>
+                        <td>${p.gia_nhap ? Number(p.gia_nhap).toLocaleString('vi-VN') + ' VNĐ' : '--'}</td>
                         <td>
-                            <button class="btn btn-sm btn-secondary" onclick="viewLogs(${p.ma_san_pham}, null)">Lịch sử</button>
+                            <div class="action-btns">
+                                <button class="btn btn-sm btn-primary" onclick="openInvModal(${p.ma_san_pham}, null, 'import', '${escapeHtml(p.ten_san_pham)}')" style="display:inline-flex;align-items:center;gap:4px;"><i data-lucide="package-plus" style="width:14px;height:14px;"></i> Nhập kho</button>
+                                <button class="icon-action-btn icon-action-btn--danger" title="Xóa" onclick="deleteInventoryProduct(${p.ma_san_pham})">
+                                    <i data-lucide="trash-2" class="icon-xs"></i>
+                                </button>
+                                <button class="icon-action-btn" title="Lịch sử" onclick="viewLogs(${p.ma_san_pham}, null)">
+                                    <i data-lucide="clock" class="icon-xs"></i>
+                                </button>
+                            </div>
                         </td>
                     </tr>`;
                 }
             });
-            tbody.innerHTML = html || '<tr><td colspan="4">Không có dữ liệu</td></tr>';
+            tbody.innerHTML = html || '<tr><td colspan="5">Không có dữ liệu</td></tr>';
+            if (window.lucide) lucide.createIcons();
         }
     } catch (e) {
         tbody.innerHTML = '<tr><td colspan="4">Lỗi tải dữ liệu</td></tr>';
@@ -1740,6 +1883,262 @@ async function handleExcelUpload(event) {
         event.target.value = ''; // Reset file input
     };
     reader.readAsArrayBuffer(file);
+}
+// ========== PUBLISH MODAL LOGIC ==========
+let unlistedProducts = [];
+
+// ========== SINGLE INV MODAL LOGIC ==========
+function openInvModal(ma_san_pham, ma_bien_the, type, productName) {
+    document.getElementById('inv-single-sp-id').value = ma_san_pham;
+    document.getElementById('inv-single-bt-id').value = ma_bien_the || '';
+    document.getElementById('inv-single-type').value = type;
+    document.getElementById('inv-single-name').value = productName;
+    document.getElementById('inv-single-sl').value = '';
+    document.getElementById('inv-single-gia').value = '';
+    document.getElementById('inv-single-note').value = '';
+
+    const title = type === 'import' ? 'Nhập kho' : 'Xuất kho';
+    document.getElementById('inv-single-title').textContent = title + ' — ' + productName;
+    document.getElementById('inv-single-submit-btn').textContent = 'Xác nhận ' + title;
+
+    // Ẩn trường Giá nhập nếu là Xuất kho
+    document.getElementById('inv-single-gia-group').style.display = type === 'import' ? 'block' : 'none';
+
+    document.getElementById('modal-inv-single').style.display = 'block';
+    if(document.getElementById('modal-overlay')) document.getElementById('modal-overlay').style.display = 'block';
+    setTimeout(() => document.getElementById('inv-single-sl').focus(), 100);
+}
+
+function closeInvModal() {
+    document.getElementById('modal-inv-single').style.display = 'none';
+    if(document.getElementById('modal-overlay') &&
+       document.getElementById('modal-product').style.display !== 'block' &&
+       document.getElementById('modal-bulk-import').style.display !== 'block' &&
+       document.getElementById('modal-logs').style.display !== 'block') {
+        document.getElementById('modal-overlay').style.display = 'none';
+    }
+}
+
+const formInvSingle = document.getElementById('form-inv-single');
+if (formInvSingle) {
+    formInvSingle.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const ma_san_pham = document.getElementById('inv-single-sp-id').value;
+        const ma_bien_the = document.getElementById('inv-single-bt-id').value || null;
+        const type = document.getElementById('inv-single-type').value;
+        const sl = parseInt(document.getElementById('inv-single-sl').value);
+        const gia = document.getElementById('inv-single-gia').value;
+        const ghi_chu = document.getElementById('inv-single-note').value;
+
+        if (!sl || sl < 1) {
+            showAlert('Vui lòng nhập số lượng hợp lệ (tối thiểu 1)', 'error');
+            return;
+        }
+
+        const endpoint = type === 'import' ? `${API_BASE_URL}/inventory/import` : `${API_BASE_URL}/inventory/export`;
+        const payload = {
+            items: [{ ma_san_pham, ma_bien_the, so_luong: sl, gia_nhap: gia ? parseInt(gia) : undefined }],
+            ghi_chu
+        };
+
+        try {
+            const res = await fetch(endpoint, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+            const result = await res.json();
+            if (result.status === 'success') {
+                showAlert(type === 'import' ? 'Nhập kho thành công!' : 'Xuất kho thành công!', 'success');
+                closeInvModal();
+                loadInventory(currentInventoryPage);
+                loadProducts();
+            } else {
+                showAlert(result.message || 'Lỗi thao tác kho', 'error');
+            }
+        } catch(err) {
+            showAlert('Lỗi kết nối', 'error');
+        }
+    });
+}
+
+async function deleteInventoryProduct(id) {
+    const confirmDelete = await window.showCustomDialog({
+        title: 'Xóa sản phẩm',
+        message: 'Bạn chắc chắn muốn xóa sản phẩm này khỏi kho hàng?',
+        isPrompt: false
+    });
+    if (!confirmDelete) return;
+    try {
+        const response = await fetch(`${API_BASE_URL}/products/${id}`, { method: 'DELETE' });
+        const result = await response.json();
+        if (result.status === 'success' || result.success) {
+            showAlert('Xóa sản phẩm thành công', 'success');
+            loadInventory(currentInventoryPage);
+        } else {
+            showAlert(result.message, 'error');
+        }
+    } catch (error) {
+        showAlert('Lỗi khi xóa sản phẩm', 'error');
+    }
+}
+
+async function openPublishModal() {
+    document.getElementById('modal-publish').style.display = 'block';
+    if(document.getElementById('modal-overlay')) document.getElementById('modal-overlay').style.display = 'block';
+    
+    document.getElementById('publish-select-all').checked = false;
+    const tbody = document.getElementById('publish-tbody');
+    tbody.innerHTML = '<tr><td colspan="5" style="text-align: center;">Đang tải...</td></tr>';
+    
+    try {
+        const response = await fetch(`${API_BASE_URL}/products?per_page=1000&is_unlisted=true`);
+        const result = await response.json();
+        if (result.status === 'success' || result.success) {
+            unlistedProducts = result.data;
+            if (unlistedProducts.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="5" style="text-align: center;">Không có sản phẩm nào trong kho chưa đăng bán</td></tr>';
+                return;
+            }
+            
+            let html = '';
+            unlistedProducts.forEach(p => {
+                html += `
+                    <tr class="publish-item" data-id="${p.ma_san_pham}">
+                        <td><input type="checkbox" class="p-check" style="width: 16px; height: 16px;" onchange="updatePublishSelectAllState()"></td>
+                        <td>
+                            <div style="font-weight: 500;">${escapeHtml(p.ten_san_pham)}</div>
+                            <div style="font-size: 12px; color: var(--text-muted);">SKU: ${escapeHtml(p.sku || '--')}</div>
+                        </td>
+                        <td>${p.so_luong_ton}</td>
+                        <td>
+                            <input type="number" class="form-control p-gia" min="1000" placeholder="Giá bán" value="${p.gia > 0 ? p.gia : ''}" style="width: 130px;">
+                        </td>
+                        <td>
+                            <input type="number" class="form-control p-giakm" min="1000" placeholder="Giá KM" value="${p.gia_khuyen_mai || ''}" style="width: 130px;">
+                        </td>
+                    </tr>
+                `;
+            });
+            tbody.innerHTML = html;
+        }
+    } catch(e) {
+        tbody.innerHTML = '<tr><td colspan="5" style="text-align: center;">Lỗi tải danh sách</td></tr>';
+    }
+}
+
+function togglePublishSelectAll(checked) {
+    document.querySelectorAll('.p-check').forEach(cb => {
+        cb.checked = checked;
+    });
+}
+
+function updatePublishSelectAllState() {
+    const all = document.querySelectorAll('.p-check');
+    const checked = document.querySelectorAll('.p-check:checked');
+    document.getElementById('publish-select-all').checked = all.length > 0 && all.length === checked.length;
+}
+
+function closePublishModal() {
+    document.getElementById('modal-publish').style.display = 'none';
+    if(document.getElementById('modal-overlay') && document.getElementById('modal-product').style.display !== 'block' && document.getElementById('modal-bulk-import').style.display !== 'block' && document.getElementById('modal-logs').style.display !== 'block' && document.getElementById('modal-voucher').style.display !== 'block' && document.getElementById('modal-inv-single').style.display !== 'block') {
+        document.getElementById('modal-overlay').style.display = 'none';
+    }
+    document.getElementById('form-publish').reset();
+}
+
+const formPublish = document.getElementById('form-publish');
+if (formPublish) {
+    formPublish.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        
+        const selectedRows = Array.from(document.querySelectorAll('.publish-item')).filter(tr => tr.querySelector('.p-check').checked);
+        if (selectedRows.length === 0) {
+            showAlert('Vui lòng chọn ít nhất một sản phẩm để đăng bán', 'error');
+            return;
+        }
+
+        const items = [];
+        let hasError = false;
+
+        selectedRows.forEach(tr => {
+            const id = tr.dataset.id;
+            const gia = tr.querySelector('.p-gia').value;
+            const giakm = tr.querySelector('.p-giakm').value;
+
+            if (!gia || parseInt(gia) < 1000) {
+                tr.querySelector('.p-gia').style.borderColor = 'red';
+                hasError = true;
+            } else {
+                tr.querySelector('.p-gia').style.borderColor = '#cbd5e1';
+                items.push({
+                    id: id,
+                    gia: parseInt(gia),
+                    gia_khuyen_mai: giakm ? parseInt(giakm) : null,
+                    trang_thai: 'dang_ban',
+                    hien_thi_web: true
+                });
+            }
+        });
+
+        if (hasError) {
+            showAlert('Vui lòng nhập giá bán hợp lệ (>= 1000) cho các sản phẩm đã chọn', 'error');
+            return;
+        }
+
+        const submitBtn = formPublish.querySelector('button[type="submit"]');
+        const originalText = submitBtn.textContent;
+        submitBtn.disabled = true;
+        submitBtn.textContent = 'Đang xử lý...';
+
+        try {
+            for (const item of items) {
+                const { id, ...payload } = item;
+                const response = await fetch(`${API_BASE_URL}/products/${id}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                const result = await response.json();
+                if (result.status !== 'success' && !result.success) {
+                    throw new Error(result.message || 'Lỗi cập nhật sản phẩm');
+                }
+            }
+            
+            showAlert(`Đã đăng bán ${items.length} sản phẩm thành công`, 'success');
+            closePublishModal();
+            loadProducts();
+            if(document.getElementById('view-inventory').style.display === 'block') {
+                loadInventory(currentInventoryPage);
+            }
+        } catch(err) {
+            showAlert('Lỗi khi đăng bán sản phẩm', 'error');
+        } finally {
+            submitBtn.disabled = false;
+            submitBtn.textContent = originalText;
+        }
+    });
+}
+
+async function unpublishProduct(id) {
+    if(!confirm('Bạn có chắc muốn gỡ sản phẩm này khỏi trang web (chỉ giữ lại trong kho)?')) return;
+    try {
+        const payload = { hien_thi_web: false };
+        const response = await fetch(`${API_BASE_URL}/products/${id}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        });
+        const result = await response.json();
+        if (result.status === 'success' || result.success) {
+            showAlert('Gỡ khỏi trang web thành công', 'success');
+            loadProducts();
+        } else {
+            showAlert(result.message || 'Lỗi', 'error');
+        }
+    } catch(err) {
+        showAlert('Lỗi kết nối', 'error');
+    }
 }
 </script>
 @endsection

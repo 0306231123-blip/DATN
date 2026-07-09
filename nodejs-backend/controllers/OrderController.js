@@ -43,6 +43,8 @@ class OrderController {
         page = 1,
         sort_by = 'ngay_dat',
         sort_order = 'DESC',
+        start_date,
+        end_date,
       } = req.query;
 
       const pageNum = Math.max(1, parseInt(page) || 1);
@@ -63,6 +65,13 @@ class OrderController {
       const validStatuses = ['cho_xac_nhan', 'da_xac_nhan', 'dang_giao', 'giao_thanh_cong', 'da_huy', 'dang_tra_hang', 'da_tra_hang', 'tra_hang_hoan_tien', 'hoan_thanh', 'tu_choi_tra_hang', 'khong_du_dieu_kien'];
       if (trang_thai && trang_thai !== 'all' && validStatuses.includes(trang_thai)) {
         where.trang_thai_don = trang_thai;
+      }
+
+      // Filter by date
+      if (start_date || end_date) {
+        where.ngay_dat = {};
+        if (start_date) where.ngay_dat[Op.gte] = new Date(start_date + 'T00:00:00.000Z');
+        if (end_date) where.ngay_dat[Op.lte] = new Date(end_date + 'T23:59:59.999Z');
       }
 
       // Validate sort

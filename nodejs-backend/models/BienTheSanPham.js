@@ -37,6 +37,10 @@ const BienTheSanPham = sequelize.define('bien_the_san_pham', {
     type: DataTypes.DECIMAL(12, 2),
     allowNull: true,
   },
+  gia_nhap: {
+    type: DataTypes.DECIMAL(12, 2),
+    allowNull: true,
+  },
   so_luong_ton: {
     type: DataTypes.INTEGER,
     allowNull: false,

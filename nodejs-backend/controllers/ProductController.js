@@ -33,6 +33,8 @@ exports.getAllProducts = async (req, res) => {
       per_page = 15,
       page = 1,
       low_stock_threshold = 20,
+      is_inventory,
+      is_unlisted,
     } = req.query;
 
     // Validate pagination
@@ -41,6 +43,15 @@ exports.getAllProducts = async (req, res) => {
     const offset = (pageNum - 1) * perPageNum;
 
     let where = {};
+
+    // By default, only show products on the web. 
+    // If is_inventory is true, show all products (or only those in inventory).
+    // If is_unlisted is true, show only products that are NOT on the web.
+    if (is_unlisted === 'true') {
+      where.hien_thi_web = false;
+    } else if (is_inventory !== 'true') {
+      where.hien_thi_web = true;
+    }
 
     // Search by product name or brand
     if (search && typeof search === 'string' && search.trim()) {
@@ -94,6 +105,10 @@ exports.getAllProducts = async (req, res) => {
       }, {
         model: BienTheSanPham,
         as: 'bien_the',
+        required: false,
+      }, {
+        model: AnhSanPham,
+        as: 'danh_sach_anh',
         required: false,
       }],
     });
@@ -201,7 +216,7 @@ exports.createProduct = async (req, res) => {
       return res.status(409).json({ status: 'error', message: 'Tên sản phẩm này đã tồn tại.' });
     }
 
-    let finalGia = parseFloat(gia) || 0;
+    let finalGia = gia !== undefined && gia !== null && gia !== '' ? parseFloat(gia) : 0;
     let finalGiaMax = finalGia;
     let finalSoLuongTon = parseInt(so_luong_ton) || 0;
     let finalCoBienThe = false;
@@ -216,10 +231,7 @@ exports.createProduct = async (req, res) => {
       finalSoLuongTon = variants.reduce((sum, v) => sum + (parseInt(v.so_luong_ton) || 0), 0);
     }
 
-    if (!finalCoBienThe && finalGia <= 0) {
-      await t.rollback();
-      return res.status(400).json({ status: 'error', message: 'Giá sản phẩm phải lớn hơn 0.' });
-    }
+    // Không bắt buộc giá phải lớn hơn 0 khi thêm vào Kho Hàng nữa.
 
     const product = await SanPham.create({
       ten_san_pham: ten_san_pham.trim(),
@@ -238,6 +250,7 @@ exports.createProduct = async (req, res) => {
       loai_da_phu_hop: loai_da_phu_hop || null,
       anh_san_pham: anh_san_pham || null,
       trang_thai: trang_thai || 'dang_ban',
+      hien_thi_web: false, // Mặc định không hiển thị trên web
       ngay_tao: new Date(),
     }, { transaction: t });
 
@@ -310,7 +323,7 @@ exports.updateProduct = async (req, res) => {
       ten_san_pham, mo_ta, thanh_phan, huong_dan_su_dung,
       gia, gia_khuyen_mai, so_luong_ton, thuong_hieu,
       xuat_xu, ma_danh_muc, loai_da_phu_hop, anh_san_pham, trang_thai,
-      sku, variants
+      sku, variants, hien_thi_web
     } = req.body;
 
     if (ten_san_pham && ten_san_pham.trim() !== product.ten_san_pham) {
@@ -358,6 +371,7 @@ exports.updateProduct = async (req, res) => {
     if (ma_danh_muc !== undefined) updateData.ma_danh_muc = ma_danh_muc ? parseInt(ma_danh_muc) : null;
     if (loai_da_phu_hop !== undefined) updateData.loai_da_phu_hop = loai_da_phu_hop;
     if (anh_san_pham !== undefined) updateData.anh_san_pham = anh_san_pham || null;
+    if (hien_thi_web !== undefined) updateData.hien_thi_web = (hien_thi_web === true || hien_thi_web === 'true');
     if (trang_thai !== undefined && ['dang_ban', 'ngung_ban', 'het_hang'].includes(trang_thai)) {
       updateData.trang_thai = trang_thai;
     }
