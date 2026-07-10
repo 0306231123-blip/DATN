@@ -386,7 +386,7 @@ class OrderController {
   async createOrder(req, res) {
     const t = await sequelize.transaction();
     try {
-        const maNguoiDung = req.user.ma_nguoi_dung || req.user.id;
+        let maNguoiDung = req.user.ma_nguoi_dung !== undefined ? req.user.ma_nguoi_dung : req.user.id;
         
         // 1. Lấy dữ liệu từ Frontend gửi lên
         const { dia_chi, so_dien_thoai, ma_khuyen_mai, so_tien_giam, phi_van_chuyen, phuong_thuc_thanh_toan } = req.body; 
@@ -458,24 +458,7 @@ class OrderController {
         const sequence = String(countOrdersToday + 1).padStart(2, '0');
         const customOrderCode = `${day}${month}${year}#${sequence}`;
 
-        // 4. Lệnh tạo đơn hàng (Đã sửa lại biến user cho chuẩn)
-        const donHangMoi = await DonHang.create({
-            ma_don_hang: customOrderCode,
-            ma_nguoi_dung: maNguoiDung, 
-            ho_ten_nguoi_nhan: req.body.ho_ten || (user ? user.ho_ten : 'Khách hàng'), 
-            so_dien_thoai_nhan: so_dien_thoai || (user ? user.so_dien_thoai : '0123456789'), 
-            dia_chi_giao: dia_chi, 
-            tong_tien_hang: tong_tien,          // Giá gốc
-            phi_van_chuyen: tienShip,
-            tong_thanh_toan: tongThanhToan,     // Giá đã tính ship & voucher
-            ma_khuyen_mai: ma_khuyen_mai || null,
-            so_tien_giam: tienGiam,
-            trang_thai_don: 'cho_xac_nhan', 
-            phuong_thuc_thanh_toan: mappedPaymentMethod, 
-            trang_thai_thanh_toan: phuong_thuc_thanh_toan === 'cod' ? 'chua_thanh_toan' : 'da_thanh_toan'
-        }, { transaction: t });
-
-        // 5. TRỪ LƯỢT SỬ DỤNG VOUCHER (Nếu có áp dụng mã)
+        // 4. KIỂM TRA VÀ TRỪ LƯỢT VOUCHER TRƯỚC KHI TẠO ĐƠN
         if (ma_khuyen_mai) {
             const daSuDung = await DonHang.findOne({
                 where: {
@@ -496,6 +479,23 @@ class OrderController {
                 await voucher.decrement('so_luong', { by: 1, transaction: t });
             }
         }
+
+        // 5. Lệnh tạo đơn hàng
+        const donHangMoi = await DonHang.create({
+            ma_don_hang: customOrderCode,
+            ma_nguoi_dung: maNguoiDung, 
+            ho_ten_nguoi_nhan: req.body.ho_ten || (user ? user.ho_ten : 'Khách hàng'), 
+            so_dien_thoai_nhan: so_dien_thoai || (user ? user.so_dien_thoai : '0123456789'), 
+            dia_chi_giao: dia_chi, 
+            tong_tien_hang: tong_tien,          // Giá gốc
+            phi_van_chuyen: tienShip,
+            tong_thanh_toan: tongThanhToan,     // Giá đã tính ship & voucher
+            ma_khuyen_mai: ma_khuyen_mai || null,
+            so_tien_giam: tienGiam,
+            trang_thai_don: 'cho_xac_nhan', 
+            phuong_thuc_thanh_toan: mappedPaymentMethod, 
+            trang_thai_thanh_toan: phuong_thuc_thanh_toan === 'cod' ? 'chua_thanh_toan' : 'da_thanh_toan'
+        }, { transaction: t });
 
         // 6. Lưu chi tiết đơn hàng và trừ kho sản phẩm
         for (let item of items) {
@@ -564,7 +564,7 @@ class OrderController {
   async updateUserOrderStatus(req, res) {
     const t = await sequelize.transaction();
     try {
-        const maNguoiDung = req.user.ma_nguoi_dung || req.user.id;
+        let maNguoiDung = req.user.ma_nguoi_dung !== undefined ? req.user.ma_nguoi_dung : req.user.id;
 
         // Lấy thêm 3 trường ngân hàng từ req.body
         let { 
@@ -699,7 +699,7 @@ class OrderController {
   // --- 3. LẤY LỊCH SỬ ĐƠN HÀNG (AUTO-COMPLETE 7 NGÀY) ---
   async getMyOrders(req, res) {
     try {
-        const maNguoiDung = req.user.ma_nguoi_dung || req.user.id;
+        let maNguoiDung = req.user.ma_nguoi_dung !== undefined ? req.user.ma_nguoi_dung : req.user.id;
 
         const orders = await DonHang.findAll({
             where: { ma_nguoi_dung: maNguoiDung },
@@ -740,7 +740,7 @@ class OrderController {
 
         await YeuCauTraHang.create({
             ma_don_hang: ma_don_hang,
-            ma_nguoi_dung: req.user.ma_nguoi_dung || req.user.id,
+            ma_nguoi_dung: req.user.ma_nguoi_dung !== undefined ? req.user.ma_nguoi_dung : req.user.id,
             ly_do: ly_do,
             ngan_hang: ngan_hang,
             so_tai_khoan: so_tai_khoan,
@@ -759,7 +759,7 @@ class OrderController {
   async deleteUnpaid(req, res) {
     const t = await sequelize.transaction();
     try {
-        const maNguoiDung = req.user.ma_nguoi_dung || req.user.id;
+        let maNguoiDung = req.user.ma_nguoi_dung !== undefined ? req.user.ma_nguoi_dung : req.user.id;
         const { ma_don_hang } = req.body;
         
         const donHang = await DonHang.findOne({
