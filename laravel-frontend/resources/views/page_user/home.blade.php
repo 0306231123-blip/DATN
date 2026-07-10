@@ -316,8 +316,13 @@
                             });
                             
                             if (skinProductEl) skinProductEl.innerHTML = productsHtml;
+                        } else {
+                            if (skinSection) skinSection.classList.add('hidden');
                         }
-                    }).catch(err => console.error('Lỗi tải AI Skin Type:', err));
+                    }).catch(err => {
+                        console.error('Lỗi tải AI Skin Type:', err);
+                        if (skinSection) skinSection.classList.add('hidden');
+                    });
                     
                     if (aiSection) aiSection.classList.remove('hidden');
                     const response = await fetch('http://localhost:5000/api/ai-next-step-suggest', {
@@ -376,6 +381,7 @@
                 }
             } catch (error) {
                 console.error('Lỗi tải AI Next Step:', error);
+                if (aiSection) aiSection.classList.add('hidden');
             }
         }
     });

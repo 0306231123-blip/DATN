@@ -12,7 +12,7 @@ class ProductController extends Controller
     // 1. Hàm hiển thị trang TẤT CẢ SẢN PHẨM
     public function index(Request $request)
     {
-        $query = SanPham::where('trang_thai', 'dang_ban');
+        $query = SanPham::where('trang_thai', 'dang_ban')->where('hien_thi_web', 1);
 
         // Lọc theo danh mục
         if ($request->has('danh_muc') && $request->get('danh_muc') != '') {
@@ -107,7 +107,7 @@ class ProductController extends Controller
         $danhMucs = DB::table('danh_muc')->orderBy('thu_tu_hien_thi', 'asc')->get();
 
         // Lấy danh sách thương hiệu để hiển thị
-        $thuongHieus = SanPham::where('trang_thai', 'dang_ban')->whereNotNull('thuong_hieu')->where('thuong_hieu', '!=', '')->distinct()->orderBy('thuong_hieu', 'asc')->pluck('thuong_hieu');
+        $thuongHieus = SanPham::where('trang_thai', 'dang_ban')->where('hien_thi_web', 1)->whereNotNull('thuong_hieu')->where('thuong_hieu', '!=', '')->distinct()->orderBy('thuong_hieu', 'asc')->pluck('thuong_hieu');
         
         return view('page_user.product', compact('danhSachSanPham', 'danhMucs', 'thuongHieus'));
     }
@@ -116,7 +116,7 @@ class ProductController extends Controller
     public function detail($id)
     {
         // Tìm 1 sản phẩm có mã khớp với $id, nếu không thấy thì báo lỗi 404
-        $sanPham = SanPham::findOrFail($id);
+        $sanPham = SanPham::where('trang_thai', 'dang_ban')->where('hien_thi_web', 1)->findOrFail($id);
         
         return view('page_user.detail', compact('sanPham'));
     }
@@ -125,7 +125,8 @@ class ProductController extends Controller
     public function sale(Request $request)
     {
         $query = SanPham::whereNotNull('gia_khuyen_mai')
-                        ->where('trang_thai', 'dang_ban');
+                        ->where('trang_thai', 'dang_ban')
+                        ->where('hien_thi_web', 1);
                         
         // Lọc theo danh mục
         if ($request->has('danh_muc') && $request->get('danh_muc') != '') {
@@ -189,6 +190,7 @@ class ProductController extends Controller
                     ->selectRaw('SUM(so_luong)');
             }, 'tong_so_luong_ban')
             ->where('san_pham.trang_thai', 'dang_ban')
+            ->where('san_pham.hien_thi_web', 1)
             ->having('tong_so_luong_ban', '>', 0);
             
         // Lọc theo danh mục
@@ -246,6 +248,7 @@ class ProductController extends Controller
     {
         // Lấy 6 sản phẩm đang bán, sắp xếp theo điểm đánh giá từ cao xuống thấp
         $sanPhamNoiBat = SanPham::where('trang_thai', 'dang_ban')
+                                ->where('hien_thi_web', 1)
                                 ->orderBy('diem_danh_gia', 'desc') // Ưu tiên điểm cao
                                 ->orderBy('so_luot_danh_gia', 'desc') // Ưu tiên nhiều người đánh giá
                                 ->take(6) // Lấy đúng 6 sản phẩm thôi để xếp 2 hàng ngang cho đẹp
@@ -255,6 +258,7 @@ class ProductController extends Controller
         // Cache lại 1 ngày để F5 không bị đổi, sang ngày mới (hết 24h) mới bốc 10 sản phẩm khác
         $sanPhamHomNay = Cache::remember('daily_discover_products', now()->endOfDay(), function () {
             return SanPham::where('trang_thai', 'dang_ban')
+                          ->where('hien_thi_web', 1)
                           ->inRandomOrder()
                           ->take(10)
                           ->get();
@@ -268,6 +272,7 @@ class ProductController extends Controller
             $dm->so_luong_sp = DB::table('san_pham')
                 ->whereIn('ma_danh_muc', $allIds)
                 ->where('trang_thai', 'dang_ban')
+                ->where('hien_thi_web', 1)
                 ->count();
         }
                                 
@@ -304,6 +309,7 @@ class ProductController extends Controller
 
         // Tìm 5 sản phẩm có tên chứa từ khóa
         $products = \App\Models\SanPham::where('trang_thai', 'dang_ban')
+                    ->where('hien_thi_web', 1)
                     ->where(function ($q) use ($keyword, $skinTypeKeys) {
                         $q->where('ten_san_pham', 'LIKE', '%' . $keyword . '%')
                           ->orWhere('thuong_hieu', 'LIKE', '%' . $keyword . '%')

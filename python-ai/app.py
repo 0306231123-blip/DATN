@@ -90,7 +90,7 @@ def ai_chat():
         try:
             conn = get_db_connection()
             cursor = conn.cursor(dictionary=True)
-            cursor.execute("SELECT ma_san_pham, ten_san_pham, mo_ta, loai_da_phu_hop FROM san_pham WHERE trang_thai = 'dang_ban'")
+            cursor.execute("SELECT ma_san_pham, ten_san_pham, mo_ta, loai_da_phu_hop FROM san_pham WHERE trang_thai = 'dang_ban' AND hien_thi_web = 1")
             products = cursor.fetchall()
             conn.close()
             
@@ -368,7 +368,7 @@ Nhiệm vụ:
                     cursor.execute("""
                         SELECT ma_san_pham FROM san_pham 
                         WHERE (ten_san_pham LIKE %s OR mo_ta LIKE %s) 
-                        AND trang_thai = 'dang_ban' 
+                        AND trang_thai = 'dang_ban' AND hien_thi_web = 1
                         LIMIT 1
                     """, (f"%{keyword}%", f"%{keyword}%"))
                     row = cursor.fetchone()
@@ -499,7 +499,7 @@ Nhiệm vụ:
                     cursor.execute("""
                         SELECT ma_san_pham FROM san_pham 
                         WHERE (ten_san_pham LIKE %s OR mo_ta LIKE %s) 
-                        AND trang_thai = 'dang_ban' 
+                        AND trang_thai = 'dang_ban' AND hien_thi_web = 1
                         LIMIT 1
                     """, (f"%{keyword}%", f"%{keyword}%"))
                     row = cursor.fetchone()
@@ -535,15 +535,15 @@ Nhiệm vụ:
                 print("Lỗi parse JSON:", str(e), reply_text)
                 cursor.close()
                 conn.close()
-                return jsonify({"success": False, "message": "Lỗi parse dữ liệu từ AI"}), 500
+                return jsonify({"success": False, "message": "Lỗi parse dữ liệu từ AI"})
         else:
             cursor.close()
             conn.close()
-            return jsonify({"success": False, "message": "Lỗi gọi OpenRouter API"}), 500
+            return jsonify({"success": False, "message": "Lỗi gọi OpenRouter API"})
             
     except Exception as e:
         print("Lỗi xử lý API ai-skin-type-suggest:", str(e))
-        return jsonify({"success": False, "message": str(e)}), 500
+        return jsonify({"success": False, "message": str(e)})
 
 
 if __name__ == '__main__':

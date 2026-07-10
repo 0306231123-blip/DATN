@@ -1561,7 +1561,7 @@ if (formBulkImport) {
         const payload = {
             items: items,
             ghi_chu: document.getElementById('bulk-note').value,
-            ma_nha_cung_cap: document.getElementById('bulk-supplier').value || null
+            ma_nha_cung_cap: document.getElementById('bulk-supplier') ? document.getElementById('bulk-supplier').value : null
         };
         
         try {
