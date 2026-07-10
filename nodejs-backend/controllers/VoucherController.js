@@ -19,7 +19,7 @@ class VoucherController {
         
         const token = authHeader.split(' ')[1];
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
-        const maNguoiDung = decoded.ma_nguoi_dung;
+        let maNguoiDung = decoded.ma_nguoi_dung !== undefined ? decoded.ma_nguoi_dung : decoded.id;
 
         const { ma_code, tong_tien_hang } = req.body;
 
@@ -122,9 +122,39 @@ class VoucherController {
             order: [['gia_tri', 'DESC']] // Mã giảm giá trị cao xếp trên
         });
 
+        let usedVoucherIds = [];
+        const authHeader = req.headers.authorization;
+        if (authHeader && authHeader.startsWith('Bearer ')) {
+            try {
+                const token = authHeader.split(' ')[1];
+                const decoded = jwt.verify(token, process.env.JWT_SECRET);
+                let maNguoiDung = decoded.ma_nguoi_dung !== undefined ? decoded.ma_nguoi_dung : decoded.id;
+                
+                if (maNguoiDung !== undefined) {
+                    const usedOrders = await DonHang.findAll({
+                        where: {
+                            ma_nguoi_dung: maNguoiDung,
+                            ma_khuyen_mai: { [Op.not]: null },
+                            trang_thai_don: { [Op.notIn]: ['da_huy', 'da_tra_hang'] }
+                        },
+                        attributes: ['ma_khuyen_mai']
+                    });
+                    usedVoucherIds = usedOrders.map(o => o.ma_khuyen_mai);
+                }
+            } catch (err) {
+                // Bỏ qua lỗi token (vì API này có thể gọi public)
+            }
+        }
+
+        const data = vouchers.map(v => {
+            const vData = v.toJSON();
+            vData.da_su_dung = usedVoucherIds.includes(v.ma_khuyen_mai);
+            return vData;
+        });
+
         res.json({
             success: true,
-            data: vouchers
+            data: data
         });
     } catch (error) {
         console.error(error);

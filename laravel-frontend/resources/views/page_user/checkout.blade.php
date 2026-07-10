@@ -545,7 +545,9 @@
             voucherModal.classList.add('flex');
             
             try {
-                const res = await fetch('http://localhost:3000/api/voucher/active');
+                const res = await fetch('http://localhost:3000/api/voucher/active', {
+                    headers: { 'Authorization': 'Bearer ' + token }
+                });
                 const result = await res.json();
                 
                 if (result.success && result.data.length > 0) {
@@ -556,15 +558,16 @@
                                    `Giảm ${v.gia_tri}% (Tối đa ${(v.giam_toi_da||0).toLocaleString()} đ)`;
                         
                         let outOfStock = v.so_luong <= 0;
+                        let daSuDung = v.da_su_dung;
                         let percentUsed = Math.round(Math.max(5, 100 - Math.sqrt(v.so_luong) * 3));
                         if (outOfStock) percentUsed = 100;
                         let minOrder = `Đơn tối thiểu: ${v.don_toi_thieu.toLocaleString()} đ`;
-                        let isEligible = baseTotal >= v.don_toi_thieu && !outOfStock;
+                        let isEligible = baseTotal >= v.don_toi_thieu && !outOfStock && !daSuDung;
                         
                         let btnClass = isEligible ? 'bg-pink-500 hover:bg-pink-600 text-white shadow-sm' : 'bg-gray-100 text-gray-400 cursor-not-allowed';
                         let btnAction = isEligible ? `onclick="window.selectVoucher('${v.ma_code}')"` : 'disabled';
-                        let borderClass = outOfStock ? 'border-gray-200 opacity-60 grayscale pointer-events-none' : (isEligible ? 'border-pink-200' : 'border-gray-200 opacity-80');
-                        let btnText = outOfStock ? 'Hết lượt' : (isEligible ? 'Dùng ngay' : 'Chưa đủ đ/k');
+                        let borderClass = (outOfStock || daSuDung) ? 'border-gray-200 opacity-60 grayscale pointer-events-none' : (isEligible ? 'border-pink-200' : 'border-gray-200 opacity-80');
+                        let btnText = daSuDung ? 'Đã dùng' : (outOfStock ? 'Hết lượt' : (isEligible ? 'Dùng ngay' : 'Chưa đủ đ/k'));
                         
                         html += `
                         <div class="border ${borderClass} rounded-2xl p-4 flex flex-col gap-3 bg-white hover:shadow-md transition relative overflow-hidden group">
