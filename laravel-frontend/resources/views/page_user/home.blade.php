@@ -103,7 +103,7 @@
 </section>
 
 {{-- AI NEXT STEP RECOMMENDATION --}}
-<section id="ai-next-step-section" class="hidden mb-12 bg-gradient-to-br from-pink-50 to-orange-50 p-6 rounded-sm border border-transparent hover:border-pink-500 shadow-sm relative overflow-hidden">
+<section id="ai-next-step-section" class="mb-12 bg-gradient-to-br from-pink-50 to-orange-50 p-6 rounded-sm border border-transparent hover:border-pink-500 shadow-sm relative overflow-hidden hidden">
     <div class="absolute top-0 right-0 p-4 opacity-10 text-6xl">🤖</div>
     <div class="flex items-center mb-4 relative z-10">
         <span class="text-3xl mr-3 animate-pulse">💡</span>
@@ -111,54 +111,72 @@
     </div>
     <div class="relative z-10 flex flex-col md:flex-row gap-6 items-center">
         <div class="flex-1">
-            <div class="bg-white p-4 rounded-sm shadow-sm border border-pink-50 relative">
+            <div class="bg-white p-4 rounded-sm shadow-sm border border-pink-50 relative min-h-[80px]">
                 <div class="absolute -left-2 -top-2 text-2xl">✨</div>
-                <p id="ai-next-step-reason" class="text-gray-700 italic font-medium leading-relaxed"></p>
+                <div id="ai-next-step-reason" class="text-gray-700 italic font-medium leading-relaxed">
+                    <!-- Skeleton Loader -->
+                    <div class="animate-pulse flex flex-col gap-2">
+                        <div class="h-4 bg-gray-200 rounded w-3/4"></div>
+                        <div class="h-4 bg-gray-200 rounded w-5/6"></div>
+                        <div class="h-4 bg-gray-200 rounded w-1/2"></div>
+                    </div>
+                </div>
             </div>
         </div>
-        <div id="ai-next-step-product" class="w-full md:w-64 flex-shrink-0">
-            <!-- Product card will be rendered here -->
+        <div id="ai-next-step-product" class="w-full md:w-64 flex-shrink-0 min-h-[250px]">
+            <!-- Skeleton Loader for Product -->
+            <div class="bg-white p-2 flex flex-col h-full group relative border border-gray-100 rounded-sm animate-pulse">
+                <div class="relative w-full aspect-square mb-3 overflow-hidden rounded-sm bg-gray-200"></div>
+                <div class="flex-grow flex flex-col justify-between">
+                    <div class="h-4 bg-gray-200 rounded mb-2 w-full"></div>
+                    <div class="h-4 bg-gray-200 rounded mb-2 w-2/3"></div>
+                </div>
+            </div>
         </div>
     </div>
 </section>
 
 
-{{-- AI SKIN TYPE RECOMMENDATION --}}
-<section id="ai-skin-type-section" class="hidden mb-12 bg-gradient-to-br from-green-50 to-teal-50 p-6 rounded-sm border border-transparent hover:border-teal-500 shadow-sm relative overflow-hidden">
-    <div class="absolute top-0 right-0 p-4 opacity-10 text-6xl">🌿</div>
-    <div class="flex items-center mb-4 relative z-10">
-        <span class="text-3xl mr-3 animate-pulse">✨</span>
-        <h2 class="text-2xl font-black text-teal-600 uppercase tracking-widest">Chăm Sóc Dành Riêng Cho <span id="skin-type-label" class="text-green-600">Làn Da</span> Của Bạn</h2>
-    </div>
-    <div class="relative z-10 flex flex-col md:flex-row gap-6 items-center">
-        <div class="flex-1">
-            <div class="bg-white p-4 rounded-sm shadow-sm border border-teal-50 relative">
-                <div class="absolute -left-2 -top-2 text-2xl">💧</div>
-                <p id="ai-skin-type-reason" class="text-gray-700 italic font-medium leading-relaxed"></p>
-            </div>
-        </div>
-        <div id="ai-skin-type-product" class="w-full md:flex-1 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 custom-scrollbar overflow-x-auto">
-            <!-- Product cards will be rendered here -->
-        </div>
-    </div>
-</section>
+
 
 {{-- AI SKIN TYPE RECOMMENDATION --}}
-<section id="ai-skin-type-section" class="hidden mb-12 bg-gradient-to-br from-green-50 to-teal-50 p-6 rounded-sm border border-transparent hover:border-teal-500 shadow-sm relative overflow-hidden">
+<section id="ai-skin-type-section" class="mb-12 bg-gradient-to-br from-green-50 to-teal-50 p-6 rounded-sm border border-transparent hover:border-teal-500 shadow-sm relative overflow-hidden hidden">
     <div class="absolute top-0 right-0 p-4 opacity-10 text-6xl">🌿</div>
     <div class="flex items-center mb-4 relative z-10">
         <span class="text-3xl mr-3 animate-pulse">✨</span>
-        <h2 class="text-2xl font-black text-teal-600 uppercase tracking-widest">Chăm Sóc Dành Riêng Cho Da <span id="skin-type-label" class="text-green-600"></span></h2>
+        <h2 class="text-2xl font-black text-teal-600 uppercase tracking-widest">Chăm Sóc Dành Riêng Cho <span id="skin-type-label" class="text-green-600">...</span></h2>
     </div>
     <div class="relative z-10 flex flex-col md:flex-row gap-6 items-center">
         <div class="flex-1">
-            <div class="bg-white p-4 rounded-sm shadow-sm border border-teal-50 relative">
+            <div class="bg-white p-4 rounded-sm shadow-sm border border-teal-50 relative min-h-[80px]">
                 <div class="absolute -left-2 -top-2 text-2xl">💧</div>
-                <p id="ai-skin-type-reason" class="text-gray-700 italic font-medium leading-relaxed"></p>
+                <div id="ai-skin-type-reason" class="text-gray-700 italic font-medium leading-relaxed">
+                     <!-- Skeleton Loader -->
+                     <div class="animate-pulse flex flex-col gap-2">
+                        <div class="h-4 bg-gray-200 rounded w-full"></div>
+                        <div class="h-4 bg-gray-200 rounded w-4/5"></div>
+                        <div class="h-4 bg-gray-200 rounded w-2/3"></div>
+                    </div>
+                </div>
             </div>
         </div>
-        <div id="ai-skin-type-product" class="w-full md:flex-1 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 custom-scrollbar overflow-x-auto">
-            <!-- Product cards will be rendered here -->
+        <div id="ai-skin-type-product" class="w-full md:flex-1 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 custom-scrollbar overflow-x-auto min-h-[250px]">
+            <!-- Skeleton Loader for Products (Show 3) -->
+            <div class="bg-white p-2 flex flex-col h-full group relative border border-gray-100 rounded-sm animate-pulse min-w-[150px]">
+                <div class="relative w-full aspect-square mb-3 overflow-hidden rounded-sm bg-gray-200"></div>
+                <div class="h-4 bg-gray-200 rounded mb-2 w-full"></div>
+                <div class="h-4 bg-gray-200 rounded mb-2 w-1/2"></div>
+            </div>
+            <div class="bg-white p-2 flex flex-col h-full group relative border border-gray-100 rounded-sm animate-pulse min-w-[150px]">
+                <div class="relative w-full aspect-square mb-3 overflow-hidden rounded-sm bg-gray-200"></div>
+                <div class="h-4 bg-gray-200 rounded mb-2 w-full"></div>
+                <div class="h-4 bg-gray-200 rounded mb-2 w-1/2"></div>
+            </div>
+            <div class="bg-white p-2 flex flex-col h-full group relative border border-gray-100 rounded-sm animate-pulse min-w-[150px]">
+                <div class="relative w-full aspect-square mb-3 overflow-hidden rounded-sm bg-gray-200"></div>
+                <div class="h-4 bg-gray-200 rounded mb-2 w-full"></div>
+                <div class="h-4 bg-gray-200 rounded mb-2 w-1/2"></div>
+            </div>
         </div>
     </div>
 </section>
@@ -255,6 +273,8 @@
                     const skinProductEl = document.getElementById('ai-skin-type-product');
                     const skinTypeLabel = document.getElementById('skin-type-label');
                     
+                    if (skinSection) skinSection.classList.remove('hidden');
+
                     fetch('http://localhost:5000/api/ai-skin-type-suggest', {
                         method: 'POST',
                         headers: {
@@ -296,10 +316,10 @@
                             });
                             
                             if (skinProductEl) skinProductEl.innerHTML = productsHtml;
-                            if (skinSection) skinSection.classList.remove('hidden');
                         }
                     }).catch(err => console.error('Lỗi tải AI Skin Type:', err));
-
+                    
+                    if (aiSection) aiSection.classList.remove('hidden');
                     const response = await fetch('http://localhost:5000/api/ai-next-step-suggest', {
                         method: 'POST',
                         headers: {
@@ -343,7 +363,6 @@
                         reasonEl.innerHTML = result.reason;
                         productEl.className = "w-full md:w-1/2 lg:w-7/12 xl:w-2/3 flex-shrink-0 flex gap-4 overflow-x-auto pb-2 custom-scrollbar";
                         productEl.innerHTML = productsHtml;
-                        aiSection.classList.remove('hidden');
                     } else {
                         reasonEl.innerHTML = "Có vẻ bạn là khách hàng mới! Hãy trải nghiệm mua sắm tại shop hoặc chờ hệ thống AI thu thập thêm dữ liệu để có thể đưa ra những gợi ý chính xác nhất cho chu trình Skincare của bạn nhé!";
                         productEl.className = "w-full md:w-64 flex-shrink-0";
@@ -353,7 +372,6 @@
                                 <p class="text-pink-600 font-bold text-sm">Chờ đón đơn hàng đầu tiên</p>
                             </div>
                         `;
-                        aiSection.classList.remove('hidden');
                     }
                 }
             } catch (error) {

@@ -391,6 +391,7 @@ async function viewOrderDetail(orderId) {
             const customerName = isDefaultName && order.nguoi_dung ? order.nguoi_dung.ho_ten : (order.ho_ten_nguoi_nhan || 'N/A');
             const customerEmail = order.nguoi_dung ? order.nguoi_dung.email : '';
             const customerPhone = order.so_dien_thoai_nhan || (order.nguoi_dung ? order.nguoi_dung.so_dien_thoai : '');
+            const customerAddress = order.dia_chi_giao || (order.nguoi_dung ? order.nguoi_dung.dia_chi : 'Chưa cập nhật');
 
             document.getElementById('modal-order-title').textContent =
                 `Đơn hàng ${order.ma_don_hang}`;
@@ -415,6 +416,7 @@ let detailsHTML = `
             <h4>Thông tin khách hàng</h4>
             <p><strong>Tên:</strong> ${escapeHtml(customerName)}</p>
             <p><strong>SĐT:</strong> ${escapeHtml(customerPhone)}</p>
+            <p><strong>Địa chỉ:</strong> ${escapeHtml(customerAddress)}</p>
             
             <div class="bank-info-box" style="margin-top: 10px; padding: 10px; background: #f8f9fa; border-radius: 8px; border: 1px solid #eee;">
                 <p style="font-size: 0.85rem; color: #666; margin-bottom: 5px;"><i>Thông tin ngân hàng (từ Profile):</i></p>

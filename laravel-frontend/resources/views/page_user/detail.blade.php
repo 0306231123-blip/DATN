@@ -308,7 +308,7 @@
                 }
 
                 const diemSo = document.getElementById('so_sao_input').value;
-                const noiDung = document.getElementById('noi_dung_danh_gia').value;
+                const noiDung = document.getElementById('noi_dung_danh_gia').value.trim();
                 const maSanPham = {{ $sanPham->ma_san_pham }};
 
                 if (diemSo == 0) {

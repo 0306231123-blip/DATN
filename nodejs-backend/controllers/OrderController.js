@@ -643,6 +643,12 @@ class OrderController {
                 await t.rollback();
                 return res.status(400).json({ success: false, message: 'Chỉ đơn hàng đã giao thành công mới được yêu cầu trả hàng!' });
             }
+
+            if (!ngan_hang_hoan_tien || !stk_hoan_tien || !chu_tk_hoan_tien || !ly_do_tra_hang) {
+                await t.rollback();
+                return res.status(400).json({ success: false, message: 'Vui lòng cung cấp đầy đủ thông tin ngân hàng và lý do trả hàng!' });
+            }
+
             
             // KIỂM TRA ĐIỀU KIỆN 3 NGÀY
             const ngayGiao = new Date(donHang.ngay_cap_nhat || donHang.ngay_dat);

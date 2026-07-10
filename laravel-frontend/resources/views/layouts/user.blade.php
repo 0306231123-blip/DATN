@@ -653,6 +653,13 @@
                         try {
                             const response = await fetch(`/search-live?q=${encodeURIComponent(keyword)}`);
                             const result = await response.json();
+                            
+                            // Ngăn chặn race condition khi người dùng xóa text nhanh
+                            if (searchInput.value.trim().length < 2) {
+                                searchDropdown.classList.add('hidden');
+                                return;
+                            }
+
                             const products = result.data;
                             if (products && products.length > 0) {
                                 let html = products.map(item => `
@@ -669,6 +676,13 @@
                             }
                         } catch (error) { console.error('Lỗi:', error); }
                     }, 300);
+                });
+
+                // Đóng dropdown khi click ra ngoài
+                document.addEventListener('click', (e) => {
+                    if (!searchInput.contains(e.target) && !searchDropdown.contains(e.target)) {
+                        searchDropdown.classList.add('hidden');
+                    }
                 });
             }
 

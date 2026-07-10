@@ -47,9 +47,40 @@ class ProductController extends Controller
         // Lọc theo từ khóa tìm kiếm (Search bar)
         if ($request->has('search') && $request->get('search') != '') {
             $keyword = $request->get('search');
-            $query->where(function($q) use ($keyword) {
+            
+            // Map từ khóa tiếng Việt sang enum của DB cho loại da
+            $keywordLower = mb_strtolower($keyword, 'UTF-8');
+            $skinTypeKeys = [];
+            if (str_contains($keywordLower, 'da dầu') || str_contains($keywordLower, 'da dau')) {
+                $skinTypeKeys[] = 'da_dau';
+            }
+            if (str_contains($keywordLower, 'da khô') || str_contains($keywordLower, 'da kho')) {
+                $skinTypeKeys[] = 'da_kho';
+            }
+            if (str_contains($keywordLower, 'hỗn hợp') || str_contains($keywordLower, 'hon hop')) {
+                $skinTypeKeys[] = 'da_hon_hop';
+            }
+            if (str_contains($keywordLower, 'nhạy cảm') || str_contains($keywordLower, 'nhay cam')) {
+                $skinTypeKeys[] = 'da_nhay_cam';
+            }
+            if (str_contains($keywordLower, 'mọi loại da') || str_contains($keywordLower, 'tất cả') || str_contains($keywordLower, 'tat ca')) {
+                $skinTypeKeys[] = 'tat_ca';
+            }
+
+            $query->where(function($q) use ($keyword, $skinTypeKeys) {
                 $q->where('ten_san_pham', 'like', '%' . $keyword . '%')
-                  ->orWhere('thuong_hieu', 'like', '%' . $keyword . '%');
+                  ->orWhere('thuong_hieu', 'like', '%' . $keyword . '%')
+                  ->orWhereIn('ma_danh_muc', function($subQuery) use ($keyword) {
+                      $subQuery->select('ma_danh_muc')
+                               ->from('danh_muc')
+                               ->where('ten_danh_muc', 'like', '%' . $keyword . '%');
+                  });
+                  
+                if (count($skinTypeKeys) > 0) {
+                    $q->orWhereIn('loai_da_phu_hop', $skinTypeKeys);
+                } else {
+                    $q->orWhere('loai_da_phu_hop', 'like', '%' . $keyword . '%');
+                }
             });
         }
 
@@ -252,11 +283,41 @@ class ProductController extends Controller
         $keyword = $request->get('q', '');
         if (strlen($keyword) < 2) return response()->json(['data' => []]);
 
+        // Map từ khóa tiếng Việt sang enum của DB cho loại da
+        $keywordLower = mb_strtolower($keyword, 'UTF-8');
+        $skinTypeKeys = [];
+        if (str_contains($keywordLower, 'da dầu') || str_contains($keywordLower, 'da dau')) {
+            $skinTypeKeys[] = 'da_dau';
+        }
+        if (str_contains($keywordLower, 'da khô') || str_contains($keywordLower, 'da kho')) {
+            $skinTypeKeys[] = 'da_kho';
+        }
+        if (str_contains($keywordLower, 'hỗn hợp') || str_contains($keywordLower, 'hon hop')) {
+            $skinTypeKeys[] = 'da_hon_hop';
+        }
+        if (str_contains($keywordLower, 'nhạy cảm') || str_contains($keywordLower, 'nhay cam')) {
+            $skinTypeKeys[] = 'da_nhay_cam';
+        }
+        if (str_contains($keywordLower, 'mọi loại da') || str_contains($keywordLower, 'tất cả') || str_contains($keywordLower, 'tat ca')) {
+            $skinTypeKeys[] = 'tat_ca';
+        }
+
         // Tìm 5 sản phẩm có tên chứa từ khóa
         $products = \App\Models\SanPham::where('trang_thai', 'dang_ban')
-                    ->where(function ($q) use ($keyword) {
+                    ->where(function ($q) use ($keyword, $skinTypeKeys) {
                         $q->where('ten_san_pham', 'LIKE', '%' . $keyword . '%')
-                          ->orWhere('thuong_hieu', 'LIKE', '%' . $keyword . '%');
+                          ->orWhere('thuong_hieu', 'LIKE', '%' . $keyword . '%')
+                          ->orWhereIn('ma_danh_muc', function($subQuery) use ($keyword) {
+                              $subQuery->select('ma_danh_muc')
+                                       ->from('danh_muc')
+                                       ->where('ten_danh_muc', 'LIKE', '%' . $keyword . '%');
+                          });
+                          
+                        if (count($skinTypeKeys) > 0) {
+                            $q->orWhereIn('loai_da_phu_hop', $skinTypeKeys);
+                        } else {
+                            $q->orWhere('loai_da_phu_hop', 'LIKE', '%' . $keyword . '%');
+                        }
                     })
                     ->limit(5)
                     ->get();

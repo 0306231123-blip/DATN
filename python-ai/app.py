@@ -18,8 +18,8 @@ API_KEY = os.getenv("OPENROUTER_API_KEY", "")
 
 # OpenRouter API URL
 OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions"
-# Chọn model Llama 3.3 70B (chỉ Text, miễn phí)
-AI_MODEL = "meta-llama/llama-3.3-70b-instruct:free"
+# Chọn model nhanh và nhẹ hơn (để tăng tốc độ phản hồi)
+AI_MODEL = "meta-llama/llama-3.1-8b-instruct:free"
 
 def get_db_connection():
     return mysql.connector.connect(
@@ -30,9 +30,10 @@ def get_db_connection():
     )
 
 FALLBACK_MODELS = [
+    "meta-llama/llama-3.1-8b-instruct:free",
+    "google/gemma-2-9b-it:free",
     "meta-llama/llama-3.3-70b-instruct:free",
-    "tencent/hy3:free",
-    "google/lyria-3-pro-preview"
+    "tencent/hy3:free"
 ]
 
 def call_openrouter_api(system_prompt, user_content_parts):

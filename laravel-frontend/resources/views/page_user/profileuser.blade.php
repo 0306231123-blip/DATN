@@ -3,31 +3,173 @@
 
 @section('styles')
 <link rel="stylesheet" href="{{ asset('css/user-profile.css') }}">
+<style>
+/* Shopee Style Overrides */
+.profile-grid { max-width: 1200px !important; display: flex !important; gap: 2rem !important; align-items: flex-start; }
+.profile-sidebar { width: 220px !important; flex-shrink: 0 !important; background: transparent !important; display: block !important; }
+.profile-content { flex-grow: 1 !important; background: #fff !important; box-shadow: 0 1px 2px 0 rgba(0,0,0,.13) !important; border-radius: 2px !important; border: none !important; min-height: 400px; padding: 0 !important; margin-bottom: 2rem; }
+
+/* Sidebar */
+.shopee-user-info { display: flex; align-items: center; gap: 15px; padding: 15px 0; margin-bottom: 15px; border-bottom: 1px solid #efefef; }
+.shopee-avatar { width: 50px; height: 50px; border-radius: 50%; background: #f5f5f5; border: 1px solid #efefef; display: flex; align-items: center; justify-content: center; color: #ccc; overflow: hidden; }
+.shopee-avatar svg { width: 30px; height: 30px; fill: #d1d5db; }
+.shopee-username { font-weight: 600; font-size: 14px; color: #333; max-width: 120px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+.profile-tab-btn { background: transparent !important; border: none !important; box-shadow: none !important; text-align: left !important; padding: 8px 0 !important; color: #757575 !important; font-size: 14px !important; font-weight: 500 !important; display: flex !important; align-items: center !important; gap: 12px !important; transition: color 0.2s !important; border-radius: 0 !important; margin-bottom: 8px !important; width: 100% !important; }
+.profile-tab-btn:hover { color: #ee4d2d !important; background: transparent !important; }
+.profile-tab-btn--active { color: #ee4d2d !important; font-weight: 600 !important; }
+.shopee-icon { width: 20px; text-align: center; color: #0055aa; font-size: 18px; }
+.shopee-icon.history { color: #ee4d2d; }
+.shopee-icon.orders { color: #ee4d2d; }
+
+/* Content Header */
+.shopee-header { padding: 18px 30px; border-bottom: 1px solid #efefef; }
+.shopee-header__title { font-size: 1.125rem; font-weight: 500; color: #333; margin: 0; text-transform: none; border: none; padding: 0; }
+.shopee-header__subtitle { font-size: 14px; color: #555; margin-top: 4px; }
+
+/* Form */
+.profile-form { background: transparent !important; box-shadow: none !important; border: none !important; padding: 30px !important; display: block !important; }
+.shopee-row { display: flex; align-items: center; margin-bottom: 30px; }
+.shopee-label { width: 25%; text-align: right; padding-right: 20px; color: rgba(85,85,85,.8); font-size: 14px; font-weight: 400 !important; margin: 0 !important; }
+.shopee-control { width: 75%; display: flex; align-items: center; gap: 10px; }
+.shopee-input { width: 100%; max-width: 400px; height: 40px; padding: 0 10px !important; border: 1px solid #ccc !important; border-radius: 2px !important; font-size: 14px; color: #333; box-shadow: none !important; background: #fff; }
+.shopee-input:focus { border-color: #555 !important; }
+.shopee-input--readonly { border: none !important; padding: 0 !important; background: transparent !important; color: #333 !important; cursor: default !important; }
+
+.shopee-address-wrapper { display: flex; flex-direction: column; width: 100%; max-width: 500px; }
+.shopee-address-text { font-size: 14px; color: #333; margin-bottom: 10px; width: 100%; }
+.shopee-address-inputs { display: flex; gap: 10px; flex-wrap: wrap; width: 100%; }
+
+.shopee-section-title { font-size: 14px; font-weight: 500; color: #333; margin: 30px 0 20px 25%; }
+.shopee-section-subtitle { font-weight: 400; color: #999; font-size: 12px; margin-left: 5px; }
+
+/* Save button */
+.profile-form__save-btn { background: #ee4d2d !important; color: #fff !important; height: 40px !important; padding: 0 20px !important; border-radius: 2px !important; font-weight: 400 !important; min-width: 100px; margin-left: 25%; width: auto !important; }
+.profile-form__save-btn:hover { background: #f05d40 !important; }
+.profile-form__actions { justify-content: flex-start !important; padding-top: 0 !important; display: block !important; margin-top: 40px !important; }
+
+/* Hide old elements to avoid conflict */
+.profile-avatar, .profile-name { display: none !important; }
+.profile-tab__title { display: none !important; }
+
+/* Bank Tab */
+#tab-bank { display: none; }
+#tab-bank.profile-tab--active { display: block; }
+
+/* Purchase Tab Styles (Shopee like) */
+#tab-purchase { display: none; background: transparent !important; box-shadow: none !important; padding: 0 !important; border: none !important; width: 100%;}
+#tab-purchase.profile-tab--active { display: block; }
+
+.shopee-status-bar {
+    display: flex;
+    background: #fff;
+    box-shadow: 0 1px 2px 0 rgba(0,0,0,.13);
+    border-radius: 2px;
+    margin-bottom: 12px;
+}
+.shopee-status-tab {
+    flex: 1;
+    text-align: center;
+    padding: 16px 0;
+    cursor: pointer;
+    font-size: 16px;
+    color: rgba(0,0,0,.8);
+    transition: color 0.2s;
+    border-bottom: 2px solid transparent;
+}
+.shopee-status-tab:hover {
+    color: #ee4d2d;
+}
+.shopee-status-tab.active {
+    color: #ee4d2d;
+    border-bottom-color: #ee4d2d;
+}
+
+.shopee-search-bar {
+    background: #eaeaea;
+    padding: 12px 16px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    border-radius: 2px;
+    margin-bottom: 12px;
+}
+.shopee-search-input-wrapper {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    background: #fff;
+    border-radius: 2px;
+    padding: 0 12px;
+    border: 1px solid #e5e5e5;
+}
+.shopee-search-input-wrapper input {
+    width: 100%;
+    border: none !important;
+    height: 40px;
+    outline: none;
+    box-shadow: none !important;
+}
+.shopee-search-input-wrapper svg {
+    width: 16px;
+    height: 16px;
+    color: #bbb;
+}
+.shopee-date-filter {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: #fff;
+    height: 40px;
+    padding: 0 12px;
+    border: 1px solid #e5e5e5;
+    border-radius: 2px;
+}
+.shopee-date-filter input {
+    border: none;
+    outline: none;
+    font-size: 14px;
+}
+.shopee-search-btn {
+    background: #ee4d2d;
+    color: #fff;
+    border: none;
+    padding: 0 20px;
+    height: 40px;
+    border-radius: 2px;
+    cursor: pointer;
+}
+
+</style>
 @endsection
 
 @section('content')
 <section class="user-section">
     <div class="profile-grid">
         
-        {{-- Sidebar --}}
+                        {{-- Sidebar --}}
         <div class="profile-sidebar">
-            <div class="profile-avatar">
-                <div class="profile-avatar__head"></div>
-                <div class="profile-avatar__body"></div>
+            <div class="shopee-user-info">
+                <div class="shopee-avatar">
+                    <svg viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
+                </div>
+                <div id="sidebar-name" class="shopee-username">Đang tải...</div>
             </div>
-
-            <div id="sidebar-name" class="profile-name">Đang tải...</div>
             
             <button id="btn-info" onclick="switchTab('info')" class="tab-btn profile-tab-btn profile-tab-btn--active">
-                Quản lý thông tin
+                <span class="shopee-icon">👤</span> Quản lý thông tin
             </button>
             
-            <button id="btn-history" onclick="switchTab('history')" class="tab-btn profile-tab-btn">
-                Lịch sử mua hàng
+            <button id="btn-bank" onclick="switchTab('bank')" class="tab-btn profile-tab-btn">
+                <span class="shopee-icon" style="color: #ee4d2d;">💳</span> Ngân hàng
             </button>
             
             <button id="btn-orders" onclick="switchTab('orders')" class="tab-btn profile-tab-btn">
-                Quản lý đơn hàng
+                <span class="shopee-icon" style="color: #0055aa;">📝</span> Quản lý đơn hàng
+            </button>
+            
+            <button id="btn-history" onclick="switchTab('history')" class="tab-btn profile-tab-btn">
+                <span class="shopee-icon history">🕒</span> Lịch sử mua hàng
             </button>
         </div>
 
@@ -36,29 +178,38 @@
             
             {{-- Tab: Thông tin --}}
             <div id="tab-info" class="tab-content profile-tab profile-tab--active">
-                <h2 class="profile-tab__title">Cập nhật thông tin</h2>
+                <div class="shopee-header">
+                    <h2 class="shopee-header__title">Hồ sơ của tôi</h2>
+                    <p class="shopee-header__subtitle">Quản lý thông tin hồ sơ để bảo mật tài khoản</p>
+                </div>
                 
                 <form id="update-profile-form" class="profile-form">
                     
-                    <div class="profile-form__grid">
-                        <div class="profile-form__group">
-                            <label class="profile-form__label">Họ và tên</label>
-                            <input type="text" id="input-name" class="profile-form__input" required>
+                    <div class="shopee-row">
+                        <label class="shopee-label">Họ và tên</label>
+                        <div class="shopee-control">
+                            <input type="text" id="input-name" class="shopee-input" required>
                         </div>
+                    </div>
 
-                        <div class="profile-form__group">
-                            <label class="profile-form__label">Email</label>
-                            <input type="email" id="input-email" class="profile-form__input profile-form__input--readonly" readonly title="Email không thể thay đổi">
+                    <div class="shopee-row">
+                        <label class="shopee-label">Email</label>
+                        <div class="shopee-control">
+                            <input type="email" id="input-email" class="shopee-input shopee-input--readonly" readonly title="Email không thể thay đổi">
                         </div>
+                    </div>
 
-                        <div class="profile-form__group">
-                            <label class="profile-form__label">Số điện thoại</label>
-                            <input type="text" id="input-phone" class="profile-form__input" placeholder="VD: 0912345678">
+                    <div class="shopee-row">
+                        <label class="shopee-label">Số điện thoại</label>
+                        <div class="shopee-control">
+                            <input type="text" id="input-phone" class="shopee-input" placeholder="VD: 0912345678">
                         </div>
+                    </div>
 
-                        <div class="profile-form__group">
-                            <label class="profile-form__label profile-form__label--pink">Loại da của bạn</label>
-                            <select id="input-skin-type" class="profile-form__select profile-form__input--pink-focus">
+                    <div class="shopee-row">
+                        <label class="shopee-label">Loại da của bạn</label>
+                        <div class="shopee-control">
+                            <select id="input-skin-type" class="shopee-input" style="max-width: 200px;">
                                 <option value="">-- Chưa xác định --</option>
                                 <option value="da_dau">Da dầu</option>
                                 <option value="da_kho">Da khô</option>
@@ -69,123 +220,151 @@
                         </div>
                     </div>
 
-                    <div class="profile-form__group profile-form__group--full">
-                        <label class="profile-form__label">Địa chỉ giao hàng</label>
-                        <div class="text-sm mb-2" style="color: #4b5563;">Địa chỉ hiện tại: <span id="current-address-display" style="font-weight: 700; color: #1f2937;">Chưa có</span></div>
-                        <input type="hidden" id="input-address">
-                        <div style="display: flex; gap: 10px; flex-wrap: wrap;">
-                            <select id="province" class="profile-form__input" style="flex: 1; min-width: 200px;">
-                                <option value="" selected>-- Giữ nguyên hoặc Chọn Tỉnh/TP mới --</option>
-                            </select>
-                            <select id="ward" class="profile-form__input cursor-pointer" style="flex: 1; min-width: 200px;">
-                                <option value="" selected>-- Chọn Phường / Xã --</option>
-                            </select>
-                            <input type="text" id="street" class="profile-form__input" style="flex: 2; min-width: 300px;" placeholder="Nhập số nhà, tên đường mới...">
-                        </div>
-                    </div>
-
-                    <div class="profile-bank-section">
-                        <h3 class="profile-bank-section__title">
-                            <span class="profile-bank-section__title-icon">💳</span> Thông tin nhận tiền hoàn
-                        </h3>
-                        <p class="profile-bank-section__hint">Cập nhật sẵn tài khoản ngân hàng để quá trình hoàn tiền (nếu có) diễn ra nhanh chóng.</p>
-                        
-                        <div class="profile-form__grid">
-                            <div class="profile-form__group">
-                                <label class="profile-form__label">Ngân hàng</label>
-                                <input type="text" id="input-bank-name" list="bank-list" class="profile-form__input" placeholder="VD: Vietcombank, MB Bank...">
-                            </div>
-                            <div class="profile-form__group">
-                                <label class="profile-form__label">Số tài khoản</label>
-                                <input type="text" id="input-bank-account" class="profile-form__input" placeholder="Nhập số tài khoản">
-                            </div>
-                            <div class="profile-form__group profile-form__group--full">
-                                <label class="profile-form__label">Tên chủ tài khoản</label>
-                                <input type="text" id="input-bank-owner" class="profile-form__input" style="text-transform: uppercase;" placeholder="VD: NGUYEN VAN A">
+                    <div class="shopee-row">
+                        <label class="shopee-label">Địa chỉ giao hàng</label>
+                        <div class="shopee-control">
+                            <div class="shopee-address-wrapper">
+                                <div class="shopee-address-text">Địa chỉ hiện tại: <span id="current-address-display" style="font-weight: 700;">Chưa có</span></div>
+                                <input type="hidden" id="input-address">
+                                <div class="shopee-address-inputs">
+                                    <select id="province" class="shopee-input" style="max-width: 245px;">
+                                        <option value="" selected>-- Chọn Tỉnh/TP mới --</option>
+                                    </select>
+                                    <select id="ward" class="shopee-input cursor-pointer" style="max-width: 245px;">
+                                        <option value="" selected>-- Chọn Phường/Xã --</option>
+                                    </select>
+                                    <input type="text" id="street" class="shopee-input" style="max-width: 500px;" placeholder="Nhập số nhà, tên đường mới...">
+                                </div>
                             </div>
                         </div>
                     </div>
 
-                    <div class="profile-password-section" style="margin-bottom: 1rem;">
-                        <label class="profile-form__label">Mật khẩu cũ <span class="profile-password-section__hint">(Bắt buộc nếu muốn đổi mật khẩu)</span></label>
-                        <input type="password" id="input-old-password" class="profile-form__input" placeholder="Nhập mật khẩu cũ...">
+                    <div class="shopee-section-title">
+                        Thay đổi mật khẩu
+                        <span class="shopee-section-subtitle">Để trống nếu không muốn đổi.</span>
                     </div>
 
-                    <div class="profile-password-section">
-                        <label class="profile-form__label">Mật khẩu mới <span class="profile-password-section__hint">(Bỏ trống nếu không muốn đổi)</span></label>
-                        <input type="password" id="input-password" class="profile-form__input" placeholder="Nhập mật khẩu mới...">
+                    <div class="shopee-row">
+                        <label class="shopee-label">Mật khẩu cũ</label>
+                        <div class="shopee-control">
+                            <input type="password" id="input-old-password" class="shopee-input" placeholder="Nhập mật khẩu cũ...">
+                        </div>
+                    </div>
+
+                    <div class="shopee-row">
+                        <label class="shopee-label">Mật khẩu mới</label>
+                        <div class="shopee-control">
+                            <input type="password" id="input-password" class="shopee-input" placeholder="Nhập mật khẩu mới...">
+                        </div>
                     </div>
 
                     <div class="profile-form__actions">
                         <button type="submit" id="btn-save-profile" class="profile-form__save-btn">
-                            Lưu thay đổi
+                            Lưu
                         </button>
                     </div>
                 </form>
             </div>
 
-            {{-- Tab: Lịch sử --}}
-            <div id="tab-history" class="tab-content profile-tab">
-                <h2 class="profile-tab__title">Lịch sử mua hàng</h2>
+            {{-- Tab: Ngân hàng --}}
+            <div id="tab-bank" class="tab-content profile-tab">
+                <div class="shopee-header">
+                    <h2 class="shopee-header__title">Thẻ Ngân Hàng</h2>
+                    <p class="shopee-header__subtitle">Quản lý tài khoản ngân hàng để quá trình hoàn tiền diễn ra nhanh chóng</p>
+                </div>
                 
-                <div class="profile-search-bar" id="history-search-bar" style="display: none;">
-                    <div class="profile-search-group">
-                        <input type="text" id="search-history-input" class="profile-form__input" style="width: 100%" placeholder="Nhập tên sản phẩm cần tìm..." onkeypress="if(event.key === 'Enter') applyFilters('history')">
+                <form id="update-bank-form" class="profile-form">
+                    <div class="shopee-row">
+                        <label class="shopee-label">Ngân hàng</label>
+                        <div class="shopee-control">
+                            <input type="text" id="input-bank-name" list="bank-list" class="shopee-input" placeholder="VD: Vietcombank, MB Bank...">
+                        </div>
                     </div>
-                    <div class="profile-search-group profile-search-group--date">
-                        <input type="date" id="date-from-history" class="profile-form__input" title="Từ ngày" onchange="document.getElementById('date-to-history').min = this.value">
-                        <span>-</span>
-                        <input type="date" id="date-to-history" class="profile-form__input" title="Đến ngày">
+
+                    <div class="shopee-row">
+                        <label class="shopee-label">Số tài khoản</label>
+                        <div class="shopee-control">
+                            <input type="text" id="input-bank-account" class="shopee-input" placeholder="Nhập số tài khoản">
+                        </div>
                     </div>
-                    <button type="button" class="profile-form__save-btn" style="padding: 0.75rem 1.5rem;" onclick="applyFilters('history')">Tìm kiếm</button>
+
+                    <div class="shopee-row">
+                        <label class="shopee-label">Tên chủ tài khoản</label>
+                        <div class="shopee-control">
+                            <input type="text" id="input-bank-owner" class="shopee-input" style="text-transform: uppercase;" placeholder="VD: NGUYEN VAN A">
+                        </div>
+                    </div>
+
+                    <div class="profile-form__actions">
+                        <button type="submit" id="btn-save-bank" class="profile-form__save-btn">
+                            Lưu
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            {{-- Tab: Quản lý đơn hàng --}}
+            <div id="tab-orders" class="tab-content profile-tab">
+                <div class="shopee-header">
+                    <h2 class="shopee-header__title">Quản lý đơn hàng</h2>
+                    <p class="shopee-header__subtitle">Theo dõi các đơn hàng đang được xử lý</p>
+                </div>
+                <div class="profile-order-filters" id="orders-filters" style="display: none; padding-top: 15px; padding-left: 30px; padding-right: 30px;">
+                    <button class="profile-filter-btn profile-filter-btn--active" onclick="filterOrders('orders', 'all', event)">Tất cả</button>
+                    <button class="profile-filter-btn" onclick="filterOrders('orders', 'cho_xac_nhan', event)">Chờ xác nhận</button>
+                    <button class="profile-filter-btn" onclick="filterOrders('orders', 'da_xac_nhan', event)">Đã xác nhận</button>
+                    <button class="profile-filter-btn" onclick="filterOrders('orders', 'dang_giao', event)">Đang giao hàng</button>
+                    <button class="profile-filter-btn" onclick="filterOrders('orders', 'giao_thanh_cong', event)">Giao thành công</button>
+                    <button class="profile-filter-btn" onclick="filterOrders('orders', 'dang_tra_hang', event)">Đang xử lý đổi/trả</button>
                 </div>
 
-                <!-- Filter buttons -->
-                <div class="profile-order-filters" id="history-filters" style="display: none;">
+                <div class="profile-search-bar" id="orders-search-bar" style="display: none; padding-left: 30px; padding-right: 30px;">
+                    <div class="profile-search-group">
+                        <input type="text" id="search-orders-input" class="profile-form__input" style="width: 100%;" placeholder="Tìm kiếm theo ID đơn hoặc tên sản phẩm..." onkeypress="if(event.key === 'Enter') applyFilters('orders')">
+                    </div>
+                    <div class="profile-search-group profile-search-group--date">
+                        Từ <input type="date" id="date-from-orders" class="profile-form__input" onchange="document.getElementById('date-to-orders').min = this.value">
+                        Đến <input type="date" id="date-to-orders" class="profile-form__input">
+                        <button class="profile-form__save-btn" style="padding: 0.5rem 1rem; margin-left: 0.5rem; width: auto;" onclick="applyFilters('orders')">Lọc</button>
+                    </div>
+                </div>
+
+                <div id="orders-container" class="profile-orders-empty" style="margin: 0 30px 30px 30px;">
+                    <p>Bạn chưa có đơn hàng nào đang xử lý.</p>
+                </div>
+            </div>
+
+            {{-- Tab: Lịch sử mua hàng --}}
+            <div id="tab-history" class="tab-content profile-tab">
+                <div class="shopee-header">
+                    <h2 class="shopee-header__title">Lịch sử mua hàng</h2>
+                    <p class="shopee-header__subtitle">Các đơn hàng đã hoàn tất hoặc bị hủy</p>
+                </div>
+                <div class="profile-order-filters" id="history-filters" style="display: none; padding-top: 15px; padding-left: 30px; padding-right: 30px;">
                     <button class="profile-filter-btn profile-filter-btn--active" onclick="filterOrders('history', 'all', event)">Tất cả</button>
                     <button class="profile-filter-btn" onclick="filterOrders('history', 'hoan_thanh', event)">Hoàn thành</button>
-                    <button class="profile-filter-btn" onclick="filterOrders('history', 'giao_thanh_cong', event)">Giao thành công</button>
                     <button class="profile-filter-btn" onclick="filterOrders('history', 'da_huy', event)">Đã hủy</button>
                     <button class="profile-filter-btn" onclick="filterOrders('history', 'da_tra_hang', event)">Đã trả hàng</button>
                     <button class="profile-filter-btn" onclick="filterOrders('history', 'tu_choi_tra_hang', event)">Từ chối trả hàng</button>
                     <button class="profile-filter-btn" onclick="filterOrders('history', 'khong_du_dieu_kien', event)">Không đủ điều kiện</button>
                 </div>
 
-                <div id="history-container" class="profile-orders-empty">
-                    Chưa có dữ liệu lịch sử mua hàng.
-                </div>
-            </div>
-
-            {{-- Tab: Đơn hàng --}}
-            <div id="tab-orders" class="tab-content profile-tab">
-                <h2 class="profile-tab__title">Quản lý đơn hàng</h2>
-
-                <div class="profile-search-bar" id="orders-search-bar" style="display: none;">
+                <div class="profile-search-bar" id="history-search-bar" style="display: none; padding-left: 30px; padding-right: 30px;">
                     <div class="profile-search-group">
-                        <input type="text" id="search-orders-input" class="profile-form__input" style="width: 100%" placeholder="Nhập tên sản phẩm cần tìm..." onkeypress="if(event.key === 'Enter') applyFilters('orders')">
+                        <input type="text" id="search-history-input" class="profile-form__input" style="width: 100%;" placeholder="Tìm kiếm theo ID đơn hoặc tên sản phẩm..." onkeypress="if(event.key === 'Enter') applyFilters('history')">
                     </div>
                     <div class="profile-search-group profile-search-group--date">
-                        <input type="date" id="date-from-orders" class="profile-form__input" title="Từ ngày" onchange="document.getElementById('date-to-orders').min = this.value">
-                        <span>-</span>
-                        <input type="date" id="date-to-orders" class="profile-form__input" title="Đến ngày">
+                        Từ <input type="date" id="date-from-history" class="profile-form__input" onchange="document.getElementById('date-to-history').min = this.value">
+                        Đến <input type="date" id="date-to-history" class="profile-form__input">
+                        <button class="profile-form__save-btn" style="padding: 0.5rem 1rem; margin-left: 0.5rem; width: auto;" onclick="applyFilters('history')">Lọc</button>
                     </div>
-                    <button type="button" class="profile-form__save-btn" style="padding: 0.75rem 1.5rem;" onclick="applyFilters('orders')">Tìm kiếm</button>
                 </div>
 
-                <!-- Filter buttons -->
-                <div class="profile-order-filters" id="orders-filters" style="display: none;">
-                    <button class="profile-filter-btn profile-filter-btn--active" onclick="filterOrders('orders', 'all', event)">Tất cả</button>
-                    <button class="profile-filter-btn" onclick="filterOrders('orders', 'cho_xac_nhan', event)">Chờ xác nhận</button>
-                    <button class="profile-filter-btn" onclick="filterOrders('orders', 'da_xac_nhan', event)">Đã xác nhận</button>
-                    <button class="profile-filter-btn" onclick="filterOrders('orders', 'dang_giao', event)">Đang giao</button>
-                    <button class="profile-filter-btn" onclick="filterOrders('orders', 'dang_tra_hang', event)">Đang xử lý trả hàng</button>
-                </div>
-
-                <div id="orders-container" class="profile-orders-empty">
-                    Bạn chưa có đơn hàng nào đang được xử lý.
+                <div id="history-container" class="profile-orders-empty" style="margin: 0 30px 30px 30px;">
+                    <p>Bạn chưa có lịch sử mua hàng nào.</p>
                 </div>
             </div>
-            
+
         </div>
     </div>
 </section>
@@ -347,9 +526,9 @@
     });
 
     // 3. GỬI DỮ LIỆU CẬP NHẬT LÊN SERVER
-    document.getElementById('update-profile-form').addEventListener('submit', async function(e) {
+    async function handleProfileSubmit(e, formType) {
         e.preventDefault();
-        const btn = document.getElementById('btn-save-profile');
+        const btn = formType === 'profile' ? document.getElementById('btn-save-profile') : document.getElementById('btn-save-bank');
         btn.textContent = 'Đang lưu...';
         btn.disabled = true;
 
@@ -358,7 +537,7 @@
         if (phoneInput && !phoneRegex.test(phoneInput)) {
             alert('🛑 Số điện thoại không hợp lệ! Vui lòng nhập đủ 10 số và bắt đầu bằng số 0.');
             document.getElementById('input-phone').focus();
-            btn.textContent = 'Lưu thay đổi';
+            btn.textContent = 'Lưu';
             btn.disabled = false;
             return;
         }
@@ -371,19 +550,19 @@
         const street = document.getElementById('street').value.trim();
 
         if (provinceName || wardName || street) {
-            if (!provinceName) { alert('🛑 Vui lòng chọn Tỉnh / Thành phố!'); document.getElementById('province').focus(); btn.textContent = 'Lưu thay đổi'; btn.disabled = false; return; }
-            if (!wardName) { alert('🛑 Vui lòng chọn Phường / Xã!'); document.getElementById('ward').focus(); btn.textContent = 'Lưu thay đổi'; btn.disabled = false; return; }
-            if (!street || street.length < 5) { alert('🛑 Vui lòng nhập chi tiết Số nhà, tên đường (tối thiểu 5 ký tự)!'); document.getElementById('street').focus(); btn.textContent = 'Lưu thay đổi'; btn.disabled = false; return; }
+            if (!provinceName) { alert('🛑 Vui lòng chọn Tỉnh / Thành phố!'); document.getElementById('province').focus(); btn.textContent = 'Lưu'; btn.disabled = false; return; }
+            if (!wardName) { alert('🛑 Vui lòng chọn Phường / Xã!'); document.getElementById('ward').focus(); btn.textContent = 'Lưu'; btn.disabled = false; return; }
+            if (!street || street.length < 5) { alert('🛑 Vui lòng nhập chi tiết Số nhà, tên đường (tối thiểu 5 ký tự)!'); document.getElementById('street').focus(); btn.textContent = 'Lưu'; btn.disabled = false; return; }
             diaChiMoi = `${street}, ${wardName}, ${provinceName}`;
         }
 
         const oldPassword = document.getElementById('input-old-password').value;
         const newPassword = document.getElementById('input-password').value;
-        const currentName = document.getElementById('input-name').value;
+        const currentName = document.getElementById('input-name').value.trim();
         const currentSkinType = document.getElementById('input-skin-type').value;
-        const currentBankName = document.getElementById('input-bank-name').value;
-        const currentBankAccount = document.getElementById('input-bank-account').value;
-        const currentBankOwner = document.getElementById('input-bank-owner').value;
+        const currentBankName = document.getElementById('input-bank-name').value.trim();
+        const currentBankAccount = document.getElementById('input-bank-account').value.trim();
+        const currentBankOwner = document.getElementById('input-bank-owner').value.trim();
 
         // KIỂM TRA XEM CÓ THAY ĐỔI GÌ KHÔNG
         if (
@@ -397,7 +576,7 @@
             !oldPassword && !newPassword
         ) {
             alert('Chưa có thông tin mới để thay đổi.');
-            btn.textContent = 'Lưu thay đổi';
+            btn.textContent = 'Lưu';
             btn.disabled = false;
             return;
         }
@@ -417,19 +596,19 @@
         if (newPassword || oldPassword) {
             if (!oldPassword) {
                 alert('Vui lòng nhập mật khẩu cũ để xác nhận việc đổi mật khẩu mới!');
-                btn.textContent = 'Lưu thay đổi';
+                btn.textContent = 'Lưu';
                 btn.disabled = false;
                 return;
             }
             if (!newPassword) {
                 alert('Vui lòng nhập mật khẩu mới!');
-                btn.textContent = 'Lưu thay đổi';
+                btn.textContent = 'Lưu';
                 btn.disabled = false;
                 return;
             }
             if (newPassword === oldPassword) {
                 alert('Mật khẩu mới không được trùng với mật khẩu cũ!');
-                btn.textContent = 'Lưu thay đổi';
+                btn.textContent = 'Lưu';
                 btn.disabled = false;
                 return;
             }
@@ -478,10 +657,13 @@
             console.error('Lỗi cập nhật:', error);
             alert('Không thể kết nối đến server Node.js!');
         } finally {
-            btn.textContent = 'Lưu thay đổi';
+            btn.textContent = 'Lưu';
             btn.disabled = false;
         }
-    });
+    }
+
+    document.getElementById('update-profile-form').addEventListener('submit', (e) => handleProfileSubmit(e, 'profile'));
+    document.getElementById('update-bank-form').addEventListener('submit', (e) => handleProfileSubmit(e, 'bank'));
 
     // 4. CHỨC NĂNG ĐĂNG XUẤT
     function logout() {
@@ -559,34 +741,11 @@
                     productsHtml += '</div>';
 
                     // TAB LỊCH SỬ
-                    if(['giao_thanh_cong', 'da_huy', 'hoan_thanh', 'da_tra_hang', 'tu_choi_tra_hang', 'khong_du_dieu_kien'].includes(order.trang_thai_don)) {
+                    if(['da_huy', 'hoan_thanh', 'da_tra_hang', 'tu_choi_tra_hang', 'khong_du_dieu_kien'].includes(order.trang_thai_don)) {
                         hasHistory = true;
                         let statusColor, statusText, actionBtnHtml = '';
 
-                        if (order.trang_thai_don === 'giao_thanh_cong') {
-                            const orderDateObj = new Date(order.ngay_cap_nhat || order.ngay_dat);
-                            const diffDays = Math.floor((new Date() - orderDateObj) / (1000 * 60 * 60 * 24));
-
-                            statusColor = 'bg-green-100 text-green-700';
-                            statusText = 'Giao thành công (Chờ xác nhận)';
-                            
-                            if (diffDays <= 3) {
-                                actionBtnHtml = `
-                                    <div class="flex space-x-3 mt-4 w-full">
-                                        <button onclick="updateOrderStatus('${order.ma_don_hang}', 'hoan_thanh')" class="w-1/2 bg-gray-800 hover:bg-black text-white font-bold py-2 px-4 rounded-lg transition text-sm shadow">
-                                            Đã nhận được hàng
-                                        </button>
-                                        <button onclick="updateOrderStatus('${order.ma_don_hang}', 'tra_hang_hoan_tien')" class="w-1/2 bg-white border-2 border-gray-200 hover:border-yellow-500 hover:text-yellow-600 text-gray-600 font-bold py-2 px-4 rounded-lg transition text-sm">
-                                            Yêu cầu Trả hàng
-                                        </button>
-                                    </div>
-                                    <p class="text-xs text-gray-400 mt-2 text-center w-full">Đơn hàng sẽ tự động hoàn thành sau 3 ngày (còn lại ${3 - diffDays} ngày)</p>
-                                `;
-                            } else {
-                                actionBtnHtml = `<div class="mt-4 text-center text-gray-500 font-medium w-full bg-gray-50 py-2 rounded-lg border border-gray-200">Đã hết hạn 3 ngày đổi trả. Hệ thống đang tự động hoàn thành.</div>`;
-                            }
-                        }
-                        else if (order.trang_thai_don === 'da_huy') {
+                        if (order.trang_thai_don === 'da_huy') {
                             statusColor = 'bg-red-100 text-red-700';
                             statusText = 'Đã hủy';
                             if (order.ly_do_huy_don) {
@@ -642,7 +801,30 @@
                         let activeStatusColor = 'bg-yellow-100 text-yellow-700';
                         let actionBtnHtml = '';
 
-                        if (order.trang_thai_don === 'cho_xac_nhan' || order.trang_thai_don === 'da_xac_nhan') {
+                        if (order.trang_thai_don === 'giao_thanh_cong') {
+                            const orderDateObj = new Date(order.ngay_cap_nhat || order.ngay_dat);
+                            const diffDays = Math.floor((new Date() - orderDateObj) / (1000 * 60 * 60 * 24));
+
+                            activeStatusColor = 'bg-green-100 text-green-700';
+                            activeStatusText = 'Giao thành công (Chờ xác nhận)';
+                            
+                            if (diffDays <= 3) {
+                                actionBtnHtml = `
+                                    <div class="flex space-x-3 mt-4 w-full">
+                                        <button onclick="updateOrderStatus('${order.ma_don_hang}', 'hoan_thanh')" class="w-1/2 bg-gray-800 hover:bg-black text-white font-bold py-2 px-4 rounded-lg transition text-sm shadow">
+                                            Đã nhận được hàng
+                                        </button>
+                                        <button onclick="updateOrderStatus('${order.ma_don_hang}', 'tra_hang_hoan_tien')" class="w-1/2 bg-white border-2 border-gray-200 hover:border-yellow-500 hover:text-yellow-600 text-gray-600 font-bold py-2 px-4 rounded-lg transition text-sm">
+                                            Yêu cầu Trả hàng
+                                        </button>
+                                    </div>
+                                    <p class="text-xs text-gray-400 mt-2 text-center w-full">Đơn hàng sẽ tự động hoàn thành sau 3 ngày (còn lại ${3 - diffDays} ngày)</p>
+                                `;
+                            } else {
+                                actionBtnHtml = `<div class="mt-4 text-center text-gray-500 font-medium w-full bg-gray-50 py-2 rounded-lg border border-gray-200">Đã hết hạn 3 ngày đổi trả. Hệ thống đang tự động hoàn thành.</div>`;
+                            }
+                        }
+                        else if (order.trang_thai_don === 'cho_xac_nhan' || order.trang_thai_don === 'da_xac_nhan') {
                             const orderDateObj = new Date(order.ngay_dat);
                             const diffMinutes = Math.floor((new Date() - orderDateObj) / (1000 * 60));
                             
@@ -670,15 +852,18 @@
                             activeStatusColor = 'bg-orange-100 text-orange-700 border border-orange-300'; 
                             actionBtnHtml = `<div class="mt-4 text-sm text-left text-orange-600 bg-orange-50 p-3 rounded-lg w-full">Shop đang xử lý yêu cầu trả hàng của bạn.</div>`;
                         }
-                        // Thêm đoạn này vào:
                         else if (order.trang_thai_don === 'tu_choi_tra_hang') {
                             activeStatusText = 'Bị từ chối trả hàng';
                             activeStatusColor = 'bg-red-100 text-red-700 border border-red-300';
                             actionBtnHtml = `<div class="mt-4 text-sm text-left text-red-600 bg-red-50 p-3 rounded-lg w-full border border-red-200">Yêu cầu trả hàng của bạn đã bị từ chối vì lý do sai quy định hoàn trả.</div>`;
                         }
-                            htmlOrders += `
-                            <div class="profile-order-card" id="order-${order.ma_don_hang}" data-status="${order.trang_thai_don}" data-date="${dateISO}" data-products="${productNames}" onclick="showOrderDetails('${order.ma_don_hang}', event)" style="cursor: pointer;">
-                                <div class="profile-order-card__header" style="align-items: center; margin-bottom: 1rem;">
+
+                        let filterDataStatus = order.trang_thai_don;
+                        if (filterDataStatus === 'dang_tra_hang' || filterDataStatus === 'da_tra_hang' || filterDataStatus === 'tu_choi_tra_hang' || filterDataStatus === 'tra_hang_hoan_tien') filterDataStatus = 'dang_tra_hang';
+
+                        htmlOrders += `
+                            <div class="profile-order-card" id="order-${order.ma_don_hang}" data-status="${filterDataStatus}" data-date="${dateISO}" data-products="${productNames}" onclick="showOrderDetails('${order.ma_don_hang}', event)" style="cursor: pointer;">
+                                <div class="profile-order-card__header">
                                     <div>
                                         <p class="profile-order-card__id">Đơn hàng ${order.ma_don_hang}</p>
                                         <p class="profile-order-card__date">Ngày đặt: ${date}</p>
@@ -707,12 +892,19 @@
                     document.getElementById('orders-search-bar').style.display = 'flex';
                     ordersContainer.innerHTML = htmlOrders;
                     ordersContainer.classList.remove('profile-orders-empty');
+                } else {
+                    ordersContainer.innerHTML = '<p style="text-align:center;color:#999;padding:50px 0;">Bạn chưa có đơn hàng nào đang xử lý.</p>';
+                    ordersContainer.classList.add('profile-orders-empty');
                 }
+                
                 if (hasHistory) {
                     document.getElementById('history-filters').style.display = 'flex';
                     document.getElementById('history-search-bar').style.display = 'flex';
                     historyContainer.innerHTML = htmlHistory;
                     historyContainer.classList.remove('profile-orders-empty');
+                } else {
+                    historyContainer.innerHTML = '<p style="text-align:center;color:#999;padding:50px 0;">Bạn chưa có lịch sử mua hàng nào.</p>';
+                    historyContainer.classList.add('profile-orders-empty');
                 }
                 
                 // Cuộn đến đơn hàng nếu có hash trên URL
@@ -721,13 +913,14 @@
                         const target = document.getElementById(window.location.hash.substring(1));
                         if (target) {
                             target.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                            target.style.boxShadow = '0 0 0 2px #f472b6'; // pink-400 highlight
-                            setTimeout(() => {
-                                target.style.boxShadow = '';
-                            }, 2000);
+                            target.style.boxShadow = '0 0 0 2px #f472b6'; 
+                            setTimeout(() => { target.style.boxShadow = ''; }, 2000);
                         }
                     }, 300);
                 }
+            } else {
+                ordersContainer.innerHTML = '<p style="text-align:center;color:#999;padding:50px 0;">Bạn chưa có đơn hàng nào đang xử lý.</p>';
+                historyContainer.innerHTML = '<p style="text-align:center;color:#999;padding:50px 0;">Bạn chưa có lịch sử mua hàng nào.</p>';
             }
         } catch (error) {
             console.error('Lỗi tải đơn hàng:', error);
@@ -847,10 +1040,10 @@ function submitRefundRequest() {
         return;
     }
     const maDonHang = document.getElementById('refund-order-id').value;
-    const nganHang = document.getElementById('refund-bank').value;
-    const soTaiKhoan = document.getElementById('refund-account').value;
-    const chuTaiKhoan = document.getElementById('refund-owner').value;
-    const lyDo = document.getElementById('refund-reason').value;
+    const nganHang = document.getElementById('refund-bank').value.trim();
+    const soTaiKhoan = document.getElementById('refund-account').value.trim();
+    const chuTaiKhoan = document.getElementById('refund-owner').value.trim();
+    const lyDo = document.getElementById('refund-reason').value.trim();
 
     if (!nganHang || !soTaiKhoan || !chuTaiKhoan || !lyDo) {
         alert("Vui lòng nhập đầy đủ thông tin bảo mật để đối chiếu!");
@@ -947,7 +1140,8 @@ function applyFilters(tab) {
 
         // Search check
         let matchSearch = true;
-        if (searchInput && !cardProducts.includes(searchInput)) {
+        const cardId = card.id.replace('order-', '').toLowerCase();
+        if (searchInput && !cardProducts.includes(searchInput) && !cardId.includes(searchInput)) {
             matchSearch = false;
         }
 
@@ -970,6 +1164,9 @@ function applyFilters(tab) {
             emptyMsgEl = document.createElement('div');
             emptyMsgEl.className = 'filter-empty-msg profile-orders-empty';
             emptyMsgEl.textContent = 'Không tìm thấy đơn hàng nào phù hợp với bộ lọc.';
+            emptyMsgEl.style.textAlign = 'center';
+            emptyMsgEl.style.padding = '50px 0';
+            emptyMsgEl.style.color = '#999';
             container.appendChild(emptyMsgEl);
         }
         emptyMsgEl.style.display = 'block';
