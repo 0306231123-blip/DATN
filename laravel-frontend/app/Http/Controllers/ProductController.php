@@ -256,7 +256,7 @@ class ProductController extends Controller
                                 
         // Lấy 10 sản phẩm ngẫu nhiên cho mục DAILY DISCOVER (Sản phẩm hôm nay)
         // Cache lại 1 ngày để F5 không bị đổi, sang ngày mới (hết 24h) mới bốc 10 sản phẩm khác
-        $sanPhamHomNay = Cache::remember('daily_discover_products', now()->endOfDay(), function () {
+        $sanPhamHomNay = Cache::remember('daily_discover_products_' . date('Y_m_d'), now()->endOfDay(), function () {
             return SanPham::where('trang_thai', 'dang_ban')
                           ->where('hien_thi_web', 1)
                           ->inRandomOrder()

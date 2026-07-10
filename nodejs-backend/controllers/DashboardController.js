@@ -64,7 +64,7 @@ class DashboardController {
           queryOne(`
             SELECT COALESCE(SUM(tong_thanh_toan), 0) AS tong_doanh_thu
             FROM don_hang
-            WHERE trang_thai_don = 'giao_thanh_cong'
+            WHERE trang_thai_don IN ('giao_thanh_cong', 'hoan_thanh')
           `),
           queryOne(`SELECT COUNT(*) AS tong_don_hang FROM don_hang`),
           queryOne(`
@@ -91,7 +91,7 @@ class DashboardController {
         SELECT
           MONTH(ngay_dat) AS thang,
           YEAR(ngay_dat) AS nam,
-          COALESCE(SUM(CASE WHEN trang_thai_don = 'giao_thanh_cong' THEN tong_thanh_toan ELSE 0 END), 0) AS doanh_thu,
+          COALESCE(SUM(CASE WHEN trang_thai_don IN ('giao_thanh_cong', 'hoan_thanh') THEN tong_thanh_toan ELSE 0 END), 0) AS doanh_thu,
           COUNT(*) AS so_don
         FROM don_hang
         WHERE ngay_dat >= DATE_SUB(CURRENT_DATE(), INTERVAL 6 MONTH)
@@ -108,7 +108,7 @@ class DashboardController {
         LEFT JOIN san_pham sp ON dm.ma_danh_muc = sp.ma_danh_muc
         LEFT JOIN chi_tiet_don_hang ctdh ON sp.ma_san_pham = ctdh.ma_san_pham
         LEFT JOIN don_hang dh ON ctdh.ma_don_hang = dh.ma_don_hang
-          AND dh.trang_thai_don = 'giao_thanh_cong'
+          AND dh.trang_thai_don IN ('giao_thanh_cong', 'hoan_thanh')
         GROUP BY dm.ma_danh_muc, dm.ten_danh_muc
         HAVING tong_doanh_thu > 0
         ORDER BY tong_doanh_thu DESC
@@ -124,7 +124,7 @@ class DashboardController {
         FROM san_pham sp
         JOIN chi_tiet_don_hang ctdh ON sp.ma_san_pham = ctdh.ma_san_pham
         JOIN don_hang dh ON ctdh.ma_don_hang = dh.ma_don_hang
-        WHERE dh.trang_thai_don = 'giao_thanh_cong'
+        WHERE dh.trang_thai_don IN ('giao_thanh_cong', 'hoan_thanh')
         GROUP BY sp.ma_san_pham, sp.ten_san_pham, sp.thuong_hieu
         ORDER BY tong_so_luong_ban DESC
         LIMIT 5

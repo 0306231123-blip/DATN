@@ -59,12 +59,28 @@
         </div>
     </div>
     <div class="action-bar-right">
-        <div class="date-filter" style="display: flex; align-items: center; gap: 8px; margin-right: 15px; border-right: 1px solid var(--border-color); padding-right: 15px;">
-            <span style="font-size: 13px; color: var(--text-muted);">Ngày đặt:</span>
-            <input type="date" id="order-start-date" class="form-control" style="width: auto; padding: 6px 10px; height: 36px; border-radius: 6px; font-size: 13px;" title="Từ ngày" max="{{ date('Y-m-d') }}">
-            <span style="color: var(--text-muted);">-</span>
-            <input type="date" id="order-end-date" class="form-control" style="width: auto; padding: 6px 10px; height: 36px; border-radius: 6px; font-size: 13px;" title="Đến ngày" max="{{ date('Y-m-d') }}">
-            <button class="btn btn-secondary" onclick="goToPage(1)" style="height: 36px; padding: 0 12px; font-size: 13px;"><i data-lucide="filter" class="icon-xs" style="margin-right: 4px;"></i>Lọc</button>
+    <div class="date-filter-bar">
+            <div class="date-filter-group">
+                <span class="date-filter-label">Ngày đặt</span>
+                <div class="date-filter-inputs">
+                    <div class="date-input-wrap">
+                        <span class="date-input-prefix">Từ</span>
+                        <input type="date" id="order-start-date" class="date-input" title="Từ ngày" max="{{ date('Y-m-d') }}" onchange="if(this.value) document.getElementById('order-end-date').min = this.value;">
+                    </div>
+                    <span class="date-separator">→</span>
+                    <div class="date-input-wrap">
+                        <span class="date-input-prefix">Đến</span>
+                        <input type="date" id="order-end-date" class="date-input" title="Đến ngày" max="{{ date('Y-m-d') }}">
+                    </div>
+                </div>
+            </div>
+            <button class="date-filter-btn" onclick="goToPage(1)" title="Lọc">
+                <i data-lucide="search" style="width:14px;height:14px;"></i>
+                Lọc
+            </button>
+            <button class="date-reset-btn" onclick="document.getElementById('order-start-date').value=''; document.getElementById('order-end-date').value=''; document.getElementById('order-end-date').removeAttribute('min'); goToPage(1);" title="Xóa bộ lọc">
+                <i data-lucide="x" style="width:13px;height:13px;"></i>
+            </button>
         </div>
         <div class="search-box" id="search-orders">
             <i data-lucide="search" class="icon-xs search-icon"></i>
@@ -431,7 +447,8 @@ let detailsHTML = `
             <p><strong>Trạng thái:</strong> <span class="status-badge ${statusInfo.class}">${statusInfo.label}</span></p>
             <p><strong>Thanh toán:</strong> ${paymentStatusText}</p>
             <p><strong>Phương thức:</strong> ${paymentMethodText}</p>
-            <p><strong>Ngày đặt:</strong> ${formatDate(order.ngay_dat)}</p>
+            <p><strong>Ngày đặt:</strong> ${formatDateTime(order.ngay_dat)}</p>
+            ${order.trang_thai_don === 'hoan_thanh' && order.ngay_cap_nhat ? `<p style="color: #059669;"><strong>&#x2705; Ngày hoàn thành:</strong> <span style="font-weight: 700;">${formatDateTime(order.ngay_cap_nhat)}</span></p>` : ''}
             <p><strong>Tổng tiền:</strong> <span class="text-bold" style="color: #7c5cfc;">${formatCurrency(order.tong_thanh_toan)}</span></p>
             ${order.ghi_chu ? `<p><strong>Ghi chú:</strong> ${escapeHtml(order.ghi_chu)}</p>` : ''}
         </div>
@@ -592,7 +609,13 @@ function formatCurrency(amount) {
 function formatDate(dateStr) {
     if (!dateStr) return '';
     const d = new Date(dateStr);
-    return d.toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric' });
+    return d.toLocaleString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: false });
+}
+
+function formatDateTime(dateStr) {
+    if (!dateStr) return '';
+    const d = new Date(dateStr);
+    return d.toLocaleString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false });
 }
 
 function escapeHtml(text) {

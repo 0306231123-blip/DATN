@@ -609,8 +609,11 @@ exports.bulkCreateProducts = async (req, res) => {
     
     for (const item of products) {
       // Hàm helper tìm key bất chấp chữ hoa/chữ thường
-      const findVal = (keywords) => {
-        const key = Object.keys(item).find(k => keywords.some(kw => k.toLowerCase().includes(kw)));
+      const findVal = (keywords, exclude = []) => {
+        const key = Object.keys(item).find(k => {
+            const lowerK = k.toLowerCase();
+            return keywords.some(kw => lowerK.includes(kw)) && !exclude.some(ex => lowerK.includes(ex));
+        });
         return key ? item[key] : null;
       };
 
@@ -620,11 +623,18 @@ exports.bulkCreateProducts = async (req, res) => {
       }
       tenSp = String(tenSp).trim();
       
-      const giaStr = findVal(['giá', 'gia', 'price']);
+      const giaStr = findVal(['giá', 'gia', 'price'], ['nhập', 'nhap']);
       let gia = 0;
       if (giaStr !== null && giaStr !== undefined) {
          const cleanGia = String(giaStr).replace(/[^\d]/g, '');
          gia = parseFloat(cleanGia) || 0;
+      }
+
+      const giaNhapStr = findVal(['giá nhập', 'gia nhap', 'import price']);
+      let giaNhap = 0;
+      if (giaNhapStr !== null && giaNhapStr !== undefined) {
+         const cleanGiaNhap = String(giaNhapStr).replace(/[^\d]/g, '');
+         giaNhap = parseFloat(cleanGiaNhap) || 0;
       }
       
       const soLuongStr = findVal(['tồn', 'ton', 'số lượng', 'so luong', 'sl', 'stock']);
@@ -652,6 +662,7 @@ exports.bulkCreateProducts = async (req, res) => {
         co_bien_the: false,
         gia: gia > 0 ? gia : 0,
         gia_max: gia > 0 ? gia : 0,
+        gia_nhap: giaNhap > 0 ? giaNhap : 0,
         so_luong_ton: soLuong > 0 ? soLuong : 0,
         thuong_hieu: thuongHieu ? String(thuongHieu).trim() : null,
         ma_danh_muc: maDanhMuc,

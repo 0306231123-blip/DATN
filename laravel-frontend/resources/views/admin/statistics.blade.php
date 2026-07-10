@@ -580,7 +580,9 @@ function initFilterBar() {
             currentStartDate = startInput.value;
             currentEndDate = endInput.value;
             previousSelectValue = 'custom';
-            currentLabel = `Từ ${startInput.value} đến ${endInput.value}`;
+            const [sY, sM, sD] = startInput.value.split('-');
+            const [eY, eM, eD] = endInput.value.split('-');
+            currentLabel = `Từ ${sD}/${sM}/${sY} đến ${eD}/${eM}/${eY}`;
             rangeText.textContent = currentLabel;
             modal.close();
             loadStatistics();
@@ -710,7 +712,7 @@ function renderChange(elementId, percent) {
     el.className = `summary-change ${cls}`;
     el.innerHTML = `
         <i data-lucide="${icon}" class="icon-xs"></i>
-        <span>${Math.abs(percent)}% so với trước</span>
+        <span title="So sánh với khoảng thời gian liền kề trước đó có cùng độ dài (ví dụ: xem 7 ngày qua sẽ so sánh với 7 ngày trước đó nữa)" style="cursor: help; border-bottom: 1px dotted currentColor;">${Math.abs(percent)}% so với trước</span>
     `;
     lucide.createIcons();
 }
@@ -921,15 +923,25 @@ function renderTopProducts(products) {
 
     tbody.innerHTML = products.map((p, idx) => {
         const rankClass = idx < 3 ? ` rank-${idx + 1}` : '';
-        const imgSrc = p.anh_san_pham
-            ? (p.anh_san_pham.startsWith('http') ? p.anh_san_pham : `http://localhost:3000${p.anh_san_pham}`)
-            : '/images/placeholder.png';
+        let imgSrc = p.anh_san_pham;
+        if (imgSrc) {
+            if (imgSrc.startsWith('http://') || imgSrc.startsWith('https://')) {
+                try { imgSrc = new URL(imgSrc).pathname; } catch(e) {}
+            }
+            if (!imgSrc.startsWith('/images/') && !imgSrc.startsWith('images/')) {
+                imgSrc = '/images/' + (imgSrc.startsWith('/') ? imgSrc.substring(1) : imgSrc);
+            } else if (imgSrc.startsWith('images/')) {
+                imgSrc = '/' + imgSrc;
+            }
+        } else {
+            imgSrc = '/images/logo.jpg';
+        }
         return `
             <tr>
                 <td><span class="product-rank${rankClass}">${idx + 1}</span></td>
                 <td>
                     <div class="top-product-info">
-                        <img class="top-product-img" src="${imgSrc}" alt="${escapeHtml(p.ten_san_pham)}" onerror="this.src='/images/placeholder.png'">
+                        <img class="top-product-img" src="${imgSrc}" alt="${escapeHtml(p.ten_san_pham)}" onerror="this.src='/images/logo.jpg'">
                         <span class="top-product-name" title="${escapeHtml(p.ten_san_pham)}">${escapeHtml(p.ten_san_pham)}</span>
                     </div>
                 </td>

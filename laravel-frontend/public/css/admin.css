@@ -1614,6 +1614,25 @@ body {
     margin: 0 4px;
 }
 
+.current-range-display {
+    display: inline-flex;
+    align-items: center;
+    background: rgba(124, 92, 252, 0.08);
+    color: var(--color-primary, #7c5cfc);
+    border: 1px solid rgba(124, 92, 252, 0.2);
+    border-radius: var(--radius-md);
+    padding: 6px 14px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    margin-left: 4px;
+}
+
+.current-range-display::before {
+    content: "📅";
+    margin-right: 6px;
+    font-size: 0.9rem;
+}
+
 .stats-date-inputs {
     display: flex;
     align-items: center;

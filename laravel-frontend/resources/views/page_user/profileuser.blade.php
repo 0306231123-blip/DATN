@@ -323,8 +323,8 @@
                         <input type="text" id="search-orders-input" class="profile-form__input" style="width: 100%;" placeholder="Tìm kiếm theo ID đơn hoặc tên sản phẩm..." onkeypress="if(event.key === 'Enter') applyFilters('orders')">
                     </div>
                     <div class="profile-search-group profile-search-group--date">
-                        Từ <input type="date" id="date-from-orders" class="profile-form__input" onchange="document.getElementById('date-to-orders').min = this.value">
-                        Đến <input type="date" id="date-to-orders" class="profile-form__input">
+                        Từ <input type="date" id="date-from-orders" class="profile-form__input" max="{{ date('Y-m-d') }}" onchange="document.getElementById('date-to-orders').min = this.value; document.getElementById('date-to-orders').max = '{{ date('Y-m-d') }}'">
+                        Đến <input type="date" id="date-to-orders" class="profile-form__input" max="{{ date('Y-m-d') }}">
                         <button class="profile-form__save-btn" style="padding: 0.5rem 1rem; margin-left: 0.5rem; width: auto;" onclick="applyFilters('orders')">Lọc</button>
                     </div>
                 </div>
@@ -354,8 +354,8 @@
                         <input type="text" id="search-history-input" class="profile-form__input" style="width: 100%;" placeholder="Tìm kiếm theo ID đơn hoặc tên sản phẩm..." onkeypress="if(event.key === 'Enter') applyFilters('history')">
                     </div>
                     <div class="profile-search-group profile-search-group--date">
-                        Từ <input type="date" id="date-from-history" class="profile-form__input" onchange="document.getElementById('date-to-history').min = this.value">
-                        Đến <input type="date" id="date-to-history" class="profile-form__input">
+                        Từ <input type="date" id="date-from-history" class="profile-form__input" max="{{ date('Y-m-d') }}" onchange="document.getElementById('date-to-history').min = this.value; document.getElementById('date-to-history').max = '{{ date('Y-m-d') }}'">
+                        Đến <input type="date" id="date-to-history" class="profile-form__input" max="{{ date('Y-m-d') }}">
                         <button class="profile-form__save-btn" style="padding: 0.5rem 1rem; margin-left: 0.5rem; width: auto;" onclick="applyFilters('history')">Lọc</button>
                     </div>
                 </div>
