@@ -114,23 +114,31 @@
                     </div>
                 </div>
 
-                <div style="display: flex; gap: 1rem;">
+                <div class="flex flex-col sm:flex-row gap-4 mt-6">
                     @if($sanPham->so_luong_ton > 0)
                         <button 
                             onclick="addToCart({{ $sanPham->ma_san_pham }}, parseInt(document.getElementById('qty-input').value))" 
-                            style="background: rgba(255,87,34,0.1); border: 1px solid #ee4d2d; color: #ee4d2d; padding: 0 1.25rem; height: 48px; border-radius: 2px; font-size: 1rem; display: flex; align-items: center; cursor: pointer; transition: background 0.2s;">
-                            <svg viewBox="0 0 24 24" fill="currentColor" style="width: 1.25rem; height: 1.25rem; margin-right: 0.5rem;"><path d="M7 18c-1.1 0-1.99.9-1.99 2S5.9 22 7 22s2-.9 2-2-.9-2-2-2zm10 0c-1.1 0-1.99.9-1.99 2s.89 2 1.99 2 2-.9 2-2-.9-2-2-2zm-9.83-3.25l.03-.12.9-1.63h7.45c.75 0 1.41-.41 1.75-1.03l3.86-7.01L19.42 4l-3.86 7H8.53L4.27 2H1v2h2l3.6 7.59-1.35 2.44C7.09 14.33 7 14.65 7 15c0 1.1.9 2 2 2h12v-2H9.42c-.14 0-.25-.11-.25-.25z"/></svg>
-                            Thêm Vào Giỏ Hàng
+                            class="flex-1 flex items-center justify-center gap-2 bg-pink-50 border-2 border-pink-500 text-pink-600 px-6 py-3.5 rounded-full font-semibold text-base transition-all duration-300 hover:bg-pink-100 hover:shadow-md hover:-translate-y-0.5">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-5 h-5">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 10.5V6a3.75 3.75 0 10-7.5 0v4.5m11.356-1.993l1.263 12c.07.665-.45 1.243-1.119 1.243H4.25a1.125 1.125 0 01-1.12-1.243l1.264-12A1.125 1.125 0 015.513 7.5h12.974c.576 0 1.059.435 1.119 1.007zM8.625 10.5a.375.375 0 11-.75 0 .375.375 0 01.75 0zm7.5 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" />
+                            </svg>
+                            Thêm Vào Giỏ
                         </button>
                         <button 
                             onclick="buyNow({{ $sanPham->ma_san_pham }}, parseInt(document.getElementById('qty-input').value))" 
-                            style="background: #ee4d2d; color: #fff; border: none; padding: 0 1.25rem; height: 48px; border-radius: 2px; font-size: 1rem; cursor: pointer; transition: background 0.2s; min-width: 140px;">
+                            class="flex-1 flex items-center justify-center gap-2 bg-gradient-to-r from-pink-500 to-pink-600 text-white px-6 py-3.5 rounded-full font-semibold text-base shadow-lg shadow-pink-500/30 transition-all duration-300 hover:shadow-xl hover:shadow-pink-500/40 hover:-translate-y-0.5">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-5 h-5">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 3h1.386c.51 0 .955.343 1.087.835l.383 1.437M7.5 14.25a3 3 0 00-3 3h15.75m-12.75-3h11.218c1.121-2.3 2.1-4.684 2.924-7.138a60.114 60.114 0 00-16.536-1.84M7.5 14.25L5.106 5.272M6 20.25a.75.75 0 11-1.5 0 .75.75 0 011.5 0zm12.75 0a.75.75 0 11-1.5 0 .75.75 0 011.5 0z" />
+                            </svg>
                             Mua Ngay
                         </button>
                     @else
                         <button 
                             disabled
-                            style="background: #f5f5f5; border: 1px solid #e0e0e0; color: #9e9e9e; padding: 0 1.25rem; height: 48px; border-radius: 2px; font-size: 1rem; display: flex; align-items: center; cursor: not-allowed; min-width: 140px; font-weight: bold;">
+                            class="w-full flex items-center justify-center gap-2 bg-gray-200 text-gray-500 px-6 py-3.5 rounded-full font-semibold text-base cursor-not-allowed">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-5 h-5">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />
+                            </svg>
                             Tạm Thời Hết Hàng
                         </button>
                     @endif

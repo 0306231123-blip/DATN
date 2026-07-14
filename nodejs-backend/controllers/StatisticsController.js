@@ -25,13 +25,13 @@ class StatisticsController {
 
       // 1. Summary metrics - current period
       const [cm] = await sequelize.query(
-        'SELECT COALESCE(SUM(CASE WHEN trang_thai_don IN (\'giao_thanh_cong\', \'hoan_thanh\') THEN tong_thanh_toan ELSE 0 END),0) AS doanh_thu, COUNT(ma_don_hang) AS so_don FROM don_hang WHERE DATE(ngay_dat)>=:startDate AND DATE(ngay_dat)<=:endDate',
+        'SELECT COALESCE(SUM(CASE WHEN ((phuong_thuc_thanh_toan != \'tien_mat\' AND trang_thai_thanh_toan = \'da_thanh_toan\') OR (phuong_thuc_thanh_toan = \'tien_mat\' AND trang_thai_don IN (\'giao_thanh_cong\', \'hoan_thanh\'))) AND trang_thai_don NOT IN (\'da_huy\', \'da_tra_hang\', \'tra_hang_hoan_tien\') THEN tong_thanh_toan ELSE 0 END),0) AS doanh_thu, COUNT(ma_don_hang) AS so_don FROM don_hang WHERE DATE(ngay_dat)>=:startDate AND DATE(ngay_dat)<=:endDate',
         { replacements: { startDate, endDate }, type: QueryTypes.SELECT }
       );
 
       // Summary metrics - previous period
       const [pm] = await sequelize.query(
-        'SELECT COALESCE(SUM(CASE WHEN trang_thai_don IN (\'giao_thanh_cong\', \'hoan_thanh\') THEN tong_thanh_toan ELSE 0 END),0) AS doanh_thu, COUNT(ma_don_hang) AS so_don FROM don_hang WHERE DATE(ngay_dat)>=:prevStartDate AND DATE(ngay_dat)<=:prevEndDate',
+        'SELECT COALESCE(SUM(CASE WHEN ((phuong_thuc_thanh_toan != \'tien_mat\' AND trang_thai_thanh_toan = \'da_thanh_toan\') OR (phuong_thuc_thanh_toan = \'tien_mat\' AND trang_thai_don IN (\'giao_thanh_cong\', \'hoan_thanh\'))) AND trang_thai_don NOT IN (\'da_huy\', \'da_tra_hang\', \'tra_hang_hoan_tien\') THEN tong_thanh_toan ELSE 0 END),0) AS doanh_thu, COUNT(ma_don_hang) AS so_don FROM don_hang WHERE DATE(ngay_dat)>=:prevStartDate AND DATE(ngay_dat)<=:prevEndDate',
         { replacements: { prevStartDate, prevEndDate }, type: QueryTypes.SELECT }
       );
 
@@ -49,13 +49,13 @@ class StatisticsController {
 
       // Products sold - current
       const [cs] = await sequelize.query(
-        'SELECT COALESCE(SUM(ctdh.so_luong),0) AS da_ban FROM chi_tiet_don_hang ctdh JOIN don_hang dh ON ctdh.ma_don_hang=dh.ma_don_hang WHERE dh.trang_thai_don IN (\'giao_thanh_cong\', \'hoan_thanh\') AND DATE(dh.ngay_dat)>=:startDate AND DATE(dh.ngay_dat)<=:endDate',
+        'SELECT COALESCE(SUM(ctdh.so_luong),0) AS da_ban FROM chi_tiet_don_hang ctdh JOIN don_hang dh ON ctdh.ma_don_hang=dh.ma_don_hang WHERE ((dh.phuong_thuc_thanh_toan != \'tien_mat\' AND dh.trang_thai_thanh_toan = \'da_thanh_toan\') OR (dh.phuong_thuc_thanh_toan = \'tien_mat\' AND dh.trang_thai_don IN (\'giao_thanh_cong\', \'hoan_thanh\'))) AND dh.trang_thai_don NOT IN (\'da_huy\', \'da_tra_hang\', \'tra_hang_hoan_tien\') AND DATE(dh.ngay_dat)>=:startDate AND DATE(dh.ngay_dat)<=:endDate',
         { replacements: { startDate, endDate }, type: QueryTypes.SELECT }
       );
 
       // Products sold - previous
       const [ps] = await sequelize.query(
-        'SELECT COALESCE(SUM(ctdh.so_luong),0) AS da_ban FROM chi_tiet_don_hang ctdh JOIN don_hang dh ON ctdh.ma_don_hang=dh.ma_don_hang WHERE dh.trang_thai_don IN (\'giao_thanh_cong\', \'hoan_thanh\') AND DATE(dh.ngay_dat)>=:prevStartDate AND DATE(dh.ngay_dat)<=:prevEndDate',
+        'SELECT COALESCE(SUM(ctdh.so_luong),0) AS da_ban FROM chi_tiet_don_hang ctdh JOIN don_hang dh ON ctdh.ma_don_hang=dh.ma_don_hang WHERE ((dh.phuong_thuc_thanh_toan != \'tien_mat\' AND dh.trang_thai_thanh_toan = \'da_thanh_toan\') OR (dh.phuong_thuc_thanh_toan = \'tien_mat\' AND dh.trang_thai_don IN (\'giao_thanh_cong\', \'hoan_thanh\'))) AND dh.trang_thai_don NOT IN (\'da_huy\', \'da_tra_hang\', \'tra_hang_hoan_tien\') AND DATE(dh.ngay_dat)>=:prevStartDate AND DATE(dh.ngay_dat)<=:prevEndDate',
         { replacements: { prevStartDate, prevEndDate }, type: QueryTypes.SELECT }
       );
 
@@ -78,7 +78,7 @@ class StatisticsController {
 
       // 2. Trend chart - group by day
       const trendRows = await sequelize.query(
-        'SELECT DATE(ngay_dat) AS ngay, COALESCE(SUM(CASE WHEN trang_thai_don IN (\'giao_thanh_cong\', \'hoan_thanh\') THEN tong_thanh_toan ELSE 0 END),0) AS doanh_thu, COUNT(ma_don_hang) AS so_don FROM don_hang WHERE DATE(ngay_dat)>=:startDate AND DATE(ngay_dat)<=:endDate GROUP BY DATE(ngay_dat) ORDER BY ngay ASC',
+        'SELECT DATE(ngay_dat) AS ngay, COALESCE(SUM(CASE WHEN ((phuong_thuc_thanh_toan != \'tien_mat\' AND trang_thai_thanh_toan = \'da_thanh_toan\') OR (phuong_thuc_thanh_toan = \'tien_mat\' AND trang_thai_don IN (\'giao_thanh_cong\', \'hoan_thanh\'))) AND trang_thai_don NOT IN (\'da_huy\', \'da_tra_hang\', \'tra_hang_hoan_tien\') THEN tong_thanh_toan ELSE 0 END),0) AS doanh_thu, COUNT(ma_don_hang) AS so_don FROM don_hang WHERE DATE(ngay_dat)>=:startDate AND DATE(ngay_dat)<=:endDate GROUP BY DATE(ngay_dat) ORDER BY ngay ASC',
         { replacements: { startDate, endDate }, type: QueryTypes.SELECT }
       );
 
@@ -104,7 +104,7 @@ class StatisticsController {
          INNER JOIN san_pham sp ON dm.ma_danh_muc = sp.ma_danh_muc
          INNER JOIN chi_tiet_don_hang ctdh ON sp.ma_san_pham = ctdh.ma_san_pham
          INNER JOIN don_hang dh ON ctdh.ma_don_hang = dh.ma_don_hang
-         WHERE dh.trang_thai_don IN ('giao_thanh_cong', 'hoan_thanh')
+         WHERE ((dh.phuong_thuc_thanh_toan != 'tien_mat' AND dh.trang_thai_thanh_toan = 'da_thanh_toan') OR (dh.phuong_thuc_thanh_toan = 'tien_mat' AND dh.trang_thai_don IN ('giao_thanh_cong', 'hoan_thanh'))) AND dh.trang_thai_don NOT IN ('da_huy', 'da_tra_hang', 'tra_hang_hoan_tien')
            AND DATE(dh.ngay_dat) >= :startDate
            AND DATE(dh.ngay_dat) <= :endDate
          GROUP BY dm.ma_danh_muc, dm.ten_danh_muc
@@ -121,7 +121,7 @@ class StatisticsController {
 
       // 4. Top 5 best-selling products
       const topProducts = await sequelize.query(
-        'SELECT sp.ma_san_pham, sp.ten_san_pham, COALESCE(NULLIF(sp.anh_san_pham, \'\'), (SELECT duong_dan_anh FROM anh_san_pham img WHERE img.ma_san_pham = sp.ma_san_pham ORDER BY la_anh_chinh DESC LIMIT 1)) AS anh_san_pham, COALESCE(SUM(ctdh.so_luong),0) AS da_ban, COALESCE(SUM(ctdh.thanh_tien),0) AS doanh_thu FROM san_pham sp JOIN chi_tiet_don_hang ctdh ON sp.ma_san_pham=ctdh.ma_san_pham JOIN don_hang dh ON ctdh.ma_don_hang=dh.ma_don_hang WHERE dh.trang_thai_don IN (\'giao_thanh_cong\', \'hoan_thanh\') AND DATE(dh.ngay_dat)>=:startDate AND DATE(dh.ngay_dat)<=:endDate GROUP BY sp.ma_san_pham, sp.ten_san_pham, sp.anh_san_pham ORDER BY doanh_thu DESC LIMIT 5',
+        'SELECT sp.ma_san_pham, sp.ten_san_pham, COALESCE(NULLIF(sp.anh_san_pham, \'\'), (SELECT duong_dan_anh FROM anh_san_pham img WHERE img.ma_san_pham = sp.ma_san_pham ORDER BY la_anh_chinh DESC LIMIT 1)) AS anh_san_pham, COALESCE(SUM(ctdh.so_luong),0) AS da_ban, COALESCE(SUM(ctdh.thanh_tien),0) AS doanh_thu FROM san_pham sp JOIN chi_tiet_don_hang ctdh ON sp.ma_san_pham=ctdh.ma_san_pham JOIN don_hang dh ON ctdh.ma_don_hang=dh.ma_don_hang WHERE ((dh.phuong_thuc_thanh_toan != \'tien_mat\' AND dh.trang_thai_thanh_toan = \'da_thanh_toan\') OR (dh.phuong_thuc_thanh_toan = \'tien_mat\' AND dh.trang_thai_don IN (\'giao_thanh_cong\', \'hoan_thanh\'))) AND dh.trang_thai_don NOT IN (\'da_huy\', \'da_tra_hang\', \'tra_hang_hoan_tien\') AND DATE(dh.ngay_dat)>=:startDate AND DATE(dh.ngay_dat)<=:endDate GROUP BY sp.ma_san_pham, sp.ten_san_pham, sp.anh_san_pham ORDER BY doanh_thu DESC LIMIT 5',
         { replacements: { startDate, endDate }, type: QueryTypes.SELECT }
       );
 

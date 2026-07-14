@@ -422,7 +422,13 @@ if (paymentMethodText === 'cod' || paymentMethodText === 'tien_mat') paymentMeth
 else if (paymentMethodText === 'banking' || paymentMethodText === 'chuyen_khoan') paymentMethodText = 'Chuyển khoản Ngân hàng';
 else if (paymentMethodText === 'momo' || paymentMethodText === 'vi_dien_tu') paymentMethodText = 'Ví Momo';
 
-let paymentStatusText = order.trang_thai_thanh_toan === 'da_thanh_toan' 
+let isPaid = order.trang_thai_thanh_toan === 'da_thanh_toan';
+if ((order.phuong_thuc_thanh_toan === 'cod' || order.phuong_thuc_thanh_toan === 'tien_mat') && 
+    (order.trang_thai_don === 'giao_thanh_cong' || order.trang_thai_don === 'hoan_thanh')) {
+    isPaid = true;
+}
+
+let paymentStatusText = isPaid 
     ? '<span style="color: #10b981; font-weight: bold;">Đã thanh toán</span>' 
     : '<span style="color: #ef4444; font-weight: bold;">Chưa thanh toán</span>';
 
@@ -457,12 +463,14 @@ let detailsHTML = `
 
             // THÔNG TIN NGÂN HÀNG HOÀN TIỀN
             if (order.ngan_hang_hoan_tien || order.stk_hoan_tien) {
+                const titleText = order.trang_thai_don === 'da_huy' ? 'Thông tin ngân hàng (Từ form hủy đơn)' : 'Thông tin Nhận tiền hoàn (Từ khách hàng)';
                 detailsHTML += `
-                    <h4 style="margin-top: 20px; margin-bottom: 10px; color: #0369a1;"><i data-lucide="credit-card" class="icon-xs"></i> Thông tin Nhận tiền hoàn (Khách nhập)</h4>
+                    <h4 style="margin-top: 20px; margin-bottom: 10px; color: #0369a1;"><i data-lucide="credit-card" class="icon-xs"></i> ${titleText}</h4>
                     <div class="order-info-section" style="background-color: #f0f9ff; border: 1px solid #bae6fd; border-radius: 8px; padding: 15px;">
                         <p><strong>Ngân hàng:</strong> ${escapeHtml(order.ngan_hang_hoan_tien)}</p>
                         <p><strong>Số tài khoản:</strong> <span class="text-bold">${escapeHtml(order.stk_hoan_tien)}</span></p>
                         <p><strong>Chủ tài khoản:</strong> <span style="text-transform: uppercase;">${escapeHtml(order.chu_tk_hoan_tien)}</span></p>
+                        ${order.ly_do_huy_don && order.trang_thai_don === 'da_huy' ? `<p style="margin-top: 10px; border-top: 1px dashed #bae6fd; padding-top: 10px;"><strong>Lý do hủy:</strong> ${escapeHtml(order.ly_do_huy_don)}</p>` : ''}
                     </div>
                 `;
             }

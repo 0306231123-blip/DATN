@@ -286,10 +286,11 @@ def ai_next_step_suggest():
         ma_don_hang_gan_nhat = recent_order['ma_don_hang']
         
         # KIỂM TRA CACHE
-        cursor.execute("SELECT ds_ma_san_pham, ly_do FROM ai_goi_y_lich_su WHERE ma_don_hang = %s", (ma_don_hang_gan_nhat,))
+        cursor.execute("SELECT ds_ma_san_pham, ly_do, ds_san_pham_di_kem, ly_do_di_kem FROM ai_goi_y_lich_su WHERE ma_don_hang = %s", (ma_don_hang_gan_nhat,))
         cache_row = cursor.fetchone()
         
         if cache_row:
+            # Xử lý missing
             ds_ma_san_pham = json.loads(cache_row['ds_ma_san_pham'])
             reason = cache_row['ly_do']
             suggested_products = []
@@ -306,10 +307,35 @@ def ai_next_step_suggest():
                     img = cursor.fetchone()
                     prod['duong_dan_anh'] = img['duong_dan_anh'] if img else None
                     suggested_products.append(prod)
+
+            # Xử lý companion
+            companion_products_out = []
+            ly_do_di_kem = cache_row['ly_do_di_kem']
+            if cache_row['ds_san_pham_di_kem']:
+                ds_di_kem = json.loads(cache_row['ds_san_pham_di_kem'])
+                for item in ds_di_kem:
+                    cursor.execute("""
+                        SELECT sp.*, dm.ten_danh_muc 
+                        FROM san_pham sp 
+                        LEFT JOIN danh_muc dm ON sp.ma_danh_muc = dm.ma_danh_muc 
+                        WHERE sp.ma_san_pham = %s
+                    """, (item['ma_sp'],))
+                    prod = cursor.fetchone()
+                    if prod:
+                        cursor.execute("SELECT duong_dan_anh FROM anh_san_pham WHERE ma_san_pham = %s AND la_anh_chinh = 1", (item['ma_sp'],))
+                        img = cursor.fetchone()
+                        prod['duong_dan_anh'] = img['duong_dan_anh'] if img else None
+                        prod['for_product'] = item.get('for_product', '')
+                        companion_products_out.append(prod)
+
             cursor.close()
             conn.close()
-            if suggested_products:
-                return jsonify({"success": True, "products": suggested_products, "reason": reason})
+            
+            return jsonify({
+                "success": True, 
+                "missing": {"products": suggested_products, "reason": reason},
+                "companion": {"products": companion_products_out, "reason": ly_do_di_kem}
+            })
         
         query_bought = """
             SELECT DISTINCT p.ten_san_pham
@@ -333,10 +359,15 @@ def ai_next_step_suggest():
 Nhiệm vụ:
 1. Đánh giá chu trình Skincare hiện tại của khách dựa vào đơn hàng gần nhất (Họ đang thiếu NHỮNG bước nào quan trọng nhất?).
 2. Gợi ý TỪ 1 ĐẾN 3 TỪ KHÓA CHUNG (ví dụ: "sữa rửa mặt", "kem chống nắng", "nước hoa hồng", "tẩy trang") để bổ sung vào các bước còn thiếu.
-3. Trả về đúng định dạng JSON chuẩn (KHÔNG có markdown ```json, KHÔNG có text thừa xung quanh):
+3. Gợi ý TỪ 1 ĐẾN 3 TỪ KHÓA CHUNG là sản phẩm ĐI KÈM lý tưởng cho các món họ đã mua. (ví dụ: mua sữa rửa mặt thì gợi ý đi kèm là nước tẩy trang hoặc máy rửa mặt). Ghi rõ sản phẩm đi kèm cho món nào.
+4. Trả về đúng định dạng JSON chuẩn (KHÔNG có markdown ```json, KHÔNG có text thừa xung quanh):
 {{
     "missing_keywords": ["từ khóa 1", "từ khóa 2"],
-    "reason": "<Một đoạn văn giải thích chung (khoảng 2-3 câu) vì sao họ nên mua NHỮNG SẢN PHẨM NÀY để bổ sung vào các bước họ đang thiếu>"
+    "missing_reason": "<Một đoạn văn giải thích chung vì sao nên bổ sung các bước thiếu>",
+    "companion_products": [
+        {{"keyword": "từ khóa 1", "for_product": "Tên món hàng đã mua"}}
+    ],
+    "companion_reason": "<Một đoạn văn giải thích vì sao các sản phẩm này là đi kèm lý tưởng>"
 }}"""
 
         user_content = [{"type": "text", "text": "Bạn phải trả về JSON chuẩn, không thêm bất kỳ ký tự nào khác."}]
@@ -356,12 +387,14 @@ Nhiệm vụ:
                     raise Exception("Không tìm thấy JSON hợp lệ trong phản hồi")
                     
                 missing_keywords = ai_data.get("missing_keywords", [])
-                reason = ai_data.get("reason")
+                missing_reason = ai_data.get("missing_reason", "")
+                companion_raw = ai_data.get("companion_products", [])
+                companion_reason = ai_data.get("companion_reason", "")
                 
                 if not isinstance(missing_keywords, list):
                     missing_keywords = [missing_keywords]
                     
-                # RAG: Truy vấn DB để tìm sản phẩm khớp với keyword
+                # RAG: Truy vấn DB để tìm sản phẩm khớp với keyword missing
                 ma_san_pham_list = []
                 for keyword in missing_keywords:
                     if not keyword: continue
@@ -389,22 +422,58 @@ Nhiệm vụ:
                         img = cursor.fetchone()
                         prod['duong_dan_anh'] = img['duong_dan_anh'] if img else None
                         suggested_products.append(prod)
+                        
+                # RAG: Truy vấn DB để tìm sản phẩm khớp với keyword companion
+                companion_list_db = []
+                companion_products_out = []
+                for comp in companion_raw:
+                    keyword = comp.get("keyword")
+                    for_prod = comp.get("for_product")
+                    if not keyword: continue
+                    cursor.execute("""
+                        SELECT ma_san_pham FROM san_pham 
+                        WHERE (ten_san_pham LIKE %s OR mo_ta LIKE %s) 
+                        AND trang_thai = 'dang_ban' AND hien_thi_web = 1
+                        LIMIT 1
+                    """, (f"%{keyword}%", f"%{keyword}%"))
+                    row = cursor.fetchone()
+                    if row:
+                        ma_sp = row['ma_san_pham']
+                        # Check if already added
+                        if not any(x['ma_sp'] == ma_sp for x in companion_list_db):
+                            companion_list_db.append({"ma_sp": ma_sp, "for_product": for_prod})
+                            
+                for item in companion_list_db:
+                    cursor.execute("""
+                        SELECT sp.*, dm.ten_danh_muc 
+                        FROM san_pham sp 
+                        LEFT JOIN danh_muc dm ON sp.ma_danh_muc = dm.ma_danh_muc 
+                        WHERE sp.ma_san_pham = %s
+                    """, (item['ma_sp'],))
+                    prod = cursor.fetchone()
+                    if prod:
+                        cursor.execute("SELECT duong_dan_anh FROM anh_san_pham WHERE ma_san_pham = %s AND la_anh_chinh = 1", (item['ma_sp'],))
+                        img = cursor.fetchone()
+                        prod['duong_dan_anh'] = img['duong_dan_anh'] if img else None
+                        prod['for_product'] = item['for_product']
+                        companion_products_out.append(prod)
                 
                 try:
                     cursor.execute("""
-                        INSERT INTO ai_goi_y_lich_su (ma_don_hang, ds_ma_san_pham, ly_do)
-                        VALUES (%s, %s, %s)
-                    """, (ma_don_hang_gan_nhat, json.dumps(ma_san_pham_list), reason))
+                        INSERT INTO ai_goi_y_lich_su (ma_don_hang, ds_ma_san_pham, ly_do, ds_san_pham_di_kem, ly_do_di_kem)
+                        VALUES (%s, %s, %s, %s, %s)
+                    """, (ma_don_hang_gan_nhat, json.dumps(ma_san_pham_list), missing_reason, json.dumps(companion_list_db), companion_reason))
                     conn.commit()
                 except Exception as e:
                     print("Lỗi lưu cache AI:", e)
 
                 cursor.close()
                 conn.close()
-                if suggested_products:
-                    return jsonify({"success": True, "products": suggested_products, "reason": reason})
-                else:
-                    return jsonify({"success": False})
+                return jsonify({
+                    "success": True, 
+                    "missing": {"products": suggested_products, "reason": missing_reason},
+                    "companion": {"products": companion_products_out, "reason": companion_reason}
+                })
                     
             except Exception as parse_e:
                 with open("error_log.txt", "a", encoding="utf-8") as f:

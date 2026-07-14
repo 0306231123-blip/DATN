@@ -835,7 +835,7 @@
                             
                             if (diffMinutes <= 30) {
                                 actionBtnHtml = `
-                                    <button onclick="updateOrderStatus('${order.ma_don_hang}', 'da_huy')" class="mt-4 w-full bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded-lg transition text-sm shadow">
+                                    <button onclick="updateOrderStatus('${order.ma_don_hang}', 'da_huy', '${order.phuong_thuc_thanh_toan}')" class="mt-4 w-full bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded-lg transition text-sm shadow">
                                         Hủy đơn hàng
                                     </button>
                                     <p class="text-xs text-center text-gray-400 mt-2">Bạn có thể hủy đơn trong vòng 30 phút (còn lại ${30 - diffMinutes} phút)</p>`;
@@ -928,7 +928,7 @@
     }
 
    // Thay thế đoạn xử lý trạng thái 'tra_hang_hoan_tien' trong hàm updateOrderStatus cũ
-async function updateOrderStatus(maDonHang, trangThaiMoi) {
+async function updateOrderStatus(maDonHang, trangThaiMoi, phuongThuc = null) {
     if (trangThaiMoi === 'tra_hang_hoan_tien') {
         // Mở Modal lên thay vì dùng prompt
         document.getElementById('refund-order-id').value = maDonHang;
@@ -939,10 +939,16 @@ async function updateOrderStatus(maDonHang, trangThaiMoi) {
     // Các trạng thái khác (hủy đơn, hoàn thành) giữ nguyên logic cũ của ông
     let lyDoHuyDon = null;
     if (trangThaiMoi === 'da_huy') {
-        lyDoHuyDon = prompt("Vui lòng nhập lý do hủy đơn hàng (Bắt buộc):");
-        if (!lyDoHuyDon || lyDoHuyDon.trim() === "") {
-            alert("Bạn phải nhập lý do thì hệ thống mới xử lý hủy đơn!");
+        if (phuongThuc === 'chuyen_khoan' || phuongThuc === 'vi_dien_tu') {
+            document.getElementById('cancel-order-id').value = maDonHang;
+            document.getElementById('cancel-modal').classList.remove('hidden');
             return;
+        } else {
+            lyDoHuyDon = prompt("Vui lòng nhập lý do hủy đơn hàng (Bắt buộc):");
+            if (!lyDoHuyDon || lyDoHuyDon.trim() === "") {
+                alert("Bạn phải nhập lý do thì hệ thống mới xử lý hủy đơn!");
+                return;
+            }
         }
     } else if (trangThaiMoi === 'hoan_thanh') {
         if (!confirm("Xác nhận bạn đã nhận được hàng và sản phẩm không có vấn đề gì?")) return;
@@ -950,6 +956,26 @@ async function updateOrderStatus(maDonHang, trangThaiMoi) {
 
     // Gọi API cho Hủy và Hoàn thành
     callUpdateStatusAPI(maDonHang, trangThaiMoi, null, lyDoHuyDon);
+}
+
+function closeCancelModal() {
+    document.getElementById('cancel-modal').classList.add('hidden');
+}
+
+function submitCancelRequest() {
+    const maDonHang = document.getElementById('cancel-order-id').value;
+    const nganHang = document.getElementById('cancel-bank').value.trim();
+    const soTaiKhoan = document.getElementById('cancel-account').value.trim();
+    const chuTaiKhoan = document.getElementById('cancel-owner').value.trim();
+    const lyDo = document.getElementById('cancel-reason').value.trim();
+
+    if (!nganHang || !soTaiKhoan || !chuTaiKhoan || !lyDo) {
+        alert("Vui lòng nhập đầy đủ lý do hủy và thông tin tài khoản nhận tiền hoàn!");
+        return;
+    }
+
+    closeCancelModal();
+    callUpdateStatusAPI(maDonHang, 'da_huy', null, lyDo, nganHang, soTaiKhoan, chuTaiKhoan);
 }
 
 function showOrderDetails(orderId, event) {
@@ -1232,6 +1258,41 @@ window.addEventListener('hashchange', function() {
 </div>
 
 {{-- Refund Modal --}}
+<!-- MODAL HỦY ĐƠN & HOÀN TIỀN -->
+<div id="cancel-modal" class="refund-modal-overlay hidden">
+    <div class="refund-modal">
+        <h3 class="refund-modal__title">Hủy Đơn & Hoàn Tiền</h3>
+        <p class="refund-modal__warning">* Bạn đã thanh toán trước cho đơn hàng này. Vui lòng cung cấp thông tin tài khoản ngân hàng để chúng tôi hoàn tiền lại cho bạn.</p>
+        
+        <input type="hidden" id="cancel-order-id">
+        
+        <div class="refund-modal__fields">
+            <div class="refund-modal__row">
+                <label class="refund-modal__label">Ngân hàng & Số tài khoản:</label>
+                <div class="refund-modal__input-group">
+                    <input type="text" id="cancel-bank" list="bank-list" class="refund-modal__input refund-modal__input--1-3" placeholder="Ngân hàng">
+                    <input type="number" id="cancel-account" class="refund-modal__input refund-modal__input--2-3" placeholder="Số tài khoản">
+                </div>
+            </div>
+
+            <div class="refund-modal__row">
+                <label class="refund-modal__label">Chủ tài khoản:</label>
+                <input type="text" id="cancel-owner" class="refund-modal__input" style="text-transform: uppercase;" placeholder="NGUYEN VAN A">
+            </div>
+
+            <div class="refund-modal__row" style="margin-top: 15px;">
+                <label class="refund-modal__label">Lý do hủy đơn:</label>
+                <textarea id="cancel-reason" class="refund-modal__textarea" rows="2" placeholder="Vui lòng nhập lý do hủy..."></textarea>
+            </div>
+        </div>
+
+        <div class="refund-modal__actions" style="margin-top: 20px;">
+            <button onclick="closeCancelModal()" class="refund-modal__btn-cancel">Đóng</button>
+            <button onclick="submitCancelRequest()" class="refund-modal__btn-submit">Xác nhận gửi</button>
+        </div>
+    </div>
+</div>
+
 <div id="refund-modal" class="refund-modal-overlay hidden">
     <div class="refund-modal">
         <h3 class="refund-modal__title">Yêu cầu hoàn trả</h3>

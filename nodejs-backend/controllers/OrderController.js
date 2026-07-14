@@ -251,24 +251,27 @@ class OrderController {
 
       const currentStatus = order.trang_thai_don;
 
-      if (
-          (trang_thai_don === 'da_huy' || trang_thai_don === 'da_tra_hang') && 
-          (currentStatus !== 'da_huy' && currentStatus !== 'da_tra_hang')
-      ) {
-          // Trả lại kho sản phẩm nếu là Hủy đơn (Nếu trả hàng thì admin tự xử lý kho sau khi kiểm định)
-          if (trang_thai_don === 'da_huy') {
-              for (let item of order.chi_tiet) {
-                  await SanPham.increment('so_luong_ton', {
-                      by: item.so_luong,
-                      where: { ma_san_pham: item.ma_san_pham }
-                  });
-              }
-          }
-          
-          // Hoàn lại Voucher cho cả Hủy đơn và Trả hàng
+      const newIsCancelOrReturn = (trang_thai_don === 'da_huy' || trang_thai_don === 'da_tra_hang' || trang_thai_don === 'tra_hang_hoan_tien');
+      const oldIsCancelOrReturn = (currentStatus === 'da_huy' || currentStatus === 'da_tra_hang' || currentStatus === 'tra_hang_hoan_tien');
+
+      // 1. Hoàn lại Voucher nếu mới chuyển sang trạng thái hủy/trả hàng (lần đầu)
+      if (newIsCancelOrReturn && !oldIsCancelOrReturn) {
           if (order.ma_khuyen_mai) {
               const KhuyenMai = require('../models/KhuyenMai');
               await KhuyenMai.increment('so_luong', { by: 1, where: { ma_khuyen_mai: order.ma_khuyen_mai } });
+          }
+      }
+
+      // 2. Trả lại kho sản phẩm CHỈ khi là HỦY ĐƠN hoặc TRẢ HÀNG HOÀN TIỀN
+      const newNeedsRestock = (trang_thai_don === 'da_huy' || trang_thai_don === 'tra_hang_hoan_tien');
+      const oldAlreadyRestocked = (currentStatus === 'da_huy' || currentStatus === 'tra_hang_hoan_tien');
+
+      if (newNeedsRestock && !oldAlreadyRestocked) {
+          for (let item of order.chi_tiet) {
+              await SanPham.increment('so_luong_ton', {
+                  by: item.so_luong,
+                  where: { ma_san_pham: item.ma_san_pham }
+              });
           }
       }
 
@@ -623,6 +626,12 @@ class OrderController {
             }
             
             donHang.ly_do_huy_don = ly_do_huy_don;
+            
+            if (ngan_hang_hoan_tien && stk_hoan_tien && chu_tk_hoan_tien) {
+                donHang.ngan_hang_hoan_tien = ngan_hang_hoan_tien;
+                donHang.stk_hoan_tien = stk_hoan_tien;
+                donHang.chu_tk_hoan_tien = chu_tk_hoan_tien;
+            }
             
             for (let item of donHang.chi_tiet) {
                 await SanPham.increment('so_luong_ton', {

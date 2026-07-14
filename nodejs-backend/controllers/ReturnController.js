@@ -1,6 +1,8 @@
 const YeuCauTraHang = require('../models/YeuCauTraHang');
 const DonHang = require('../models/DonHang');
 const KhuyenMai = require('../models/KhuyenMai'); // Thêm KhuyenMai
+const ChiTietDonHang = require('../models/ChiTietDonHang');
+const SanPham = require('../models/SanPham');
 const sequelize = require('../config/database');
 
 exports.createReturnRequest = async (req, res) => {
@@ -73,7 +75,10 @@ exports.updateReturnRequestStatus = async (req, res) => {
       return res.status(400).json({ status: 'error', message: 'Yêu cầu này đã được xử lý.' });
     }
 
-    const donHang = await DonHang.findByPk(returnReq.ma_don_hang, { transaction });
+    const donHang = await DonHang.findByPk(returnReq.ma_don_hang, { 
+      include: [{ model: ChiTietDonHang, as: 'chi_tiet' }],
+      transaction 
+    });
 
     await returnReq.update({
       trang_thai,
@@ -87,6 +92,7 @@ exports.updateReturnRequestStatus = async (req, res) => {
       if (donHang.ma_khuyen_mai) {
         await KhuyenMai.increment('so_luong', { by: 1, where: { ma_khuyen_mai: donHang.ma_khuyen_mai }, transaction });
       }
+
     } else if (trang_thai === 'tu_choi') {
       await donHang.update({ trang_thai_don: 'tu_choi_tra_hang', ngay_cap_nhat: new Date() }, { transaction });
     }
