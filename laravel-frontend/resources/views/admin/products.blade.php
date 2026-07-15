@@ -105,6 +105,10 @@
                 <span>Nhập từ Excel</span>
             </button>
             <input type="file" id="excel-upload" accept=".xlsx, .xls, .csv" style="display: none;" onchange="handleExcelUpload(event)">
+            <button class="btn" onclick="downloadSampleExcel()" style="margin-left: 10px; background-color: #6366f1; color: white; border-color: #6366f1;">
+                <i data-lucide="download" class="icon-xs"></i>
+                <span>Tải file mẫu</span>
+            </button>
         </div>
         <div class="action-bar-right">
             <button class="btn btn-secondary" onclick="viewAllLogs()" style="margin-right: 10px;">
@@ -378,7 +382,7 @@
 
 <!-- Modal Publish Product (Multi-select) -->
 <div class="modal" id="modal-publish" style="display: none; z-index: 1002;">
-    <div class="modal-content modal-content--wide">
+    <div class="modal-content modal-content--extra-wide">
         <div class="modal-header">
             <h2>Đăng bán sản phẩm từ Kho</h2>
             <button class="modal-close" type="button" onclick="closePublishModal()">&times;</button>
@@ -391,19 +395,20 @@
                     Chọn tất cả
                 </label>
             </div>
-            <div class="table-wrapper" style="max-height: 400px; overflow-y: auto; margin-bottom: 15px;">
+            <div class="table-wrapper" style="max-height: 65vh; overflow-y: auto; margin-bottom: 15px;">
                 <table class="admin-table">
                     <thead>
                         <tr>
                             <th style="width: 40px;"></th>
                             <th>Sản phẩm</th>
                             <th>Tồn kho</th>
+                            <th style="width: 130px;">Giá nhập</th>
                             <th style="width: 160px;">Giá bán (VNĐ) *</th>
                             <th style="width: 160px;">Giá KM (Tùy chọn)</th>
                         </tr>
                     </thead>
                     <tbody id="publish-tbody">
-                        <tr><td colspan="5" style="text-align: center;">Đang tải...</td></tr>
+                        <tr><td colspan="6" style="text-align: center;">Đang tải...</td></tr>
                     </tbody>
                 </table>
             </div>
@@ -456,7 +461,7 @@
 </div>
 
 <div class="modal" id="modal-bulk-import" style="display: none; z-index: 1002;">
-    <div class="modal-content modal-content--wide">
+    <div class="modal-content modal-content--extra-wide">
         <div class="modal-header">
             <h2>Nhập kho hàng loạt</h2>
             <button class="modal-close" type="button" onclick="closeBulkImportModal()">&times;</button>
@@ -465,7 +470,7 @@
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
                 <span style="font-size: 14px; color: var(--text-muted);">Vui lòng chọn sản phẩm và điền số lượng.</span>
             </div>
-            <div class="table-wrapper" style="max-height: 400px; overflow-y: auto; margin-bottom: 20px;">
+            <div class="table-wrapper" style="max-height: 65vh; overflow-y: auto; margin-bottom: 20px;">
                 <table class="admin-table">
                     <thead>
                         <tr>
@@ -494,12 +499,12 @@
 
 <!-- Modal Thẻ Kho -->
 <div class="modal" id="modal-logs" style="display: none; z-index: 1002;">
-    <div class="modal-content modal-content--wide">
+    <div class="modal-content modal-content--extra-wide">
         <div class="modal-header">
             <h2>Lịch sử biến động kho</h2>
             <button class="modal-close" onclick="closeLogsModal()">&times;</button>
         </div>
-        <div class="table-wrapper" style="max-height: 400px; overflow-y: auto;">
+        <div class="table-wrapper" style="max-height: 65vh; overflow-y: auto;">
             <table class="admin-table">
                 <thead>
                     <tr>
@@ -508,6 +513,7 @@
                         <th>Thao tác</th>
                         <th>Thay đổi</th>
                         <th>Tồn cuối</th>
+                        <th>Giá nhập</th>
                         <th>Ghi chú</th>
                     </tr>
                 </thead>
@@ -1589,7 +1595,7 @@ async function viewLogs(ma_sp, ma_bt) {
     document.getElementById('modal-logs').style.display = 'block';
     if(document.getElementById('modal-overlay')) document.getElementById('modal-overlay').style.display = 'block';
     const tbody = document.getElementById('logs-tbody');
-    tbody.innerHTML = '<tr><td colspan="6">Đang tải...</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="7">Đang tải...</td></tr>';
     try {
         let url = `${API_BASE_URL}/inventory/logs?ma_san_pham=${ma_sp}`;
         if (ma_bt) url += `&ma_bien_the=${ma_bt}`;
@@ -1606,13 +1612,14 @@ async function viewLogs(ma_sp, ma_bt) {
                     <td>${log.loai_thao_tac === 'nhap_kho' ? '<span style="color:green">Nhập</span>' : (log.loai_thao_tac === 'xuat_kho' ? '<span style="color:red">Xuất</span>' : log.loai_thao_tac)}</td>
                     <td>${log.so_luong_thay_doi > 0 ? '+'+log.so_luong_thay_doi : log.so_luong_thay_doi}</td>
                     <td>${log.ton_kho_cuoi}</td>
+                    <td>${log.gia_nhap ? Number(log.gia_nhap).toLocaleString('vi-VN') + 'đ' : '--'}</td>
                     <td>${escapeHtml(log.ghi_chu || '')}</td>
                 </tr>
                 `;
-            }).join('') || '<tr><td colspan="6">Chưa có lịch sử</td></tr>';
+            }).join('') || '<tr><td colspan="7">Chưa có lịch sử</td></tr>';
         }
     } catch(e) {
-        tbody.innerHTML = '<tr><td colspan="6">Lỗi tải dữ liệu</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="7">Lỗi tải dữ liệu</td></tr>';
     }
 }
 
@@ -1620,7 +1627,7 @@ async function viewAllLogs() {
     document.getElementById('modal-logs').style.display = 'block';
     if(document.getElementById('modal-overlay')) document.getElementById('modal-overlay').style.display = 'block';
     const tbody = document.getElementById('logs-tbody');
-    tbody.innerHTML = '<tr><td colspan="6">Đang tải...</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="7">Đang tải...</td></tr>';
     try {
         let url = `${API_BASE_URL}/inventory/logs`; // Lấy tất cả, đã sort DESC từ DB
         const res = await fetch(url);
@@ -1636,13 +1643,14 @@ async function viewAllLogs() {
                     <td>${log.loai_thao_tac === 'nhap_kho' ? '<span style="color:green">Nhập</span>' : (log.loai_thao_tac === 'xuat_kho' ? '<span style="color:red">Xuất</span>' : log.loai_thao_tac)}</td>
                     <td>${log.so_luong_thay_doi > 0 ? '+'+log.so_luong_thay_doi : log.so_luong_thay_doi}</td>
                     <td>${log.ton_kho_cuoi}</td>
+                    <td>${log.gia_nhap ? Number(log.gia_nhap).toLocaleString('vi-VN') + 'đ' : '--'}</td>
                     <td>${escapeHtml(log.ghi_chu || '')}</td>
                 </tr>
                 `;
-            }).join('') || '<tr><td colspan="6">Chưa có lịch sử</td></tr>';
+            }).join('') || '<tr><td colspan="7">Chưa có lịch sử</td></tr>';
         }
     } catch(e) {
-        tbody.innerHTML = '<tr><td colspan="6">Lỗi tải dữ liệu</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="7">Lỗi tải dữ liệu</td></tr>';
     }
 }
 function closeLogsModal() {
@@ -1830,6 +1838,32 @@ async function deleteVoucher(id) {
 
 // ========== EXCEL IMPORT & MARKET PRICE ==========
 
+// 0. Tải file Excel mẫu
+function downloadSampleExcel() {
+    const headers = ['Tên sản phẩm', 'SKU', 'Danh mục', 'Giá bán', 'Giá nhập', 'Số lượng tồn', 'Thương hiệu'];
+    const sampleData = [{}];
+    headers.forEach(h => sampleData[0][h] = '');
+
+    const ws = XLSX.utils.json_to_sheet(sampleData);
+
+    // Đặt độ rộng cột cho dễ đọc
+    ws['!cols'] = [
+        { wch: 40 },  // Tên sản phẩm
+        { wch: 12 },  // SKU
+        { wch: 20 },  // Danh mục
+        { wch: 15 },  // Giá bán
+        { wch: 15 },  // Giá nhập
+        { wch: 15 },  // Số lượng tồn
+        { wch: 20 },  // Thương hiệu
+    ];
+
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Danh sách sản phẩm');
+
+    XLSX.writeFile(wb, 'mau_nhap_san_pham.xlsx');
+    showAlert('Tải file mẫu thành công!', 'success');
+}
+
 // 1. Nhập từ Excel (Thêm sản phẩm hàng loạt)
 async function handleExcelUpload(event) {
     const file = event.target.files[0];
@@ -1989,7 +2023,7 @@ async function openPublishModal() {
     
     document.getElementById('publish-select-all').checked = false;
     const tbody = document.getElementById('publish-tbody');
-    tbody.innerHTML = '<tr><td colspan="5" style="text-align: center;">Đang tải...</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="6" style="text-align: center;">Đang tải...</td></tr>';
     
     try {
         const response = await fetch(`${API_BASE_URL}/products?per_page=1000&is_unlisted=true`);
@@ -1997,7 +2031,7 @@ async function openPublishModal() {
         if (result.status === 'success' || result.success) {
             unlistedProducts = result.data;
             if (unlistedProducts.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="5" style="text-align: center;">Không có sản phẩm nào trong kho chưa đăng bán</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="6" style="text-align: center;">Không có sản phẩm nào trong kho chưa đăng bán</td></tr>';
                 return;
             }
             
@@ -2011,6 +2045,7 @@ async function openPublishModal() {
                             <div style="font-size: 12px; color: var(--text-muted);">SKU: ${escapeHtml(p.sku || '--')}</div>
                         </td>
                         <td>${p.so_luong_ton}</td>
+                        <td style="color: var(--text-muted);">${p.gia_nhap ? Number(p.gia_nhap).toLocaleString('vi-VN') + 'đ' : '--'}</td>
                         <td>
                             <input type="number" class="form-control p-gia" min="1000" placeholder="Giá bán" value="${p.gia > 0 ? p.gia : ''}" style="width: 130px;">
                         </td>
@@ -2023,7 +2058,7 @@ async function openPublishModal() {
             tbody.innerHTML = html;
         }
     } catch(e) {
-        tbody.innerHTML = '<tr><td colspan="5" style="text-align: center;">Lỗi tải danh sách</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="6" style="text-align: center;">Lỗi tải danh sách</td></tr>';
     }
 }
 

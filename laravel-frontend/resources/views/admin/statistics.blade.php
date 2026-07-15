@@ -12,8 +12,12 @@
         <option value="yesterday">Hôm qua</option>
         <option value="7days">7 ngày qua</option>
         <option value="30days" selected>30 ngày qua</option>
-        <option value="custom">Tùy chỉnh...</option>
+        <option value="custom" hidden>Tùy chỉnh...</option>
     </select>
+    <button class="btn btn-outline" id="btn-custom-date" style="margin-left:8px; display:flex; align-items:center; gap:6px; border:1px solid var(--border-color); background:var(--bg-card); color:var(--text-primary); padding:6px 12px; border-radius:var(--radius-sm); cursor:pointer; font-weight:500;">
+        <i data-lucide="calendar" class="icon-sm"></i>
+        Tùy chỉnh thời gian
+    </button>
     <div class="filter-separator"></div>
     <div id="current-range-display" class="current-range-display">
         <span id="range-text">30 ngày qua</span>
@@ -542,6 +546,7 @@ function initFilterBar() {
     const modal = document.getElementById('custom-date-modal');
     const btnCancel = document.getElementById('btn-cancel-date');
     const btnApply = document.getElementById('btn-apply-date');
+    const btnCustomDate = document.getElementById('btn-custom-date');
     const rangeText = document.getElementById('range-text');
 
     // Set default range (30 days)
@@ -551,19 +556,18 @@ function initFilterBar() {
     currentStartDate = defaultRange.startDate;
     currentEndDate = defaultRange.endDate;
 
-    let previousSelectValue = '30days';
+    btnCustomDate.addEventListener('click', () => {
+        modal.showModal();
+    });
 
     rangeSelect.addEventListener('change', (e) => {
         const val = e.target.value;
-        if (val === 'custom') {
-            modal.showModal();
-        } else {
+        if (val !== 'custom') {
             const range = getDateRange(val);
             startInput.value = range.startDate;
             endInput.value = range.endDate;
             currentStartDate = range.startDate;
             currentEndDate = range.endDate;
-            previousSelectValue = val;
             currentLabel = e.target.options[e.target.selectedIndex].text;
             rangeText.textContent = currentLabel;
             loadStatistics();
@@ -572,14 +576,13 @@ function initFilterBar() {
 
     btnCancel.addEventListener('click', () => {
         modal.close();
-        rangeSelect.value = previousSelectValue;
     });
 
     btnApply.addEventListener('click', () => {
         if (startInput.value && endInput.value) {
             currentStartDate = startInput.value;
             currentEndDate = endInput.value;
-            previousSelectValue = 'custom';
+            rangeSelect.value = 'custom';
             const [sY, sM, sD] = startInput.value.split('-');
             const [eY, eM, eD] = endInput.value.split('-');
             currentLabel = `Từ ${sD}/${sM}/${sY} đến ${eD}/${eM}/${eY}`;

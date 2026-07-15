@@ -227,8 +227,11 @@
 <div class="chat-container">
     <!-- Cột danh sách user -->
     <div class="chat-sidebar">
-        <div class="chat-sidebar-header">
-            <h3>Danh sách trò chuyện</h3>
+        <div class="chat-sidebar-header" style="display: flex; justify-content: space-between; align-items: center;">
+            <h3 style="margin: 0;">Danh sách trò chuyện</h3>
+            <button class="btn btn-primary" onclick="openNewChatModal()" style="padding: 4px 8px; font-size: 12px; display: flex; align-items: center; gap: 4px;" title="Khởi tạo tin nhắn mới">
+                <i data-lucide="plus" style="width: 14px; height: 14px;"></i> Tìm
+            </button>
         </div>
         <div class="chat-user-list" id="user-list">
             <div style="padding: 20px; text-align: center; color: var(--text-muted);">Đang tải...</div>
@@ -271,10 +274,37 @@
         <p>Chọn một khách hàng để bắt đầu hỗ trợ</p>
     </div>
 </div>
+
+<!-- Modal Bắt đầu chat mới -->
+<div class="modal" id="modal-new-chat" style="display: none; z-index: 1002;">
+    <div class="modal-content" style="width: 450px;">
+        <div class="modal-header">
+            <h2>Tìm khách hàng</h2>
+            <button class="modal-close" onclick="closeNewChatModal()">&times;</button>
+        </div>
+        <div style="padding: 20px;">
+            <input type="text" id="new-chat-search" class="form-control" placeholder="Tìm tên hoặc email..." style="width: 100%; margin-bottom: 15px;" oninput="searchNewChatUsers()">
+            <div id="new-chat-user-list" style="max-height: 350px; overflow-y: auto;">
+                <!-- Danh sách user render ở đây -->
+                <div style="text-align: center; color: var(--text-muted); padding: 20px;">Gõ để tìm kiếm khách hàng...</div>
+            </div>
+        </div>
+    </div>
+</div>
 @endsection
 
 @section('scripts')
 <script>
+    function escapeHtml(unsafe) {
+        if (!unsafe) return '';
+        return String(unsafe)
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;")
+            .replace(/"/g, "&quot;")
+            .replace(/'/g, "&#039;");
+    }
+
     const API_URL = 'http://localhost:3000/api';
     let currentUserId = null;
     let users = [];
@@ -355,21 +385,92 @@
 
         userListEl.innerHTML = users.map(user => {
             const lastRead = localStorage.getItem('chat_admin_read_' + user.ma_nguoi_dung) || 0;
-            const msgTime = new Date(user.latest_message_date).getTime();
+            const msgTime = new Date(user.latest_message_date || Date.now()).getTime();
             const isUnread = (msgTime > lastRead) && (currentUserId != user.ma_nguoi_dung);
             
             return `
-            <div class="chat-user-item ${currentUserId == user.ma_nguoi_dung ? 'active' : ''}" onclick="selectUser(${user.ma_nguoi_dung}, '${user.ho_ten}', '${user.email}')">
+            <div class="chat-user-item ${currentUserId == user.ma_nguoi_dung ? 'active' : ''}" onclick="selectUser(${user.ma_nguoi_dung}, '${escapeHtml(user.ho_ten)}', '${escapeHtml(user.email)}')">
                 <div class="chat-avatar">${getInitials(user.ho_ten)}</div>
                 <div class="chat-user-info">
-                    <div class="chat-user-name">${user.ho_ten}</div>
-                    <div class="chat-user-email">${user.email}</div>
+                    <div class="chat-user-name">${escapeHtml(user.ho_ten)}</div>
+                    <div class="chat-user-email">${escapeHtml(user.email)}</div>
                 </div>
                 ${isUnread ? '<div class="unread-badge">Mới</div>' : ''}
             </div>
             `;
         }).join('');
     }
+
+    // ========== TÌM KIẾM VÀ TẠO CHAT MỚI ==========
+    function openNewChatModal() {
+        document.getElementById('modal-new-chat').style.display = 'block';
+        if(document.getElementById('modal-overlay')) document.getElementById('modal-overlay').style.display = 'block';
+        
+        document.getElementById('new-chat-search').value = '';
+        document.getElementById('new-chat-user-list').innerHTML = '<div style="text-align: center; color: var(--text-muted); padding: 20px;">Gõ để tìm kiếm khách hàng...</div>';
+        setTimeout(() => document.getElementById('new-chat-search').focus(), 100);
+    }
+
+    function closeNewChatModal() {
+        document.getElementById('modal-new-chat').style.display = 'none';
+        if(document.getElementById('modal-overlay')) document.getElementById('modal-overlay').style.display = 'none';
+    }
+
+    let searchChatTimer = null;
+    async function searchNewChatUsers() {
+        const query = document.getElementById('new-chat-search').value;
+        if (!query.trim()) {
+            document.getElementById('new-chat-user-list').innerHTML = '<div style="text-align: center; color: var(--text-muted); padding: 20px;">Gõ để tìm kiếm khách hàng...</div>';
+            return;
+        }
+
+        if (searchChatTimer) clearTimeout(searchChatTimer);
+        searchChatTimer = setTimeout(async () => {
+            document.getElementById('new-chat-user-list').innerHTML = '<div style="text-align: center; color: var(--text-muted); padding: 20px;">Đang tìm...</div>';
+            try {
+                const token = localStorage.getItem('admin_token');
+                const res = await fetch(`${API_URL}/users?search=${encodeURIComponent(query)}&per_page=10`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const result = await res.json();
+                
+                if (result.success && result.data && result.data.length > 0) {
+                    const html = result.data.map(u => `
+                        <div class="chat-user-item" onclick="startNewChat(${u.ma_nguoi_dung}, '${escapeHtml(u.ho_ten)}', '${escapeHtml(u.email)}')">
+                            <div class="chat-avatar">${getInitials(u.ho_ten)}</div>
+                            <div class="chat-user-info">
+                                <div class="chat-user-name">${escapeHtml(u.ho_ten)}</div>
+                                <div class="chat-user-email">${escapeHtml(u.email)}</div>
+                            </div>
+                        </div>
+                    `).join('');
+                    document.getElementById('new-chat-user-list').innerHTML = html;
+                } else {
+                    document.getElementById('new-chat-user-list').innerHTML = '<div style="text-align: center; color: var(--text-muted); padding: 20px;">Không tìm thấy khách hàng</div>';
+                }
+            } catch (e) {
+                document.getElementById('new-chat-user-list').innerHTML = '<div style="text-align: center; color: red; padding: 20px;">Lỗi kết nối</div>';
+            }
+        }, 500);
+    }
+
+    function startNewChat(userId, name, email) {
+        closeNewChatModal();
+        let existingUser = users.find(u => u.ma_nguoi_dung == userId);
+        if (existingUser) {
+            existingUser.latest_message_date = new Date().toISOString();
+        } else {
+            users.unshift({
+                ma_nguoi_dung: userId,
+                ho_ten: name,
+                email: email,
+                latest_message_date: new Date().toISOString()
+            });
+        }
+        renderUserList();
+        selectUser(userId, name, email);
+    }
+    // ==============================================
 
     // 2. Chọn user và tải tin nhắn
     window.selectUser = function(userId, name, email) {
