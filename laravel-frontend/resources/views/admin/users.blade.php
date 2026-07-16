@@ -139,6 +139,73 @@
     </div>
 </div>
 
+<!-- Modal View User Details -->
+<div class="modal" id="modal-user-detail" style="display: none;">
+    <div class="modal-content" style="max-width: 500px;">
+        <div class="modal-header">
+            <h2>Chi tiết người dùng</h2>
+            <button class="modal-close" onclick="closeDetailModal()">&times;</button>
+        </div>
+        <div class="modal-body" style="padding: 20px;">
+            <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 25px;">
+                <div id="detail-avatar" style="width: 60px; height: 60px; border-radius: 50%; background: linear-gradient(135deg, #667eea, #764ba2); color: white; display: flex; align-items: center; justify-content: center; font-size: 24px; font-weight: bold;"></div>
+                <div>
+                    <h3 id="detail-ho-ten" style="margin: 0; font-size: 18px;"></h3>
+                    <span id="detail-vai-tro" class="role-badge" style="margin-top: 8px; display: inline-block;"></span>
+                </div>
+            </div>
+            
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 25px;">
+                <div>
+                    <strong style="display: block; margin-bottom: 5px; color: #6c757d; font-size: 13px;">Email</strong>
+                    <div id="detail-email"></div>
+                </div>
+                <div>
+                    <strong style="display: block; margin-bottom: 5px; color: #6c757d; font-size: 13px;">Số điện thoại</strong>
+                    <div id="detail-sdt"></div>
+                </div>
+                <div>
+                    <strong style="display: block; margin-bottom: 5px; color: #6c757d; font-size: 13px;">Trạng thái</strong>
+                    <div id="detail-trang-thai"></div>
+                </div>
+                <div>
+                    <strong style="display: block; margin-bottom: 5px; color: #6c757d; font-size: 13px;">Ngày đăng ký</strong>
+                    <div id="detail-ngay-tao"></div>
+                </div>
+                <div>
+                    <strong style="display: block; margin-bottom: 5px; color: #6c757d; font-size: 13px;">Loại da</strong>
+                    <div id="detail-loai-da"></div>
+                </div>
+                <div style="grid-column: 1 / -1;">
+                    <strong style="display: block; margin-bottom: 5px; color: #6c757d; font-size: 13px;">Địa chỉ giao hàng</strong>
+                    <div id="detail-dia-chi"></div>
+                </div>
+            </div>
+            
+            <div style="padding-top: 20px; border-top: 1px solid #eee;">
+                <h4 style="margin: 0 0 15px 0; font-size: 15px;">Thống kê mua hàng</h4>
+                <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px;">
+                    <div style="padding: 12px; background: #f8f9fa; border-radius: 8px; text-align: center;">
+                        <span style="font-size: 12px; color: #6c757d; display: block; margin-bottom: 5px;">Tổng đơn</span>
+                        <div id="detail-tong-don" style="font-size: 18px; font-weight: bold;">0</div>
+                    </div>
+                    <div style="padding: 12px; background: #f8f9fa; border-radius: 8px; text-align: center;">
+                        <span style="font-size: 12px; color: #6c757d; display: block; margin-bottom: 5px;">Đơn hủy</span>
+                        <div id="detail-don-huy" style="font-size: 18px; font-weight: bold;">0</div>
+                    </div>
+                    <div style="padding: 12px; background: #f8f9fa; border-radius: 8px; text-align: center;">
+                        <span style="font-size: 12px; color: #6c757d; display: block; margin-bottom: 5px;">Đã chi</span>
+                        <div id="detail-da-chi" style="font-size: 18px; font-weight: bold; color: var(--primary-color);">0đ</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="modal-footer" style="padding-top: 0; border-top: none;">
+            <button type="button" class="btn btn-secondary" onclick="closeDetailModal()">Đóng</button>
+        </div>
+    </div>
+</div>
+
 <!-- Modal Overlay -->
 <div class="modal-overlay" id="modal-overlay" style="display: none;"></div>
 
@@ -275,6 +342,9 @@ function renderTable(users) {
                 <td><span class="status-badge ${statusClass}">${statusLabel}</span></td>
                 <td>
                     <div class="action-btns">
+                        <button class="icon-action-btn" style="color: #0dcaf0;" title="Xem chi tiết" onclick="viewUser(${user.ma_nguoi_dung})">
+                            <i data-lucide="eye" class="icon-xs"></i>
+                        </button>
                         ${lockAction}
                         <button class="icon-action-btn" title="Sửa" onclick="editUser(${user.ma_nguoi_dung})">
                             <i data-lucide="pencil" class="icon-xs"></i>
@@ -356,6 +426,63 @@ function closeModal() {
 // Clear errors
 function clearErrors() {
     document.querySelectorAll('.error-message').forEach(el => el.textContent = '');
+}
+
+// View user detail
+async function viewUser(id) {
+    try {
+        const response = await fetch(`${API_BASE_URL}/users/${id}`);
+        const result = await response.json();
+        
+        if (result.success || result.status === 'success') {
+            const user = result.data;
+            const initials = user.ho_ten.split(' ').map(n => n.charAt(0).toUpperCase()).join('');
+            document.getElementById('detail-avatar').textContent = initials;
+            document.getElementById('detail-ho-ten').textContent = user.ho_ten;
+            document.getElementById('detail-email').textContent = user.email;
+            document.getElementById('detail-sdt').textContent = user.so_dien_thoai || 'Chưa cập nhật';
+            
+            const roleLabel = user.vai_tro === 'quan_tri_vien' ? 'Admin' : 'Khách hàng';
+            const roleBadgeClass = user.vai_tro === 'quan_tri_vien' ? 'role-badge--admin' : 'role-badge--customer';
+            const roleEl = document.getElementById('detail-vai-tro');
+            roleEl.textContent = roleLabel;
+            roleEl.className = `role-badge ${roleBadgeClass}`;
+            
+            const statusLabel = user.trang_thai === 'hoat_dong' ? 'Hoạt động' : 'Bị khóa';
+            const statusClass = user.trang_thai === 'hoat_dong' ? 'status-badge--active' : 'status-badge--inactive';
+            document.getElementById('detail-trang-thai').innerHTML = `<span class="status-badge ${statusClass}">${statusLabel}</span>`;
+            
+            const createdAt = user.tao_luc || user.created_at || user.ngay_tao;
+            document.getElementById('detail-ngay-tao').textContent = createdAt ? new Date(createdAt).toLocaleDateString('vi-VN') : 'Chưa rõ';
+            
+            const skinTypes = {
+                'da_dau': 'Da dầu',
+                'da_kho': 'Da khô',
+                'da_hon_hop': 'Da hỗn hợp',
+                'da_nhay_cam': 'Da nhạy cảm',
+                'da_thuong': 'Da thường'
+            };
+            document.getElementById('detail-loai-da').textContent = user.loai_da ? (skinTypes[user.loai_da] || user.loai_da) : 'Chưa cập nhật';
+            document.getElementById('detail-dia-chi').textContent = user.dia_chi || 'Chưa cập nhật';
+            
+            document.getElementById('detail-tong-don').textContent = user.tong_don || 0;
+            document.getElementById('detail-don-huy').textContent = user.so_don_huy || 0;
+            document.getElementById('detail-da-chi').textContent = new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(user.tong_chi || 0);
+            
+            document.getElementById('modal-user-detail').style.display = 'block';
+            document.getElementById('modal-overlay').style.display = 'block';
+        } else {
+            showAlert('Không thể lấy thông tin chi tiết', 'error');
+        }
+    } catch (error) {
+        console.error('Error viewing user:', error);
+        showAlert('Lỗi khi tải dữ liệu người dùng', 'error');
+    }
+}
+
+function closeDetailModal() {
+    document.getElementById('modal-user-detail').style.display = 'none';
+    document.getElementById('modal-overlay').style.display = 'none';
 }
 
 // Edit user
