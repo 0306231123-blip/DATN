@@ -6,8 +6,8 @@
 @endsection
 
 @section('content')
-<section class="user-section" style="position: relative;">
-    <div class="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 py-8">
+<section class="user-section" style="position: relative; padding-top: 0.5rem;">
+    <div class="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 pt-0 pb-8">
     <div class="mb-4 max-w-[64rem] mx-auto">
         <a href="/user/cart" class="inline-flex items-center text-gray-500 hover:text-pink-600 font-bold transition">
             <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
@@ -107,10 +107,11 @@
                             </div>
                         </div>
                     </label>
-                    <label class="cursor-pointer">
-                        <input type="radio" name="payment" value="cod" class="peer hidden">
-                        <div class="border border-gray-200 px-4 py-2 text-sm text-gray-800 peer-checked:border-pink-500 peer-checked:text-pink-500 hover:border-pink-500 transition relative bg-white">
+                    <label class="cursor-pointer" id="cod-wrapper">
+                        <input type="radio" name="payment" value="cod" id="cod-radio" class="peer hidden">
+                        <div id="cod-box" class="border border-gray-200 px-4 py-2 text-sm text-gray-800 peer-checked:border-pink-500 peer-checked:text-pink-500 hover:border-pink-500 transition relative bg-white flex items-center gap-1 group">
                             Thanh toán khi nhận hàng
+                            <span id="cod-warning" class="hidden text-white bg-red-500 rounded-full w-4 h-4 flex items-center justify-center text-[10px] font-bold cursor-help" title="Đơn hàng có giá trị trên 5.000.000đ nên phải thanh toán bằng Banking hoặc Momo">!</span>
                             <div class="hidden peer-checked:block absolute bottom-0 right-0 w-4 h-4 overflow-hidden">
                                 <div class="w-8 h-8 bg-pink-500 transform rotate-45 translate-x-4 translate-y-4"></div>
                                 <svg class="absolute bottom-0 right-0 text-white w-2.5 h-2.5 mb-0.5 mr-0.5" fill="currentColor" viewBox="0 0 20 20"><path d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"/></svg>
@@ -740,6 +741,37 @@
             let final = baseTotal + currentShippingFee - currentDiscount;
             if (final < 0) final = 0; // Không để âm tiền
             finalPriceEl.textContent = final.toLocaleString() + ' đ';
+
+            // Logic giới hạn thanh toán khi nhận hàng cho đơn > 5 triệu
+            const COD_LIMIT = 5000000;
+            const codWrapper = document.getElementById('cod-wrapper');
+            const codRadio = document.getElementById('cod-radio');
+            const codBox = document.getElementById('cod-box');
+            const codWarning = document.getElementById('cod-warning');
+
+            if (codWrapper && codRadio && codBox && codWarning) {
+                if (final >= COD_LIMIT) {
+                    codWrapper.classList.remove('cursor-pointer');
+                    codWrapper.classList.add('cursor-not-allowed');
+                    codRadio.disabled = true;
+                    codBox.classList.add('opacity-50', 'bg-gray-100');
+                    codBox.classList.remove('hover:border-pink-500');
+                    codWarning.classList.remove('hidden');
+
+                    // Nếu đang chọn COD thì chuyển sang Banking
+                    if (codRadio.checked) {
+                        const bankingRadio = document.querySelector('input[name="payment"][value="banking"]');
+                        if (bankingRadio) bankingRadio.checked = true;
+                    }
+                } else {
+                    codWrapper.classList.add('cursor-pointer');
+                    codWrapper.classList.remove('cursor-not-allowed');
+                    codRadio.disabled = false;
+                    codBox.classList.remove('opacity-50', 'bg-gray-100');
+                    codBox.classList.add('hover:border-pink-500');
+                    codWarning.classList.add('hidden');
+                }
+            }
         }
 
         loadCartTotal(); // Khởi chạy lúc mở trang

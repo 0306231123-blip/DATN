@@ -53,6 +53,7 @@ class AuthController {
         email,
         mat_khau: hashedPassword,
         so_dien_thoai: req.body.so_dien_thoai || null,
+        loai_da: req.body.loai_da || null,
         vai_tro: 'khach_hang',
         trang_thai: 'hoat_dong',
       });

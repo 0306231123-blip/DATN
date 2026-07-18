@@ -28,7 +28,7 @@
 
             <header class="bg-gradient-to-b from-pink-500 to-pink-600 pt-2 pb-4 sticky top-0 z-50 shadow-md">
         <!-- Top Navbar (Navigation and Account) -->
-        <div class="max-w-[1200px] mx-auto px-4 flex justify-between items-center text-white/90 text-[13px] mb-3 hidden md:flex font-light">
+        <div class="max-w-[1200px] mx-auto px-4 flex justify-between items-center text-white/90 text-[16px] mb-3 hidden md:flex font-medium">
             <!-- Left: Main Nav Links -->
             <div class="flex items-center space-x-4">
                 <a href="/user/home" class="hover:text-white transition">Trang chủ</a>
@@ -327,7 +327,7 @@
             if (event) event.preventDefault();
             localStorage.removeItem('token');
             sessionStorage.clear();
-            window.location.replace('/login');
+            window.location.replace('/user/home');
         }
 
         // HÀM LOAD SỐ LƯỢNG GIỎ HÀNG
@@ -427,9 +427,6 @@
                         }
                         
                         let targetTab = 'orders';
-                        if (['giao_thanh_cong', 'hoan_thanh', 'da_huy', 'da_tra_hang', 'tu_choi_tra_hang', 'khong_du_dieu_kien'].includes(order.trang_thai_don)) {
-                            targetTab = 'history';
-                        }
 
                         const dateObj = new Date(order.ngay_cap_nhat || order.ngay_dat);
                         const timeStr = dateObj.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }) + ' - ' + dateObj.toLocaleDateString('vi-VN');

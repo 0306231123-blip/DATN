@@ -144,7 +144,7 @@
 @endsection
 
 @section('content')
-<section class="user-section">
+<section class="user-section" style="padding-top: 1.5rem;">
     <div class="profile-grid">
         
                         {{-- Sidebar --}}
@@ -166,10 +166,6 @@
             
             <button id="btn-orders" onclick="switchTab('orders')" class="tab-btn profile-tab-btn">
                 <span class="shopee-icon" style="color: #0055aa;">📝</span> Quản lý đơn hàng
-            </button>
-            
-            <button id="btn-history" onclick="switchTab('history')" class="tab-btn profile-tab-btn">
-                <span class="shopee-icon history">🕒</span> Lịch sử mua hàng
             </button>
         </div>
 
@@ -215,7 +211,7 @@
                                 <option value="da_kho">Da khô</option>
                                 <option value="da_hon_hop">Da hỗn hợp</option>
                                 <option value="da_nhay_cam">Da nhạy cảm</option>
-                                <option value="da_thuong">Da thường</option>
+                                <option value="tat_ca">Mọi loại da (Da thường)</option>
                             </select>
                         </div>
                     </div>
@@ -315,7 +311,12 @@
                     <button class="profile-filter-btn" onclick="filterOrders('orders', 'da_xac_nhan', event)">Đã xác nhận</button>
                     <button class="profile-filter-btn" onclick="filterOrders('orders', 'dang_giao', event)">Đang giao hàng</button>
                     <button class="profile-filter-btn" onclick="filterOrders('orders', 'giao_thanh_cong', event)">Giao thành công</button>
+                    <button class="profile-filter-btn" onclick="filterOrders('orders', 'hoan_thanh', event)">Hoàn thành</button>
+                    <button class="profile-filter-btn" onclick="filterOrders('orders', 'da_huy', event)">Đã hủy</button>
                     <button class="profile-filter-btn" onclick="filterOrders('orders', 'dang_tra_hang', event)">Đang xử lý đổi/trả</button>
+                    <button class="profile-filter-btn" onclick="filterOrders('orders', 'da_tra_hang', event)">Đã trả hàng</button>
+                    <button class="profile-filter-btn" onclick="filterOrders('orders', 'tu_choi_tra_hang', event)">Từ chối trả hàng</button>
+                    <button class="profile-filter-btn" onclick="filterOrders('orders', 'khong_du_dieu_kien', event)">Không đủ điều kiện</button>
                 </div>
 
                 <div class="profile-search-bar" id="orders-search-bar" style="display: none; padding-left: 30px; padding-right: 30px;">
@@ -334,36 +335,7 @@
                 </div>
             </div>
 
-            {{-- Tab: Lịch sử mua hàng --}}
-            <div id="tab-history" class="tab-content profile-tab">
-                <div class="shopee-header">
-                    <h2 class="shopee-header__title">Lịch sử mua hàng</h2>
-                    <p class="shopee-header__subtitle">Các đơn hàng đã hoàn tất hoặc bị hủy</p>
-                </div>
-                <div class="profile-order-filters" id="history-filters" style="display: none; padding-top: 15px; padding-left: 30px; padding-right: 30px;">
-                    <button class="profile-filter-btn profile-filter-btn--active" onclick="filterOrders('history', 'all', event)">Tất cả</button>
-                    <button class="profile-filter-btn" onclick="filterOrders('history', 'hoan_thanh', event)">Hoàn thành</button>
-                    <button class="profile-filter-btn" onclick="filterOrders('history', 'da_huy', event)">Đã hủy</button>
-                    <button class="profile-filter-btn" onclick="filterOrders('history', 'da_tra_hang', event)">Đã trả hàng</button>
-                    <button class="profile-filter-btn" onclick="filterOrders('history', 'tu_choi_tra_hang', event)">Từ chối trả hàng</button>
-                    <button class="profile-filter-btn" onclick="filterOrders('history', 'khong_du_dieu_kien', event)">Không đủ điều kiện</button>
-                </div>
 
-                <div class="profile-search-bar" id="history-search-bar" style="display: none; padding-left: 30px; padding-right: 30px;">
-                    <div class="profile-search-group">
-                        <input type="text" id="search-history-input" class="profile-form__input" style="width: 100%;" placeholder="Tìm kiếm theo ID đơn hoặc tên sản phẩm..." onkeypress="if(event.key === 'Enter') applyFilters('history')">
-                    </div>
-                    <div class="profile-search-group profile-search-group--date">
-                        Từ <input type="date" id="date-from-history" class="profile-form__input" max="{{ date('Y-m-d') }}" onchange="document.getElementById('date-to-history').min = this.value; document.getElementById('date-to-history').max = '{{ date('Y-m-d') }}'">
-                        Đến <input type="date" id="date-to-history" class="profile-form__input" max="{{ date('Y-m-d') }}">
-                        <button class="profile-form__save-btn" style="padding: 0.5rem 1rem; margin-left: 0.5rem; width: auto;" onclick="applyFilters('history')">Lọc</button>
-                    </div>
-                </div>
-
-                <div id="history-container" class="profile-orders-empty" style="margin: 0 30px 30px 30px;">
-                    <p>Bạn chưa có lịch sử mua hàng nào.</p>
-                </div>
-            </div>
 
         </div>
     </div>
@@ -669,7 +641,7 @@
     function logout() {
         localStorage.removeItem('token');
         localStorage.removeItem('user');
-        window.location.href = '/login';
+        window.location.href = '/user/home';
     }
 
     // 5. TẢI VÀ HIỂN THỊ ĐƠN HÀNG
@@ -686,10 +658,8 @@
 
             if (result.success && result.data.length > 0) {
                 let htmlOrders = '<div class="space-y-4 text-left">';
-                let htmlHistory = '<div class="space-y-4 text-left">';
-                let hasOrders = false;
-                let hasHistory = false;
-                window.ordersMap = {};
+                                let hasOrders = false;
+                                window.ordersMap = {};
                 
                 result.data.forEach((order, index) => {
                     window.ordersMap[order.ma_don_hang] = order;
@@ -740,152 +710,118 @@
                     }
                     productsHtml += '</div>';
 
-                    // TAB LỊCH SỬ
-                    if(['da_huy', 'hoan_thanh', 'da_tra_hang', 'tu_choi_tra_hang', 'khong_du_dieu_kien'].includes(order.trang_thai_don)) {
-                        hasHistory = true;
-                        let statusColor, statusText, actionBtnHtml = '';
+                    hasOrders = true;
+                    let statusColor = '', statusText = '', actionBtnHtml = '';
 
-                        if (order.trang_thai_don === 'da_huy') {
-                            statusColor = 'bg-red-100 text-red-700';
-                            statusText = 'Đã hủy';
-                            if (order.ly_do_huy_don) {
-                                actionBtnHtml = `<div class="mt-4 text-sm text-left text-red-600 bg-red-50 p-3 rounded-lg w-full border border-red-100"><b>Lý do hủy:</b> ${order.ly_do_huy_don}</div>`;
-                            }
-                        } 
-                        else if (order.trang_thai_don === 'hoan_thanh') {
-                            statusColor = 'bg-blue-100 text-blue-700 border border-blue-200';
-                            statusText = 'Hoàn thành';
-                            actionBtnHtml = `<div class="mt-4 text-center text-green-600 font-bold w-full bg-green-50 py-2 rounded-lg">Cảm ơn bạn đã mua sắm!</div>`;
+                    if (order.trang_thai_don === 'da_huy') {
+                        statusColor = 'bg-red-100 text-red-700';
+                        statusText = 'Đã hủy';
+                        if (order.ly_do_huy_don) {
+                            actionBtnHtml = `<div class="mt-4 text-sm text-left text-red-600 bg-red-50 p-3 rounded-lg w-full border border-red-100"><b>Lý do hủy:</b> ${order.ly_do_huy_don}</div>`;
                         }
-                        else if (order.trang_thai_don === 'da_tra_hang') {
-                            statusColor = 'bg-gray-100 text-gray-700 border border-gray-300';
-                            statusText = 'Đã hoàn tiền / Trả hàng';
-                            actionBtnHtml = `<div class="mt-4 text-center text-gray-600 font-bold w-full bg-gray-50 py-2 rounded-lg">Đơn hàng đã được trả thành công</div>`;
-                        }
-                        else if (order.trang_thai_don === 'tu_choi_tra_hang') {
-                            statusColor = 'bg-red-100 text-red-700 border border-red-300';
-                            statusText = 'Bị từ chối trả hàng';
-                            actionBtnHtml = `<div class="mt-4 text-center text-red-600 font-bold w-full bg-red-50 py-2 rounded-lg">Yêu cầu trả hàng của bạn bị từ chối vì sai quy định hoàn trả.</div>`;
-                        }
-                        else if (order.trang_thai_don === 'khong_du_dieu_kien') {
-                            statusColor = 'bg-gray-200 text-gray-500 border border-gray-300';
-                            statusText = 'Không đủ điều kiện';
-                            actionBtnHtml = `<div class="mt-4 text-center text-gray-500 font-bold w-full bg-gray-100 py-2 rounded-lg">Đơn hàng không đủ điều kiện xử lý.</div>`;
-                        }
-
-                        htmlHistory += `
-                            <div class="profile-order-card" id="order-${order.ma_don_hang}" data-status="${order.trang_thai_don}" data-date="${dateISO}" data-products="${productNames}" onclick="showOrderDetails('${order.ma_don_hang}', event)" style="cursor: pointer;">
-                                <div class="profile-order-card__header">
-                                    <div>
-                                        <p class="profile-order-card__id">Đơn hàng ${order.ma_don_hang}</p>
-                                        <p class="profile-order-card__date">Ngày đặt: ${date}</p>
-                                        <p class="profile-order-card__date mt-1 text-pink-600">Thanh toán: <span class="font-medium">${paymentMethodText}</span></p>
-                                    </div>
-                                    <span class="profile-order-card__status ${statusColor}">${statusText}</span>
-                                </div>
-                                ${productsHtml}
-                                <div class="profile-order-card__footer">
-                                    ${voucherHtml}
-                                    <div class="profile-order-card__total-row">
-                                        <span class="profile-order-card__total-label">Tổng thanh toán:</span>
-                                        <span class="profile-order-card__total-value">${tongThanhToan.toLocaleString()} VNĐ</span>
-                                    </div>
-                                    <div class="w-full">${actionBtnHtml}</div>
-                                </div>
-                            </div>`;
                     } 
-                    // TAB QUẢN LÝ ĐƠN HÀNG
-                    else {
-                        hasOrders = true;
-                        let activeStatusText = 'Chờ xác nhận';
-                        let activeStatusColor = 'bg-yellow-100 text-yellow-700';
-                        let actionBtnHtml = '';
-
-                        if (order.trang_thai_don === 'giao_thanh_cong') {
-                            const orderDateObj = new Date(order.ngay_cap_nhat || order.ngay_dat);
-                            const diffDays = Math.floor((new Date() - orderDateObj) / (1000 * 60 * 60 * 24));
-
-                            activeStatusColor = 'bg-green-100 text-green-700';
-                            activeStatusText = 'Giao thành công (Chờ xác nhận)';
-                            
-                            if (diffDays <= 3) {
-                                actionBtnHtml = `
-                                    <div class="flex space-x-3 mt-4 w-full">
-                                        <button onclick="updateOrderStatus('${order.ma_don_hang}', 'hoan_thanh')" class="w-1/2 bg-gray-800 hover:bg-black text-white font-bold py-2 px-4 rounded-lg transition text-sm shadow">
-                                            Đã nhận được hàng
-                                        </button>
-                                        <button onclick="updateOrderStatus('${order.ma_don_hang}', 'tra_hang_hoan_tien')" class="w-1/2 bg-white border-2 border-gray-200 hover:border-yellow-500 hover:text-yellow-600 text-gray-600 font-bold py-2 px-4 rounded-lg transition text-sm">
-                                            Yêu cầu Trả hàng
-                                        </button>
-                                    </div>
-                                    <p class="text-xs text-gray-400 mt-2 text-center w-full">Đơn hàng sẽ tự động hoàn thành sau 3 ngày (còn lại ${3 - diffDays} ngày)</p>
-                                `;
-                            } else {
-                                actionBtnHtml = `<div class="mt-4 text-center text-gray-500 font-medium w-full bg-gray-50 py-2 rounded-lg border border-gray-200">Đã hết hạn 3 ngày đổi trả. Hệ thống đang tự động hoàn thành.</div>`;
-                            }
-                        }
-                        else if (order.trang_thai_don === 'cho_xac_nhan' || order.trang_thai_don === 'da_xac_nhan') {
-                            const orderDateObj = new Date(order.ngay_dat);
-                            const diffMinutes = Math.floor((new Date() - orderDateObj) / (1000 * 60));
-                            
-                            if (order.trang_thai_don === 'da_xac_nhan') {
-                                activeStatusText = 'Đã xác nhận';
-                                activeStatusColor = 'bg-purple-100 text-purple-700';
-                            }
-                            
-                            if (diffMinutes <= 30) {
-                                actionBtnHtml = `
-                                    <button onclick="updateOrderStatus('${order.ma_don_hang}', 'da_huy', '${order.phuong_thuc_thanh_toan}')" class="mt-4 w-full bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded-lg transition text-sm shadow">
-                                        Hủy đơn hàng
-                                    </button>
-                                    <p class="text-xs text-center text-gray-400 mt-2">Bạn có thể hủy đơn trong vòng 30 phút (còn lại ${30 - diffMinutes} phút)</p>`;
-                            } else {
-                                if (order.trang_thai_don === 'cho_xac_nhan') {
-                                    actionBtnHtml = `<div class="mt-4 text-sm text-center text-gray-500 bg-gray-50 border border-gray-200 py-2 rounded-lg w-full">Đã quá 30 phút kể từ lúc đặt hàng, không thể tự hủy đơn.</div>`;
-                                }
-                            }
-                        } else if (order.trang_thai_don === 'dang_giao') {
-                            activeStatusText = 'Đang giao hàng';
-                            activeStatusColor = 'bg-blue-100 text-blue-700';
-                        } else if (order.trang_thai_don === 'dang_tra_hang' || order.trang_thai_don === 'tra_hang_hoan_tien') {
-                            activeStatusText = 'Đang xử lý trả hàng';
-                            activeStatusColor = 'bg-orange-100 text-orange-700 border border-orange-300'; 
-                            actionBtnHtml = `<div class="mt-4 text-sm text-left text-orange-600 bg-orange-50 p-3 rounded-lg w-full">Shop đang xử lý yêu cầu trả hàng của bạn.</div>`;
-                        }
-                        else if (order.trang_thai_don === 'tu_choi_tra_hang') {
-                            activeStatusText = 'Bị từ chối trả hàng';
-                            activeStatusColor = 'bg-red-100 text-red-700 border border-red-300';
-                            actionBtnHtml = `<div class="mt-4 text-sm text-left text-red-600 bg-red-50 p-3 rounded-lg w-full border border-red-200">Yêu cầu trả hàng của bạn đã bị từ chối vì lý do sai quy định hoàn trả.</div>`;
-                        }
-
-                        let filterDataStatus = order.trang_thai_don;
-                        if (filterDataStatus === 'dang_tra_hang' || filterDataStatus === 'da_tra_hang' || filterDataStatus === 'tu_choi_tra_hang' || filterDataStatus === 'tra_hang_hoan_tien') filterDataStatus = 'dang_tra_hang';
-
-                        htmlOrders += `
-                            <div class="profile-order-card" id="order-${order.ma_don_hang}" data-status="${filterDataStatus}" data-date="${dateISO}" data-products="${productNames}" onclick="showOrderDetails('${order.ma_don_hang}', event)" style="cursor: pointer;">
-                                <div class="profile-order-card__header">
-                                    <div>
-                                        <p class="profile-order-card__id">Đơn hàng ${order.ma_don_hang}</p>
-                                        <p class="profile-order-card__date">Ngày đặt: ${date}</p>
-                                        <p class="profile-order-card__date mt-1 text-pink-600">Thanh toán: <span class="font-medium">${paymentMethodText}</span></p>
-                                    </div>
-                                    <span class="profile-order-card__status ${activeStatusColor}">${activeStatusText}</span>
-                                </div>
-                                ${productsHtml}
-                                <div class="profile-order-card__footer">
-                                    ${voucherHtml}
-                                    <div class="profile-order-card__total-row">
-                                        <span class="profile-order-card__total-label">Tổng thanh toán:</span>
-                                        <span class="profile-order-card__total-value">${tongThanhToan.toLocaleString()} VNĐ</span>
-                                    </div>
-                                    <div class="w-full">${actionBtnHtml}</div>
-                                </div>
-                            </div>`;
+                    else if (order.trang_thai_don === 'hoan_thanh') {
+                        statusColor = 'bg-blue-100 text-blue-700 border border-blue-200';
+                        statusText = 'Hoàn thành';
+                        actionBtnHtml = `<div class="mt-4 text-center text-green-600 font-bold w-full bg-green-50 py-2 rounded-lg">Cảm ơn bạn đã mua sắm!</div>`;
                     }
+                    else if (order.trang_thai_don === 'da_tra_hang') {
+                        statusColor = 'bg-gray-100 text-gray-700 border border-gray-300';
+                        statusText = 'Đã hoàn tiền / Trả hàng';
+                        actionBtnHtml = `<div class="mt-4 text-center text-gray-600 font-bold w-full bg-gray-50 py-2 rounded-lg">Đơn hàng đã được trả thành công</div>`;
+                    }
+                    else if (order.trang_thai_don === 'tu_choi_tra_hang') {
+                        statusColor = 'bg-red-100 text-red-700 border border-red-300';
+                        statusText = 'Bị từ chối trả hàng';
+                        actionBtnHtml = `<div class="mt-4 text-sm text-left text-red-600 bg-red-50 p-3 rounded-lg w-full border border-red-200">Yêu cầu trả hàng của bạn bị từ chối vì sai quy định hoàn trả.</div>`;
+                    }
+                    else if (order.trang_thai_don === 'khong_du_dieu_kien') {
+                        statusColor = 'bg-gray-200 text-gray-500 border border-gray-300';
+                        statusText = 'Không đủ điều kiện';
+                        actionBtnHtml = `<div class="mt-4 text-center text-gray-500 font-bold w-full bg-gray-100 py-2 rounded-lg">Đơn hàng không đủ điều kiện xử lý.</div>`;
+                    }
+                    else if (order.trang_thai_don === 'giao_thanh_cong') {
+                        const orderDateObj = new Date(order.ngay_cap_nhat || order.ngay_dat);
+                        const diffDays = Math.floor((new Date() - orderDateObj) / (1000 * 60 * 60 * 24));
+
+                        statusColor = 'bg-green-100 text-green-700';
+                        statusText = 'Giao thành công (Chờ xác nhận)';
+                        
+                        if (diffDays <= 3) {
+                            actionBtnHtml = `
+                                <div class="flex space-x-3 mt-4 w-full">
+                                    <button onclick="updateOrderStatus('${order.ma_don_hang}', 'hoan_thanh')" class="w-1/2 bg-gray-800 hover:bg-black text-white font-bold py-2 px-4 rounded-lg transition text-sm shadow">
+                                        Đã nhận được hàng
+                                    </button>
+                                    <button onclick="updateOrderStatus('${order.ma_don_hang}', 'tra_hang_hoan_tien')" class="w-1/2 bg-white border-2 border-gray-200 hover:border-yellow-500 hover:text-yellow-600 text-gray-600 font-bold py-2 px-4 rounded-lg transition text-sm">
+                                        Yêu cầu Trả hàng
+                                    </button>
+                                </div>
+                                <p class="text-xs text-gray-400 mt-2 text-center w-full">Đơn hàng sẽ tự động hoàn thành sau 3 ngày (còn lại ${3 - diffDays} ngày)</p>
+                            `;
+                        } else {
+                            actionBtnHtml = `<div class="mt-4 text-center text-gray-500 font-medium w-full bg-gray-50 py-2 rounded-lg border border-gray-200">Đã hết hạn 3 ngày đổi trả. Hệ thống đang tự động hoàn thành.</div>`;
+                        }
+                    }
+                    else if (order.trang_thai_don === 'cho_xac_nhan' || order.trang_thai_don === 'da_xac_nhan') {
+                        const orderDateObj = new Date(order.ngay_dat);
+                        const diffMinutes = Math.floor((new Date() - orderDateObj) / (1000 * 60));
+                        
+                        if (order.trang_thai_don === 'da_xac_nhan') {
+                            statusText = 'Đã xác nhận';
+                            statusColor = 'bg-purple-100 text-purple-700';
+                        } else {
+                            statusText = 'Chờ xác nhận';
+                            statusColor = 'bg-yellow-100 text-yellow-700';
+                        }
+                        
+                        if (diffMinutes <= 30) {
+                            actionBtnHtml = `
+                                <button onclick="updateOrderStatus('${order.ma_don_hang}', 'da_huy', '${order.phuong_thuc_thanh_toan}')" class="mt-4 w-full bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded-lg transition text-sm shadow">
+                                    Hủy đơn hàng
+                                </button>
+                                <p class="text-xs text-center text-gray-400 mt-2">Bạn có thể hủy đơn trong vòng 30 phút (còn lại ${30 - diffMinutes} phút)</p>`;
+                        } else {
+                            if (order.trang_thai_don === 'cho_xac_nhan') {
+                                actionBtnHtml = `<div class="mt-4 text-sm text-center text-gray-500 bg-gray-50 border border-gray-200 py-2 rounded-lg w-full">Đã quá 30 phút kể từ lúc đặt hàng, không thể tự hủy đơn.</div>`;
+                            }
+                        }
+                    } else if (order.trang_thai_don === 'dang_giao') {
+                        statusText = 'Đang giao hàng';
+                        statusColor = 'bg-blue-100 text-blue-700';
+                    } else if (order.trang_thai_don === 'dang_tra_hang' || order.trang_thai_don === 'tra_hang_hoan_tien') {
+                        statusText = 'Đang xử lý đổi/trả';
+                        statusColor = 'bg-orange-100 text-orange-700 border border-orange-300'; 
+                        actionBtnHtml = `<div class="mt-4 text-sm text-left text-orange-600 bg-orange-50 p-3 rounded-lg w-full">Shop đang xử lý yêu cầu đổi/trả của bạn.</div>`;
+                    }
+
+                    let filterDataStatus = order.trang_thai_don;
+                    if (filterDataStatus === 'tra_hang_hoan_tien') filterDataStatus = 'dang_tra_hang';
+
+                    htmlOrders += `
+                        <div class="profile-order-card" id="order-${order.ma_don_hang}" data-status="${filterDataStatus}" data-date="${dateISO}" data-products="${productNames}" onclick="showOrderDetails('${order.ma_don_hang}', event)" style="cursor: pointer;">
+                            <div class="profile-order-card__header">
+                                <div>
+                                    <p class="profile-order-card__id">Đơn hàng ${order.ma_don_hang}</p>
+                                    <p class="profile-order-card__date">Ngày đặt: ${date}</p>
+                                    <p class="profile-order-card__date mt-1 text-pink-600">Thanh toán: <span class="font-medium">${paymentMethodText}</span></p>
+                                </div>
+                                <span class="profile-order-card__status ${statusColor}">${statusText}</span>
+                            </div>
+                            ${productsHtml}
+                            <div class="profile-order-card__footer">
+                                ${voucherHtml}
+                                <div class="profile-order-card__total-row">
+                                    <span class="profile-order-card__total-label">Tổng thanh toán:</span>
+                                    <span class="profile-order-card__total-value">${tongThanhToan.toLocaleString()} VNĐ</span>
+                                </div>
+                                <div class="w-full">${actionBtnHtml}</div>
+                            </div>
+                        </div>`;
                 });
                 
                 htmlOrders += '</div>';
-                htmlHistory += '</div>';
+
                 
                 if (hasOrders) {
                     document.getElementById('orders-filters').style.display = 'flex';
@@ -897,15 +833,7 @@
                     ordersContainer.classList.add('profile-orders-empty');
                 }
                 
-                if (hasHistory) {
-                    document.getElementById('history-filters').style.display = 'flex';
-                    document.getElementById('history-search-bar').style.display = 'flex';
-                    historyContainer.innerHTML = htmlHistory;
-                    historyContainer.classList.remove('profile-orders-empty');
-                } else {
-                    historyContainer.innerHTML = '<p style="text-align:center;color:#999;padding:50px 0;">Bạn chưa có lịch sử mua hàng nào.</p>';
-                    historyContainer.classList.add('profile-orders-empty');
-                }
+
                 
                 // Cuộn đến đơn hàng nếu có hash trên URL
                 if (window.location.hash) {
@@ -920,7 +848,6 @@
                 }
             } else {
                 ordersContainer.innerHTML = '<p style="text-align:center;color:#999;padding:50px 0;">Bạn chưa có đơn hàng nào đang xử lý.</p>';
-                historyContainer.innerHTML = '<p style="text-align:center;color:#999;padding:50px 0;">Bạn chưa có lịch sử mua hàng nào.</p>';
             }
         } catch (error) {
             console.error('Lỗi tải đơn hàng:', error);

@@ -77,6 +77,29 @@
                 <span id="confirm-error" class="text-red-500 text-xs mt-1 ml-3 hidden"></span>
             </div>
 
+            <!-- Loại da -->
+            <div class="flex flex-col mb-8">
+                <div class="flex items-center justify-between mb-2 ml-3">
+                    <label for="loai_da" class="text-sm text-gray-800 font-bold text-left">
+                        Loại da
+                    </label>
+                    <button type="button" onclick="openSkinTypeModal()" class="text-xs text-pink-500 hover:text-pink-600 font-semibold flex items-center pr-3">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-4 h-4 mr-1">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M11.25 11.25l.041-.02a.75.75 0 011.063.852l-.708 2.836a.75.75 0 001.063.853l.041-.021M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9-3.75h.008v.008H12V8.25z" />
+                        </svg>
+                        Cách phân biệt
+                    </button>
+                </div>
+                <select id="loai_da" name="loai_da" class="w-full px-4 py-2 rounded-full border-none focus:outline-none focus:ring-2 focus:ring-pink-400 shadow-inner bg-white text-gray-700">
+                    <option value="">-- Chưa xác định --</option>
+                    <option value="da_dau">Da dầu</option>
+                    <option value="da_kho">Da khô</option>
+                    <option value="da_hon_hop">Da hỗn hợp</option>
+                    <option value="da_nhay_cam">Da nhạy cảm</option>
+                    <option value="tat_ca">Mọi loại da</option>
+                </select>
+            </div>
+
             <!-- Nút Xác nhận -->
             <div class="flex justify-center mb-6">
                 <button type="submit" id="register-btn" class="bg-white hover:bg-gray-100 text-gray-800 font-bold py-2 px-10 rounded-full shadow-md transition duration-200">
@@ -94,8 +117,55 @@
     </div>
 </div>
 
+<!-- Modal Phân biệt Loại da -->
+<div id="skin-type-modal" class="fixed inset-0 z-50 hidden flex items-center justify-center bg-black bg-opacity-50 transition-opacity">
+    <div class="bg-white rounded-2xl w-11/12 max-w-lg p-6 shadow-2xl relative">
+        <button onclick="closeSkinTypeModal()" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600 focus:outline-none">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-6 h-6">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+        </button>
+        <h3 class="text-xl font-bold text-pink-500 mb-4 border-b border-pink-100 pb-2">Dấu hiệu nhận biết các loại da</h3>
+        <div class="space-y-4 max-h-[60vh] overflow-y-auto text-sm text-gray-700 custom-scrollbar pr-2">
+            <div>
+                <strong class="text-gray-900 block mb-1">🛢️ Da dầu (Nhờn)</strong>
+                Bề mặt da thường xuyên bóng nhờn, đặc biệt là vùng chữ T (trán, mũi, cằm). Lỗ chân lông to, dễ nổi mụn trứng cá, mụn đầu đen.
+            </div>
+            <div>
+                <strong class="text-gray-900 block mb-1">🌵 Da khô</strong>
+                Bề mặt da nhám, khô ráp, đôi khi có vảy nhỏ bong tróc. Sau khi rửa mặt thường có cảm giác căng rát. Da ít nổi mụn nhưng dễ xuất hiện nếp nhăn, lão hóa sớm.
+            </div>
+            <div>
+                <strong class="text-gray-900 block mb-1">⚖️ Da hỗn hợp</strong>
+                Vùng chữ T (trán, mũi, cằm) bị bóng nhờn, lỗ chân lông to, trong khi vùng má lại bình thường hoặc khô. Đây là loại da phổ biến nhất ở Việt Nam.
+            </div>
+            <div>
+                <strong class="text-gray-900 block mb-1">🌸 Da nhạy cảm</strong>
+                Da rất mỏng, dễ nhìn thấy các mạch máu li ti. Dễ bị ửng đỏ, ngứa rát, châm chích khi thay đổi thời tiết, tiếp xúc bụi bẩn hoặc dùng mỹ phẩm lạ.
+            </div>
+            <div>
+                <strong class="text-gray-900 block mb-1">✨ Da thường (Mọi loại da)</strong>
+                Loại da lý tưởng nhất: Cân bằng tốt, không quá nhờn cũng không quá khô, lỗ chân lông nhỏ, da mịn màng, ít khuyết điểm.
+            </div>
+        </div>
+        <div class="mt-6 flex justify-end">
+            <button onclick="closeSkinTypeModal()" class="bg-pink-500 hover:bg-pink-600 text-white font-bold py-2 px-6 rounded-full shadow transition-colors">
+                Đã hiểu
+            </button>
+        </div>
+    </div>
+</div>
+
 <script>
     const API_URL = 'http://localhost:3000/api';
+
+    function openSkinTypeModal() {
+        document.getElementById('skin-type-modal').classList.remove('hidden');
+    }
+
+    function closeSkinTypeModal() {
+        document.getElementById('skin-type-modal').classList.add('hidden');
+    }
 
     function togglePassword(inputId) {
         const input = document.getElementById(inputId);
@@ -131,6 +201,7 @@
         const email = document.getElementById('email').value.trim();
         const password = document.getElementById('password').value;
         const passwordConfirm = document.getElementById('password_confirmation').value;
+        const loai_da = document.getElementById('loai_da').value;
         const btn = document.getElementById('register-btn');
 
         // Client-side validation
@@ -165,7 +236,7 @@
             const response = await fetch(`${API_URL}/auth/register`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ ho_ten, email, password }),
+                body: JSON.stringify({ ho_ten, email, password, loai_da }),
             });
 
             const data = await response.json();
