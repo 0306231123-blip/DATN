@@ -816,7 +816,10 @@ function renderTable() {
 async function loadStats() {
     try {
         const settings = window.getGlobalSettings ? window.getGlobalSettings() : { lowStockThreshold: 20 };
-        const response = await fetch(`${API_BASE_URL}/products/stats?low_stock_threshold=${settings.lowStockThreshold}`);
+        const token = localStorage.getItem('admin_token');
+        const response = await fetch(`${API_BASE_URL}/products/stats?low_stock_threshold=${settings.lowStockThreshold}`, {
+            headers: token ? { 'Authorization': `Bearer ${token}` } : {}
+        });
         const result = await response.json();
         if (result.status === 'success' || result.success) {
             if(document.getElementById('stat-total')) document.getElementById('stat-total').textContent = result.data.total;
@@ -1415,7 +1418,10 @@ async function loadInventory(page = 1) {
     tbody.innerHTML = '<tr><td colspan="4" style="text-align: center;">Đang tải...</td></tr>';
     try {
         const settings = window.getGlobalSettings ? window.getGlobalSettings() : { perPage: 15 };
-        const response = await fetch(`${API_BASE_URL}/products?per_page=${settings.perPage}&page=${page}&is_inventory=true`);
+        const token = localStorage.getItem('admin_token');
+        const response = await fetch(`${API_BASE_URL}/products?per_page=${settings.perPage}&page=${page}&is_inventory=true`, {
+            headers: token ? { 'Authorization': `Bearer ${token}` } : {}
+        });
         const result = await response.json();
         if (result.status === 'success' || result.success) {
             let html = '';
@@ -1735,6 +1741,11 @@ function openVoucherModal() {
     document.getElementById('voucher-id').value = '';
     document.getElementById('voucher-modal-title').textContent = 'Thêm Khuyến Mãi';
     
+    // Set minimum start date to today
+    const today = new Date();
+    const minDate = today.toISOString().slice(0, 16);
+    document.getElementById('voucher-start').min = minDate;
+    
     // Load options for products and categories
     const catSelect = document.getElementById('voucher-category');
     catSelect.innerHTML = '<option value="">-- Tất cả danh mục --</option>' + categories.map(c => `<option value="${c.ma_danh_muc}">${escapeHtml(c.ten_danh_muc)}</option>`).join('');
@@ -1892,21 +1903,27 @@ async function handleExcelUpload(event) {
             showAlert('Đang xử lý dữ liệu...', 'info');
 
             // Gọi API Bulk Create
+            const token = localStorage.getItem('admin_token');
             const res = await fetch(`${API_BASE_URL}/products/bulk`, {
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application/json'
+                    'Content-Type': 'application/json',
+                    ...(token ? { 'Authorization': `Bearer ${token}` } : {})
                 },
                 body: JSON.stringify({ products: jsonData })
             });
 
             const result = await res.json();
             
-            if (result.success || result.status === 'success') {
-                showAlert(`Đã nhập thành công ${result.data?.length || jsonData.length} sản phẩm từ Excel`, 'success');
+            if (res.ok && (result.success || result.status === 'success')) {
+                const created = result.data?.created || 0;
+                const updated = result.data?.updated || 0;
+                const total = created + updated;
+                showAlert(`Đã xử lý ${total} dòng từ Excel (${created} mới, ${updated} cập nhật)`, 'success');
                 loadProducts(document.getElementById('product-search-input')?.value || '', document.querySelector('.role-tab.active')?.getAttribute('data-status') || 'all');
             } else {
-                showAlert('Lỗi: ' + (result.message || 'Không thể nhập từ Excel'), 'error');
+                const details = result.errors && result.errors.length > 0 ? '\n' + result.errors.slice(0, 5).join('\n') : '';
+                showAlert('Lỗi: ' + (result.message || 'Không thể nhập từ Excel') + details, 'error');
             }
 
         } catch (err) {
@@ -1998,19 +2015,23 @@ if (formInvSingle) {
 
 async function deleteInventoryProduct(id) {
     const confirmDelete = await window.showCustomDialog({
-        title: 'Xóa sản phẩm',
-        message: 'Bạn chắc chắn muốn xóa sản phẩm này khỏi kho hàng?',
+        title: 'Xóa sản phẩm khỏi kho',
+        message: 'Bạn chắc chắn muốn xóa sản phẩm này khỏi hệ thống? Hành động này không thể hoàn tác!',
         isPrompt: false
     });
     if (!confirmDelete) return;
     try {
-        const response = await fetch(`${API_BASE_URL}/products/${id}`, { method: 'DELETE' });
+        const token = localStorage.getItem('admin_token');
+        const response = await fetch(`${API_BASE_URL}/products/${id}`, {
+            method: 'DELETE',
+            headers: token ? { 'Authorization': `Bearer ${token}` } : {}
+        });
         const result = await response.json();
         if (result.status === 'success' || result.success) {
-            showAlert('Xóa sản phẩm thành công', 'success');
+            showAlert('Đã xóa sản phẩm khỏi kho hàng', 'success');
             loadInventory(currentInventoryPage);
         } else {
-            showAlert(result.message, 'error');
+            showAlert(result.message || 'Lỗi khi xóa sản phẩm', 'error');
         }
     } catch (error) {
         showAlert('Lỗi khi xóa sản phẩm', 'error');

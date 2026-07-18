@@ -313,7 +313,7 @@ function renderTable(users) {
             cancelBadge = `<span class="text-secondary">${user.so_don_huy} đơn</span>`;
         }
 
-        const formattedSpent = new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(user.tong_chi || 0);
+        const formattedSpent = formatCurrency(user.tong_chi || 0);
 
         const lockAction = user.trang_thai === 'hoat_dong' 
             ? `<button class="icon-action-btn icon-action-btn--warning" title="Khóa tài khoản" onclick="toggleUserStatus(${user.ma_nguoi_dung}, 'bi_khoa')"><i data-lucide="lock" class="icon-xs"></i></button>`
@@ -384,6 +384,10 @@ function escapeHtml(text) {
     const div = document.createElement('div');
     div.textContent = text;
     return div.innerHTML;
+}
+
+function formatCurrency(amount) {
+    return new Intl.NumberFormat('vi-VN').format(amount) + ' VNĐ';
 }
 
 // Show modal
@@ -467,7 +471,7 @@ async function viewUser(id) {
             
             document.getElementById('detail-tong-don').textContent = user.tong_don || 0;
             document.getElementById('detail-don-huy').textContent = user.so_don_huy || 0;
-            document.getElementById('detail-da-chi').textContent = new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(user.tong_chi || 0);
+            document.getElementById('detail-da-chi').textContent = formatCurrency(user.tong_chi || 0);
             
             document.getElementById('modal-user-detail').style.display = 'block';
             document.getElementById('modal-overlay').style.display = 'block';

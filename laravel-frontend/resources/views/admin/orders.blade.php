@@ -272,6 +272,26 @@ function getActionButtons(order) {
 async function updateStatus(orderId, selectElement, oldStatus) {
     const newStatus = selectElement.value;
     
+    // Kiểm tra không cho phép chuyển trạng thái ngược lại
+    const statusFlow = ['cho_xac_nhan', 'da_xac_nhan', 'dang_giao', 'giao_thanh_cong', 'hoan_thanh'];
+    const oldStatusIndex = statusFlow.indexOf(oldStatus);
+    const newStatusIndex = statusFlow.indexOf(newStatus);
+    
+    if (oldStatusIndex !== -1 && newStatusIndex !== -1 && newStatusIndex < oldStatusIndex) {
+        showAlert('Không thể chuyển đơn hàng về trạng thái trước đó. Chỉ cho phép chuyển về phía trước.', 'error');
+        selectElement.value = oldStatus;
+        return;
+    }
+    
+    // Nếu đơn hàng đã bị hủy hoặc đã hoàn thành, không cho thay đổi trạng thái
+    if (oldStatus === 'da_huy' || oldStatus === 'hoan_thanh') {
+        if (newStatus !== oldStatus) {
+            showAlert(`Không thể thay đổi trạng thái của đơn hàng ${oldStatus === 'da_huy' ? 'đã hủy' : 'đã hoàn thành'}.`, 'error');
+            selectElement.value = oldStatus;
+            return;
+        }
+    }
+    
     // ĐÃ THÊM: LOGIC TỪ CHỐI TRẢ HÀNG CÓ CẢNH BÁO
     if (newStatus === 'tu_choi_tra_hang') {
         const confirmResult = await window.showCustomDialog({
@@ -611,7 +631,7 @@ function getStatusInfo(status) {
 }
 
 function formatCurrency(amount) {
-    return new Intl.NumberFormat('vi-VN').format(amount) + 'đ';
+    return new Intl.NumberFormat('vi-VN').format(amount) + ' VNĐ';
 }
 
 function formatDate(dateStr) {

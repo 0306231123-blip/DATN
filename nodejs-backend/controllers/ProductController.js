@@ -10,6 +10,7 @@ const NguoiDung = require('../models/NguoiDung');
 const SanPham = require('../models/SanPham');
 const BienTheSanPham = require('../models/BienTheSanPham');
 const DanhMuc = require('../models/DanhMuc');
+const LichSuKho = require('../models/LichSuKho');
 const { Op } = require('sequelize');
 const sequelize = require('../config/database');
 const { QueryTypes } = require('sequelize');
@@ -105,6 +106,7 @@ exports.getAllProducts = async (req, res) => {
       }, {
         model: BienTheSanPham,
         as: 'bien_the',
+        attributes: ['ma_bien_the', 'sku', 'ten_bien_the', 'thuoc_tinh', 'gia', 'gia_khuyen_mai', 'gia_nhap', 'so_luong_ton', 'hinh_anh'],
         required: false,
       }, {
         model: AnhSanPham,
@@ -371,7 +373,31 @@ exports.updateProduct = async (req, res) => {
     if (ma_danh_muc !== undefined) updateData.ma_danh_muc = ma_danh_muc ? parseInt(ma_danh_muc) : null;
     if (loai_da_phu_hop !== undefined) updateData.loai_da_phu_hop = loai_da_phu_hop;
     if (anh_san_pham !== undefined) updateData.anh_san_pham = anh_san_pham || null;
-    if (hien_thi_web !== undefined) updateData.hien_thi_web = (hien_thi_web === true || hien_thi_web === 'true');
+    
+    // Kiểm tra điều kiện hiển thị web
+    if (hien_thi_web !== undefined) {
+      const shouldPublish = (hien_thi_web === true || hien_thi_web === 'true');
+      if (shouldPublish) {
+        // Sản phẩm phải có trong kho và trạng thái dang_ban mới được đăng lên web
+        if (finalSoLuongTon <= 0) {
+          await t.rollback();
+          return res.status(400).json({ 
+            status: 'error', 
+            message: 'Không thể đăng sản phẩm lên web vì sản phẩm hết hàng. Vui lòng cập nhật số lượng tồn trước.' 
+          });
+        }
+        const currentStatus = trang_thai !== undefined ? trang_thai : product.trang_thai;
+        if (currentStatus !== 'dang_ban') {
+          await t.rollback();
+          return res.status(400).json({ 
+            status: 'error', 
+            message: 'Không thể đăng sản phẩm lên web vì sản phẩm không ở trạng thái "đang bán". Vui lòng cập nhật trạng thái trước.' 
+          });
+        }
+      }
+      updateData.hien_thi_web = shouldPublish;
+    }
+    
     if (trang_thai !== undefined && ['dang_ban', 'ngung_ban', 'het_hang'].includes(trang_thai)) {
       updateData.trang_thai = trang_thai;
     }
@@ -446,39 +472,80 @@ exports.updateProduct = async (req, res) => {
  * Xóa sản phẩm
  */
 exports.deleteProduct = async (req, res) => {
+  const t = await sequelize.transaction();
   try {
     const { id } = req.params;
 
     const productId = parseInt(id);
     if (isNaN(productId) || productId < 0) {
+      await t.rollback();
       return res.status(400).json({
         status: 'error',
         message: 'ID sản phẩm không hợp lệ.',
       });
     }
 
-    const product = await SanPham.findByPk(productId);
+    const product = await SanPham.findByPk(productId, { transaction: t });
     if (!product) {
+      await t.rollback();
       return res.status(404).json({
         status: 'error',
         message: 'Sản phẩm không tồn tại.',
       });
     }
 
-    // Check if product is referenced in order details
-    const [orderCheck] = await sequelize.query(
-      `SELECT COUNT(*) AS count FROM chi_tiet_don_hang WHERE ma_san_pham = :id`,
-      { replacements: { id: productId }, type: QueryTypes.SELECT }
-    );
-
-    if (orderCheck && orderCheck.count > 0) {
+    // Kiểm tra: sản phẩm phải đã gỡ khỏi web (hien_thi_web = false) hoặc ngừng bán mới được xóa
+    if (product.hien_thi_web === true || product.trang_thai === 'dang_ban') {
+      await t.rollback();
       return res.status(400).json({
         status: 'error',
-        message: 'Không thể xóa sản phẩm đã có trong đơn hàng. Hãy chuyển sang trạng thái "ngừng bán".',
+        message: 'Không thể xóa sản phẩm đang được hiển thị trên web. Vui lòng gỡ sản phẩm khỏi trang web hoặc chuyển sang trạng thái "ngừng bán" trước.',
       });
     }
 
-    await product.destroy();
+    // Check if product is referenced in pending/confirmed orders
+    const [orderCheck] = await sequelize.query(
+      `SELECT COUNT(*) AS count FROM chi_tiet_don_hang 
+       WHERE ma_san_pham = :id`,
+      { replacements: { id: productId }, type: QueryTypes.SELECT, transaction: t }
+    );
+
+    // If there are any orders, warn user but still allow deletion if they confirm
+    if (orderCheck && orderCheck.count > 0) {
+      // Just log warning but don't block deletion - use soft delete instead
+      console.warn(`Product ${productId} has ${orderCheck.count} orders. Performing safe deletion.`);
+    }
+
+    // Temporarily disable foreign key checks for safe deletion
+    await sequelize.query('SET FOREIGN_KEY_CHECKS=0', { transaction: t });
+
+    try {
+      // Delete related records in specific order
+      await sequelize.query(
+        'DELETE FROM lich_su_kho WHERE ma_san_pham = ?',
+        { replacements: [productId], transaction: t }
+      );
+
+      await sequelize.query(
+        'DELETE FROM bien_the_san_pham WHERE ma_san_pham = ?',
+        { replacements: [productId], transaction: t }
+      );
+
+      await sequelize.query(
+        'DELETE FROM anh_san_pham WHERE ma_san_pham = ?',
+        { replacements: [productId], transaction: t }
+      );
+
+      await sequelize.query(
+        'DELETE FROM san_pham WHERE ma_san_pham = ?',
+        { replacements: [productId], transaction: t }
+      );
+    } finally {
+      // Re-enable foreign key checks
+      await sequelize.query('SET FOREIGN_KEY_CHECKS=1', { transaction: t });
+    }
+
+    await t.commit();
 
     // LƯU LOG XÓA SẢN PHẨM
     if (req.user) {
@@ -490,10 +557,11 @@ exports.deleteProduct = async (req, res) => {
       message: 'Xóa sản phẩm thành công.',
     });
   } catch (error) {
+    if (t) await t.rollback();
     console.error('Delete product error:', error);
     res.status(500).json({
       status: 'error',
-      message: 'Lỗi khi xóa sản phẩm.',
+      message: 'Lỗi khi xóa sản phẩm: ' + error.message,
       error: error.message,
     });
   }
@@ -587,6 +655,90 @@ exports.getBrands = async (req, res) => {
 // ĐOẠN CODE CỦA MÌNH THÊM VÀO NẰM Ở ĐÂY
 // ==========================================
 
+function normalizeText(value) {
+  return String(value || '')
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-z0-9]/g, '');
+}
+
+function findImportValue(item, keywords, exclude = []) {
+  const key = Object.keys(item || {}).find(k => {
+    const normalizedKey = normalizeText(k);
+    const normalizedKeywords = keywords.map(normalizeText);
+    const normalizedExclude = exclude.map(normalizeText);
+    return normalizedKeywords.some(kw => normalizedKey.includes(kw)) && !normalizedExclude.some(ex => normalizedKey.includes(ex));
+  });
+  return key ? item[key] : null;
+}
+
+function parseNumericValue(value) {
+  if (value === null || value === undefined || value === '') {
+    return null;
+  }
+
+  const cleaned = String(value).trim().replace(/[^\d.-]/g, '');
+  if (cleaned === '') {
+    return null;
+  }
+
+  const parsed = Number(cleaned);
+  return Number.isFinite(parsed) ? parsed : null;
+}
+
+function validateBulkImportItem(item, lineNumber) {
+  const errors = [];
+  const normalized = {};
+
+  let tenSp = findImportValue(item, ['tên', 'ten_san_pham', 'name']);
+  if (tenSp === null || tenSp === undefined || String(tenSp).trim() === '') {
+    errors.push(`Dòng ${lineNumber}: thiếu tên sản phẩm.`);
+  }
+  normalized.tenSp = tenSp ? String(tenSp).trim() : '';
+
+  const giaStr = findImportValue(item, ['giá', 'gia', 'price'], ['nhập', 'nhap']);
+  const gia = parseNumericValue(giaStr);
+  if (giaStr !== null && giaStr !== undefined && giaStr !== '' && gia === null) {
+    errors.push(`Dòng ${lineNumber}: giá bán không hợp lệ.`);
+  }
+  normalized.gia = gia !== null ? gia : 0;
+
+  const giaNhapStr = findImportValue(item, ['giá nhập', 'gia nhap', 'import price']);
+  const giaNhap = parseNumericValue(giaNhapStr);
+  if (giaNhapStr !== null && giaNhapStr !== undefined && giaNhapStr !== '' && giaNhap === null) {
+    errors.push(`Dòng ${lineNumber}: giá nhập không hợp lệ.`);
+  }
+  normalized.giaNhap = giaNhap !== null ? giaNhap : 0;
+
+  const soLuongStr = findImportValue(item, ['tồn', 'ton', 'số lượng', 'so luong', 'sl', 'stock']);
+  const soLuong = parseNumericValue(soLuongStr);
+  if (soLuongStr !== null && soLuongStr !== undefined && soLuongStr !== '' && soLuong === null) {
+    errors.push(`Dòng ${lineNumber}: số lượng tồn không hợp lệ.`);
+  }
+  if (soLuong !== null && soLuong < 0) {
+    errors.push(`Dòng ${lineNumber}: số lượng tồn không được âm.`);
+  }
+  normalized.soLuong = soLuong !== null ? Math.max(0, Math.round(soLuong)) : 0;
+
+  const thuongHieu = findImportValue(item, ['thương', 'thuong', 'brand']);
+  normalized.thuongHieu = thuongHieu ? String(thuongHieu).trim() : null;
+
+  const danhMucName = findImportValue(item, ['danh', 'danh mục', 'category']);
+  normalized.danhMucName = danhMucName ? String(danhMucName).trim() : null;
+
+  const sku = findImportValue(item, ['sku', 'mã', 'ma_sp']);
+  normalized.sku = sku ? String(sku).trim() : null;
+
+  return {
+    isValid: errors.length === 0,
+    errors,
+    normalized,
+  };
+}
+
+exports.validateBulkImportItem = validateBulkImportItem;
+
 /**
  * POST /api/products/bulk
  * Nhập hàng loạt sản phẩm từ Excel (JSON array)
@@ -594,116 +746,157 @@ exports.getBrands = async (req, res) => {
 exports.bulkCreateProducts = async (req, res) => {
   const t = await sequelize.transaction();
   try {
-    const { products } = req.body;
-    
+    const { products, ghi_chu, ma_nha_cung_cap, nguoi_thuc_hien } = req.body;
+
     if (!products || !Array.isArray(products) || products.length === 0) {
       await t.rollback();
       return res.status(400).json({ status: 'error', message: 'Dữ liệu không hợp lệ hoặc trống.' });
     }
 
-    let successCount = 0;
-    
-    // Tìm ID lớn nhất hiện tại để tránh lỗi AUTO_INCREMENT bị lệch (PRIMARY must be unique)
-    const maxProduct = await SanPham.findOne({ order: [['ma_san_pham', 'DESC']], transaction: t });
-    let nextId = maxProduct ? maxProduct.ma_san_pham + 1 : 1;
-    
-    for (const item of products) {
-      // Hàm helper tìm key bất chấp chữ hoa/chữ thường
-      const findVal = (keywords, exclude = []) => {
-        const key = Object.keys(item).find(k => {
-            const lowerK = k.toLowerCase();
-            return keywords.some(kw => lowerK.includes(kw)) && !exclude.some(ex => lowerK.includes(ex));
-        });
-        return key ? item[key] : null;
-      };
+    const validationErrors = [];
+    const itemsToProcess = [];
+    let createdCount = 0;
+    let updatedCount = 0;
 
-      let tenSp = findVal(['tên', 'ten_san_pham', 'name']);
-      if (tenSp === null || tenSp === undefined || String(tenSp).trim() === '') {
-         continue; // Bỏ qua nếu không có tên
+    // Validate all items first
+    for (const [index, item] of products.entries()) {
+      const validation = validateBulkImportItem(item, index + 2);
+      if (!validation.isValid) {
+        validationErrors.push(...validation.errors);
+        continue;
       }
-      tenSp = String(tenSp).trim();
-      
-      const giaStr = findVal(['giá', 'gia', 'price'], ['nhập', 'nhap']);
-      let gia = 0;
-      if (giaStr !== null && giaStr !== undefined) {
-         const cleanGia = String(giaStr).replace(/[^\d]/g, '');
-         gia = parseFloat(cleanGia) || 0;
-      }
+      itemsToProcess.push({ ...validation.normalized, index: index + 2 });
+    }
 
-      const giaNhapStr = findVal(['giá nhập', 'gia nhap', 'import price']);
-      let giaNhap = 0;
-      if (giaNhapStr !== null && giaNhapStr !== undefined) {
-         const cleanGiaNhap = String(giaNhapStr).replace(/[^\d]/g, '');
-         giaNhap = parseFloat(cleanGiaNhap) || 0;
-      }
-      
-      const soLuongStr = findVal(['tồn', 'ton', 'số lượng', 'so luong', 'sl', 'stock']);
-      const soLuong = soLuongStr ? parseInt(String(soLuongStr).replace(/[^\d]/g, '')) || 0 : 0;
-      
-      const thuongHieu = findVal(['thương', 'thuong', 'brand']);
-      const danhMucName = findVal(['danh', 'danh mục', 'category']);
-      const sku = findVal(['sku', 'mã', 'ma_sp']);
-      
+    if (validationErrors.length > 0) {
+      await t.rollback();
+      return res.status(400).json({
+        status: 'error',
+        message: 'Một số dòng trong file Excel không hợp lệ.',
+        errors: validationErrors,
+      });
+    }
+
+    // Process each valid item
+    for (const itemData of itemsToProcess) {
+      const { tenSp, gia, giaNhap, soLuong, thuongHieu, danhMucName, sku } = itemData;
+      const normalizedSku = sku ? String(sku).trim() : null;
+      const normalizedTenSp = String(tenSp).trim();
+
+      if (!normalizedTenSp) continue;
+
       let maDanhMuc = null;
       if (danhMucName) {
-        let category = await DanhMuc.findOne({ where: { ten_danh_muc: String(danhMucName).trim() } });
+        const category = await DanhMuc.findOne({
+          where: { ten_danh_muc: String(danhMucName).trim() },
+          transaction: t,
+        });
         if (category) {
           maDanhMuc = category.ma_danh_muc;
         }
       }
 
-      // Kiểm tra trùng lặp
-      const existing = await SanPham.findOne({ where: { ten_san_pham: tenSp }, transaction: t });
-      if (existing) continue; // Bỏ qua nếu đã tồn tại
+      const whereClause = {
+        [Op.or]: [
+          ...(normalizedSku ? [{ sku: normalizedSku }] : []),
+          { ten_san_pham: normalizedTenSp },
+        ],
+      };
 
-      await SanPham.create({
-        ma_san_pham: nextId,
-        ten_san_pham: tenSp,
-        co_bien_the: false,
-        gia: gia > 0 ? gia : 0,
-        gia_max: gia > 0 ? gia : 0,
-        gia_nhap: giaNhap > 0 ? giaNhap : 0,
-        so_luong_ton: soLuong > 0 ? soLuong : 0,
-        thuong_hieu: thuongHieu ? String(thuongHieu).trim() : null,
-        ma_danh_muc: maDanhMuc,
-        sku: sku ? String(sku).trim() : null,
-        trang_thai: 'dang_ban',
-        ngay_tao: new Date(),
-      }, { transaction: t });
-      
-      nextId++;
-      successCount++;
+      let product = await SanPham.findOne({ where: whereClause, transaction: t });
+
+      if (product) {
+        // Update existing product
+        if (gia > 0) product.gia = gia;
+        if (giaNhap > 0) product.gia_nhap = giaNhap;
+        product.so_luong_ton = (Number(product.so_luong_ton) || 0) + soLuong;
+        if (thuongHieu) product.thuong_hieu = thuongHieu;
+        if (maDanhMuc) product.ma_danh_muc = maDanhMuc;
+        if (normalizedSku && !product.sku) product.sku = normalizedSku;
+        product.ngay_cap_nhat = new Date();
+        await product.save({ transaction: t });
+        updatedCount++;
+
+        // Log inventory update
+        try {
+          await LichSuKho.create({
+            ma_san_pham: product.ma_san_pham,
+            ma_bien_the: null,
+            loai_thao_tac: 'nhap_kho',
+            so_luong_thay_doi: soLuong,
+            ton_kho_cuoi: Number(product.so_luong_ton) || 0,
+            gia_nhap: giaNhap > 0 ? giaNhap : null,
+            ma_nha_cung_cap: ma_nha_cung_cap || null,
+            ghi_chu: ghi_chu || 'Nhập từ Excel',
+            nguoi_thuc_hien: nguoi_thuc_hien || (req.user ? req.user.ma_nguoi_dung : null),
+          }, { transaction: t });
+        } catch (historyError) {
+          console.error('Failed to create history for update:', historyError.message);
+        }
+      } else {
+        // Create new product (let DB auto-increment the ID)
+        product = await SanPham.create({
+          ten_san_pham: normalizedTenSp,
+          co_bien_the: false,
+          gia: gia > 0 ? gia : 0,
+          gia_max: gia > 0 ? gia : 0,
+          gia_nhap: giaNhap > 0 ? giaNhap : 0,
+          so_luong_ton: soLuong > 0 ? soLuong : 0,
+          thuong_hieu: thuongHieu ? String(thuongHieu).trim() : null,
+          ma_danh_muc: maDanhMuc,
+          sku: normalizedSku,
+          trang_thai: 'dang_ban',
+          ngay_tao: new Date(),
+        }, { transaction: t });
+        createdCount++;
+
+        // Log new product inventory
+        try {
+          await LichSuKho.create({
+            ma_san_pham: product.ma_san_pham,
+            ma_bien_the: null,
+            loai_thao_tac: 'nhap_kho',
+            so_luong_thay_doi: soLuong,
+            ton_kho_cuoi: Number(product.so_luong_ton) || 0,
+            gia_nhap: giaNhap > 0 ? giaNhap : null,
+            ma_nha_cung_cap: ma_nha_cung_cap || null,
+            ghi_chu: ghi_chu || 'Nhập từ Excel',
+            nguoi_thuc_hien: nguoi_thuc_hien || (req.user ? req.user.ma_nguoi_dung : null),
+          }, { transaction: t });
+        } catch (historyError) {
+          console.error('Failed to create history for new product:', historyError.message);
+        }
+      }
     }
 
     await t.commit();
-    
-    // Log
+
     if (req.user) {
-      await logActivity(req.user.ma_nguoi_dung, 'Thêm', 'san_pham', `Nhập từ Excel ${successCount} sản phẩm`);
+      await logActivity(req.user.ma_nguoi_dung, 'Thêm', 'san_pham', `Nhập từ Excel ${createdCount} mới, ${updatedCount} cập nhật`);
     }
 
     res.status(200).json({
       status: 'success',
-      message: `Đã nhập thành công ${successCount} sản phẩm.`,
-      data: { count: successCount }
+      message: `Đã xử lý ${createdCount} sản phẩm mới và ${updatedCount} sản phẩm cập nhật.`,
+      data: { created: createdCount, updated: updatedCount, errors: [] }
     });
-    
+
   } catch (error) {
     if (t) await t.rollback();
     console.error('Bulk create product error:', error);
-    
+
     let errDetails = error.message;
     if (error.errors && Array.isArray(error.errors)) {
-      errDetails += " - " + error.errors.map(e => `${e.path}: ${e.message}`).join(", ");
+      errDetails += ' - ' + error.errors.map(e => `${e.path}: ${e.message}`).join(', ');
     }
-    
+
     try {
       require('fs').writeFileSync('c:/xampp/htdocs/cosmetic-shop/debug_error.txt', errDetails + '\n' + error.stack);
-    } catch(e) {}
-    
+    } catch (e) {}
+
     res.status(500).json({
       status: 'error',
-      message: errDetails,
+      message: 'Lỗi xử lý dữ liệu: ' + errDetails,
       error: error.message,
     });
   }

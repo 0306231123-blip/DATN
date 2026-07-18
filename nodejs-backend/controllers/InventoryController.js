@@ -33,49 +33,62 @@ exports.importInventory = async (req, res) => {
   try {
     const { items, ghi_chu, ma_nha_cung_cap, nguoi_thuc_hien } = req.body;
     // items = [{ ma_san_pham, ma_bien_the, so_luong, gia_nhap }]
-    
+
     if (!items || !Array.isArray(items) || items.length === 0) {
       await t.rollback();
       return res.status(400).json({ status: 'error', message: 'Danh sách nhập kho trống.' });
     }
 
+    const validationErrors = [];
+
     for (let item of items) {
       const { ma_san_pham, ma_bien_the, so_luong, gia_nhap } = item;
       const amount = parseInt(so_luong);
-      if (isNaN(amount) || amount <= 0) continue;
-
-      let ton_kho_cuoi = 0;
-
-      // Check if variant or product
-      if (ma_bien_the) {
-        const variant = await BienTheSanPham.findByPk(ma_bien_the, { transaction: t });
-        if (variant) {
-          variant.so_luong_ton += amount;
-          if (gia_nhap) variant.gia_nhap = parseFloat(gia_nhap);
-          ton_kho_cuoi = variant.so_luong_ton;
-          await variant.save({ transaction: t });
-          
-          // Must update product total stock
-          const product = await SanPham.findByPk(ma_san_pham, { transaction: t });
-          if (product) {
-            product.so_luong_ton += amount;
-            if (gia_nhap) product.gia_nhap = parseFloat(gia_nhap);
-            await product.save({ transaction: t });
-          }
-        }
-      } else {
-        const product = await SanPham.findByPk(ma_san_pham, { transaction: t });
-        if (product) {
-          product.so_luong_ton += amount;
-          if (gia_nhap) product.gia_nhap = parseFloat(gia_nhap);
-          ton_kho_cuoi = product.so_luong_ton;
-          await product.save({ transaction: t });
-        }
+      if (isNaN(amount) || amount <= 0) {
+        validationErrors.push('Một dòng trong danh sách nhập kho thiếu số lượng hợp lệ.');
+        continue;
       }
 
-      // Create log
+      let ton_kho_cuoi = 0;
+      let product = null;
+      let variant = null;
+
+      if (ma_bien_the) {
+        variant = await BienTheSanPham.findByPk(ma_bien_the, { transaction: t });
+        if (!variant) {
+          validationErrors.push(`Không tìm thấy biến thể ${ma_bien_the}.`);
+          continue;
+        }
+
+        product = await SanPham.findByPk(ma_san_pham, { transaction: t });
+        if (!product) {
+          validationErrors.push(`Không tìm thấy sản phẩm ${ma_san_pham}.`);
+          continue;
+        }
+
+        variant.so_luong_ton += amount;
+        if (gia_nhap) variant.gia_nhap = parseFloat(gia_nhap);
+        ton_kho_cuoi = variant.so_luong_ton;
+        await variant.save({ transaction: t });
+
+        product.so_luong_ton += amount;
+        if (gia_nhap) product.gia_nhap = parseFloat(gia_nhap);
+        await product.save({ transaction: t });
+      } else {
+        product = await SanPham.findByPk(ma_san_pham, { transaction: t });
+        if (!product) {
+          validationErrors.push(`Không tìm thấy sản phẩm ${ma_san_pham}.`);
+          continue;
+        }
+
+        product.so_luong_ton += amount;
+        if (gia_nhap) product.gia_nhap = parseFloat(gia_nhap);
+        ton_kho_cuoi = product.so_luong_ton;
+        await product.save({ transaction: t });
+      }
+
       await LichSuKho.create({
-        ma_san_pham,
+        ma_san_pham: ma_san_pham || product?.ma_san_pham,
         ma_bien_the: ma_bien_the || null,
         loai_thao_tac: 'nhap_kho',
         so_luong_thay_doi: amount,
@@ -85,6 +98,11 @@ exports.importInventory = async (req, res) => {
         ghi_chu,
         nguoi_thuc_hien
       }, { transaction: t });
+    }
+
+    if (validationErrors.length > 0) {
+      await t.rollback();
+      return res.status(400).json({ status: 'error', message: 'Một số dữ liệu nhập kho không hợp lệ.', errors: validationErrors });
     }
 
     await t.commit();
