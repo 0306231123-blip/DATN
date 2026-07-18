@@ -4,7 +4,7 @@
 
 @include('components.filter-assets')
 
-<section class="user-section">
+<section class="user-section" style="padding-top: 1.5rem;">
     <div class="user-container">
         
         <h2 class="user-section-title">

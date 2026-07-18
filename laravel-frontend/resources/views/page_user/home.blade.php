@@ -102,60 +102,6 @@
 
 </section>
 
-{{-- AI NEXT STEP RECOMMENDATION --}}
-<section id="ai-next-step-section" class="mb-12 bg-gradient-to-br from-pink-50 to-orange-50 p-6 rounded-sm border border-transparent hover:border-pink-500 shadow-sm relative overflow-hidden hidden">
-    <div class="absolute top-0 right-0 p-4 opacity-10 text-6xl">🤖</div>
-    <div class="flex items-center mb-4 relative z-10">
-        <span class="text-3xl mr-3 animate-pulse">💡</span>
-        <h2 class="text-2xl font-black text-pink-600 uppercase tracking-widest">Gợi Ý Riêng Cho Bạn</h2>
-    </div>
-    
-    <div class="relative z-10 grid grid-cols-1 md:grid-cols-2 gap-6">
-        <!-- Cột 1: Sản phẩm đi kèm -->
-        <div id="ai-companion-block" class="hidden flex-col gap-3">
-            <h3 class="font-bold text-lg text-pink-600 border-b border-pink-200 pb-2">Sản Phẩm Đi Kèm</h3>
-            <div class="bg-white p-3 rounded-sm shadow-sm border border-pink-50 relative min-h-[60px]">
-                <div class="absolute -left-2 -top-2 text-xl">✨</div>
-                <div id="ai-companion-reason" class="text-gray-700 italic font-medium leading-relaxed text-sm">
-                </div>
-            </div>
-            <div id="ai-companion-product" class="flex gap-3 overflow-x-auto pb-2 custom-scrollbar">
-            </div>
-        </div>
-
-        <!-- Cột 2: Các bước còn thiếu -->
-        <div id="ai-missing-block" class="hidden flex-col gap-3">
-            <h3 class="font-bold text-lg text-orange-600 border-b border-orange-200 pb-2">Các Bước Còn Thiếu</h3>
-            <div class="bg-white p-3 rounded-sm shadow-sm border border-orange-50 relative min-h-[60px]">
-                <div class="absolute -left-2 -top-2 text-xl">✨</div>
-                <div id="ai-next-step-reason" class="text-gray-700 italic font-medium leading-relaxed text-sm">
-                </div>
-            </div>
-            <div id="ai-next-step-product" class="flex gap-3 overflow-x-auto pb-2 custom-scrollbar">
-            </div>
-        </div>
-        
-        <!-- Skeleton Loader (Chung khi đang load) -->
-        <div id="ai-next-step-skeleton" class="col-span-1 md:col-span-2 flex gap-6 w-full">
-            <div class="flex-1">
-                <div class="bg-white p-4 rounded-sm shadow-sm border border-pink-50 relative min-h-[80px]">
-                    <div class="animate-pulse flex flex-col gap-2">
-                        <div class="h-4 bg-gray-200 rounded w-3/4"></div>
-                        <div class="h-4 bg-gray-200 rounded w-5/6"></div>
-                    </div>
-                </div>
-            </div>
-            <div class="w-full md:w-1/2 flex-shrink-0 min-h-[150px]">
-                <div class="bg-white p-2 flex flex-col h-full group relative border border-gray-100 rounded-sm animate-pulse">
-                    <div class="relative w-full aspect-square mb-3 overflow-hidden rounded-sm bg-gray-200"></div>
-                </div>
-            </div>
-        </div>
-    </div>
-</section>
-
-
-
 
 {{-- AI SKIN TYPE RECOMMENDATION --}}
 <section id="ai-skin-type-section" class="mb-12 bg-gradient-to-br from-green-50 to-teal-50 p-6 rounded-sm border border-transparent hover:border-teal-500 shadow-sm relative overflow-hidden hidden">
@@ -264,11 +210,8 @@
             },
         });
 
-        // --- 2. CHẠY LOGIC AI GỢI Ý BƯỚC TIẾP THEO ---
+        // --- 2. CHẠY LOGIC AI GỢI Ý ---
         const token = localStorage.getItem('token');
-        const aiSection = document.getElementById('ai-next-step-section');
-        const reasonEl = document.getElementById('ai-next-step-reason');
-        const productEl = document.getElementById('ai-next-step-product');
         const guestSection = document.getElementById('ai-guest-section');
 
         if (token) {
@@ -301,7 +244,7 @@
                         body: JSON.stringify({ user_id: userId })
                     }).then(res => res.json()).then(result => {
                         if (result.success && result.products && result.products.length > 0) {
-                            skinTypeLabel.innerText = result.loai_da_text;
+                            skinTypeLabel.innerText = result.loai_da_text + " Vào " + result.session_name;
                             skinReasonEl.innerHTML = result.reason;
                             
                             let productsHtml = '';
@@ -341,93 +284,6 @@
                         console.error('Lỗi tải AI Skin Type:', err);
                         if (skinSection) skinSection.classList.add('hidden');
                     });
-                    
-                    if (aiSection) aiSection.classList.remove('hidden');
-                    const response = await fetch('http://localhost:5000/api/ai-next-step-suggest', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json'
-                        },
-                        body: JSON.stringify({ user_id: userId })
-                    });
-
-                    const result = await response.json();
-                    
-                    const skeleton = document.getElementById('ai-next-step-skeleton');
-                    if (skeleton) skeleton.classList.add('hidden');
-                    
-                    if (result.success && (result.missing.products.length > 0 || result.companion.products.length > 0)) {
-                        
-                        // Hàm tạo HTML thẻ sản phẩm thu nhỏ
-                        const createProductCards = (products, colorClass, borderClass, isCompanion = false) => {
-                            let html = '';
-                            products.forEach(sp => {
-                                const price = new Intl.NumberFormat('vi-VN').format(sp.gia_khuyen_mai || sp.gia) + ' đ';
-                                let img = sp.duong_dan_anh ? sp.duong_dan_anh : 'https://via.placeholder.com/300x300?text=No+Image';
-                                if (!img.startsWith('http')) {
-                                    img = img.startsWith('/') ? img : '/' + img;
-                                }
-                                const tagName = sp.ten_danh_muc ? sp.ten_danh_muc : (isCompanion ? 'Đi kèm hoàn hảo' : 'Mảnh ghép hoàn hảo');
-                                
-                                html += `
-                                    <a href="/user/detail/${sp.ma_san_pham}" class="bg-white p-2 hover:shadow-md hover:-translate-y-[1px] transition-all duration-200 flex flex-col h-full group relative border border-transparent ${borderClass} min-w-[140px] max-w-[160px] flex-shrink-0">
-                                        <div class="absolute top-0 right-0 z-20 bg-gradient-to-r from-${colorClass}-500 to-${colorClass}-400 text-white text-[9px] font-bold px-2 py-0.5 rounded-bl-sm shadow-md">
-                                            ${tagName}
-                                        </div>
-                                        <div class="relative w-full aspect-square mb-2 overflow-hidden rounded-sm bg-gray-50">
-                                            <img src="${img}" alt="${sp.ten_san_pham}" class="w-full h-full object-cover group-hover:scale-105 transition duration-500">
-                                        </div>
-                                        <div class="flex-grow flex flex-col justify-between">
-                                            <h3 class="font-bold text-gray-800 text-[11px] leading-tight line-clamp-2 mb-1 group-hover:text-${colorClass}-600 transition">
-                                                ${sp.ten_san_pham}
-                                            </h3>
-                                            <div class="text-${colorClass}-600 font-medium text-xs mb-1">
-                                                ${price}
-                                            </div>
-                                            ${isCompanion && sp.for_product ? `<div class="text-[9px] text-gray-500 italic border-t border-gray-100 pt-1 mt-1 leading-tight">Đi kèm cho:<br><span class="font-semibold text-gray-600">${sp.for_product}</span></div>` : ''}
-                                        </div>
-                                    </a>
-                                `;
-                            });
-                            return html;
-                        };
-                        
-                        // Xử lý cột Sản phẩm đi kèm
-                        if (result.companion && result.companion.products && result.companion.products.length > 0) {
-                            const companionBlock = document.getElementById('ai-companion-block');
-                            const companionReason = document.getElementById('ai-companion-reason');
-                            const companionProduct = document.getElementById('ai-companion-product');
-                            
-                            companionBlock.classList.remove('hidden');
-                            companionBlock.classList.add('flex');
-                            companionReason.innerHTML = result.companion.reason;
-                            companionProduct.innerHTML = createProductCards(result.companion.products, 'pink', 'hover:border-pink-500', true);
-                        }
-                        
-                        // Xử lý cột Các bước còn thiếu
-                        if (result.missing && result.missing.products && result.missing.products.length > 0) {
-                            const missingBlock = document.getElementById('ai-missing-block');
-                            const missingReason = document.getElementById('ai-next-step-reason');
-                            const missingProduct = document.getElementById('ai-next-step-product');
-                            
-                            missingBlock.classList.remove('hidden');
-                            missingBlock.classList.add('flex');
-                            missingReason.innerHTML = result.missing.reason;
-                            missingProduct.innerHTML = createProductCards(result.missing.products, 'orange', 'hover:border-orange-500', false);
-                        }
-
-                    } else {
-                        const missingBlock = document.getElementById('ai-missing-block');
-                        missingBlock.classList.remove('hidden');
-                        missingBlock.classList.add('flex');
-                        document.getElementById('ai-next-step-reason').innerHTML = "Có vẻ bạn là khách hàng mới! Hãy trải nghiệm mua sắm tại shop hoặc chờ hệ thống AI thu thập thêm dữ liệu để có thể đưa ra những gợi ý chính xác nhất cho chu trình Skincare của bạn nhé!";
-                        document.getElementById('ai-next-step-product').innerHTML = `
-                            <div class="bg-white border-2 border-dashed border-pink-200 rounded-sm p-6 h-full flex flex-col items-center justify-center text-center opacity-70 w-full min-w-[200px]">
-                                <span class="text-4xl mb-2 grayscale">🛒</span>
-                                <p class="text-pink-600 font-bold text-sm">Chờ đón đơn hàng đầu tiên</p>
-                            </div>
-                        `;
-                    }
                 }
             } catch (error) {
                 console.error('Lỗi tải AI Next Step:', error);

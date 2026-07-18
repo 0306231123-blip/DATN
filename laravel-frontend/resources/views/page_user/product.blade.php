@@ -10,7 +10,7 @@
     $selectedBrands = request()->get('thuong_hieu') ? explode(',', request()->get('thuong_hieu')) : [];
 @endphp
 
-<section class="user-section">
+<section class="user-section" style="padding-top: 1.5rem;">
     <div class="user-container">
         
         <h2 class="user-section-title text-center mb-8">

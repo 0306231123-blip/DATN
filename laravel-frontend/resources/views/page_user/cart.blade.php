@@ -6,8 +6,8 @@
 @endsection
 
 @section('content')
-<section class="user-section">
-    <div class="max-w-6xl mx-auto mt-4">
+<section class="user-section" style="padding-top: 0.5rem;">
+    <div class="max-w-6xl mx-auto">
         <div class="mb-4">
             <a href="/user/product" class="inline-flex items-center text-gray-500 hover:text-pink-600 font-bold transition">
                 <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
@@ -111,7 +111,7 @@
                                 <div class="ml-3 flex-1">
                                     <h3 class="text-gray-800 text-sm hover:text-pink-600 transition cursor-pointer line-clamp-2">${sanPham.ten_san_pham}</h3>
                                     <p class="text-xs text-gray-500 mt-1">Còn lại: ${soLuongTon}</p>
-                                    <p class="text-[10px] text-gray-400 mt-1">Đã thêm: ${new Date(item.ngay_them).toLocaleString('vi-VN')}</p>
+                                    <p class="text-xs text-gray-400 mt-1">Đã thêm: ${new Date(item.ngay_them).toLocaleString('vi-VN')}</p>
                                 </div>
                             </div>
                             

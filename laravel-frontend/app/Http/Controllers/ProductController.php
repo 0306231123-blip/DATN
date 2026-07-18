@@ -246,13 +246,30 @@ class ProductController extends Controller
     // 5. Hàm hiển thị TRANG CHỦ
     public function home()
     {
-        // Lấy 6 sản phẩm đang bán, sắp xếp theo điểm đánh giá từ cao xuống thấp
-        $sanPhamNoiBat = SanPham::where('trang_thai', 'dang_ban')
-                                ->where('hien_thi_web', 1)
-                                ->orderBy('diem_danh_gia', 'desc') // Ưu tiên điểm cao
-                                ->orderBy('so_luot_danh_gia', 'desc') // Ưu tiên nhiều người đánh giá
-                                ->take(6) // Lấy đúng 6 sản phẩm thôi để xếp 2 hàng ngang cho đẹp
-                                ->get();
+        // Lấy 5 sản phẩm bán chạy nhất động (giống logic bên admin)
+        $sanPhamNoiBat = SanPham::select('san_pham.*')
+            ->selectSub(function ($subquery) {
+                $subquery->from('chi_tiet_don_hang')
+                    ->join('don_hang', 'chi_tiet_don_hang.ma_don_hang', '=', 'don_hang.ma_don_hang')
+                    ->whereColumn('chi_tiet_don_hang.ma_san_pham', 'san_pham.ma_san_pham')
+                    ->where(function($q) {
+                        $q->where(function($q1) {
+                            $q1->where('don_hang.phuong_thuc_thanh_toan', '!=', 'tien_mat')
+                               ->where('don_hang.trang_thai_thanh_toan', 'da_thanh_toan');
+                        })->orWhere(function($q2) {
+                            $q2->where('don_hang.phuong_thuc_thanh_toan', 'tien_mat')
+                               ->whereIn('don_hang.trang_thai_don', ['giao_thanh_cong', 'hoan_thanh']);
+                        });
+                    })
+                    ->whereNotIn('don_hang.trang_thai_don', ['da_huy', 'da_tra_hang', 'tra_hang_hoan_tien'])
+                    ->selectRaw('SUM(so_luong)');
+            }, 'tong_so_luong_ban')
+            ->where('san_pham.trang_thai', 'dang_ban')
+            ->where('san_pham.hien_thi_web', 1)
+            ->orderByRaw('COALESCE(tong_so_luong_ban, 0) DESC')
+            ->orderBy('diem_danh_gia', 'desc')
+            ->take(5)
+            ->get();
                                 
         // Lấy 10 sản phẩm ngẫu nhiên cho mục DAILY DISCOVER (Sản phẩm hôm nay)
         // Cache lại 1 ngày để F5 không bị đổi, sang ngày mới (hết 24h) mới bốc 10 sản phẩm khác

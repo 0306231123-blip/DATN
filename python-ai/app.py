@@ -399,11 +399,18 @@ Nhiệm vụ:
                 for keyword in missing_keywords:
                     if not keyword: continue
                     cursor.execute("""
-                        SELECT ma_san_pham FROM san_pham 
-                        WHERE (ten_san_pham LIKE %s OR mo_ta LIKE %s) 
-                        AND trang_thai = 'dang_ban' AND hien_thi_web = 1
+                        SELECT sp.ma_san_pham FROM san_pham sp
+                        LEFT JOIN danh_muc dm ON sp.ma_danh_muc = dm.ma_danh_muc
+                        WHERE (sp.ten_san_pham LIKE %s OR dm.ten_danh_muc LIKE %s OR sp.mo_ta LIKE %s) 
+                        AND sp.trang_thai = 'dang_ban' AND sp.hien_thi_web = 1
+                        ORDER BY 
+                            CASE 
+                                WHEN dm.ten_danh_muc LIKE %s THEN 1
+                                WHEN sp.ten_san_pham LIKE %s THEN 2
+                                ELSE 3
+                            END
                         LIMIT 1
-                    """, (f"%{keyword}%", f"%{keyword}%"))
+                    """, (f"%{keyword}%", f"%{keyword}%", f"%{keyword}%", f"%{keyword}%", f"%{keyword}%"))
                     row = cursor.fetchone()
                     if row and row['ma_san_pham'] not in ma_san_pham_list:
                         ma_san_pham_list.append(row['ma_san_pham'])
@@ -431,11 +438,18 @@ Nhiệm vụ:
                     for_prod = comp.get("for_product")
                     if not keyword: continue
                     cursor.execute("""
-                        SELECT ma_san_pham FROM san_pham 
-                        WHERE (ten_san_pham LIKE %s OR mo_ta LIKE %s) 
-                        AND trang_thai = 'dang_ban' AND hien_thi_web = 1
+                        SELECT sp.ma_san_pham FROM san_pham sp
+                        LEFT JOIN danh_muc dm ON sp.ma_danh_muc = dm.ma_danh_muc
+                        WHERE (sp.ten_san_pham LIKE %s OR dm.ten_danh_muc LIKE %s OR sp.mo_ta LIKE %s) 
+                        AND sp.trang_thai = 'dang_ban' AND sp.hien_thi_web = 1
+                        ORDER BY 
+                            CASE 
+                                WHEN dm.ten_danh_muc LIKE %s THEN 1
+                                WHEN sp.ten_san_pham LIKE %s THEN 2
+                                ELSE 3
+                            END
                         LIMIT 1
-                    """, (f"%{keyword}%", f"%{keyword}%"))
+                    """, (f"%{keyword}%", f"%{keyword}%", f"%{keyword}%", f"%{keyword}%", f"%{keyword}%"))
                     row = cursor.fetchone()
                     if row:
                         ma_sp = row['ma_san_pham']
@@ -527,15 +541,31 @@ def ai_skin_type_suggest():
         loai_da_raw = user_info['loai_da'] or 'da_thuong'
         loai_da_text = loai_da_map.get(loai_da_raw, 'Da thường')
         
+        from datetime import datetime, timedelta
+        vn_time = datetime.utcnow() + timedelta(hours=7)
+        current_hour = vn_time.hour
+        
+        if 5 <= current_hour < 11:
+            session_name = "Buổi Sáng"
+        elif 11 <= current_hour < 14:
+            session_name = "Buổi Trưa"
+        elif 14 <= current_hour < 18:
+            session_name = "Buổi Chiều"
+        elif 18 <= current_hour < 22:
+            session_name = "Buổi Tối"
+        else:
+            session_name = "Ban Đêm"
+        
         system_prompt = f"""Đóng vai chuyên gia da liễu cực kỳ chuyên nghiệp.
 Khách hàng này có loại da: {loai_da_text}.
+Hiện tại đang là {session_name} (theo giờ Việt Nam).
 
 Nhiệm vụ:
-1. Gợi ý TỪ 1 ĐẾN 3 TỪ KHÓA CHUNG (ví dụ: "kiềm dầu", "BHA", "cấp ẩm", "HA", "làm dịu", "Ceramide", "sữa rửa mặt") về các tính năng hoặc thành phần phù hợp nhất cho loại da này.
+1. Gợi ý CHÍNH XÁC 3 TỪ KHÓA CHUNG (ví dụ: "sữa rửa mặt", "kem chống nắng", "kem dưỡng", "tẩy trang", "serum", "mặt nạ ngủ") về các loại sản phẩm hoặc tính năng cần thiết nhất để chăm sóc da vào {session_name} dành riêng cho {loai_da_text}.
 2. Trả về đúng định dạng JSON chuẩn (KHÔNG có markdown ```json, KHÔNG có text thừa xung quanh):
 {{
-    "missing_keywords": ["từ khóa 1", "từ khóa 2"],
-    "reason": "<Một đoạn văn giải thích chung (khoảng 2-3 câu) vì sao loại da này cần dùng các sản phẩm có tính năng/thành phần này>"
+    "missing_keywords": ["từ khóa 1", "từ khóa 2", "từ khóa 3"],
+    "reason": "<Một đoạn văn giải thích (khoảng 3-4 câu) vì sao {loai_da_text} nên dùng 3 sản phẩm này vào {session_name}>"
 }}"""
 
         user_content = [{"type": "text", "text": "Bạn phải trả về JSON chuẩn, không thêm bất kỳ ký tự nào khác."}]
@@ -566,11 +596,18 @@ Nhiệm vụ:
                 for keyword in missing_keywords:
                     if not keyword: continue
                     cursor.execute("""
-                        SELECT ma_san_pham FROM san_pham 
-                        WHERE (ten_san_pham LIKE %s OR mo_ta LIKE %s) 
-                        AND trang_thai = 'dang_ban' AND hien_thi_web = 1
+                        SELECT sp.ma_san_pham FROM san_pham sp
+                        LEFT JOIN danh_muc dm ON sp.ma_danh_muc = dm.ma_danh_muc
+                        WHERE (sp.ten_san_pham LIKE %s OR dm.ten_danh_muc LIKE %s OR sp.mo_ta LIKE %s) 
+                        AND sp.trang_thai = 'dang_ban' AND sp.hien_thi_web = 1
+                        ORDER BY 
+                            CASE 
+                                WHEN dm.ten_danh_muc LIKE %s THEN 1
+                                WHEN sp.ten_san_pham LIKE %s THEN 2
+                                ELSE 3
+                            END
                         LIMIT 1
-                    """, (f"%{keyword}%", f"%{keyword}%"))
+                    """, (f"%{keyword}%", f"%{keyword}%", f"%{keyword}%", f"%{keyword}%", f"%{keyword}%"))
                     row = cursor.fetchone()
                     if row and row['ma_san_pham'] not in ma_san_pham_list:
                         ma_san_pham_list.append(row['ma_san_pham'])
@@ -598,7 +635,8 @@ Nhiệm vụ:
                     "success": True,
                     "reason": reason,
                     "products": suggested_products,
-                    "loai_da_text": loai_da_text
+                    "loai_da_text": loai_da_text,
+                    "session_name": session_name
                 })
             except Exception as e:
                 print("Lỗi parse JSON:", str(e), reply_text)
