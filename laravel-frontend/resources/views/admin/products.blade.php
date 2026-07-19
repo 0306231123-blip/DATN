@@ -1789,6 +1789,11 @@ function editVoucher(id) {
         d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
         document.getElementById('voucher-end').value = d.toISOString().slice(0, 16);
     }
+    
+    // Xoá giới hạn min của ngày bắt đầu khi sửa để không lỗi với voucher cũ
+    document.getElementById('voucher-start').removeAttribute('min');
+    // Set giới hạn ngày kết thúc không được nhỏ hơn ngày bắt đầu
+    document.getElementById('voucher-end').min = document.getElementById('voucher-start').value;
 }
 
 async function saveVoucher(e) {
@@ -1810,6 +1815,13 @@ async function saveVoucher(e) {
     
     const method = id ? 'PUT' : 'POST';
     const url = id ? `${API_BASE_URL}/voucher/${id}` : `${API_BASE_URL}/voucher`;
+    
+    if (payload.ngay_bat_dau && payload.ngay_ket_thuc) {
+        if (new Date(payload.ngay_ket_thuc) <= new Date(payload.ngay_bat_dau)) {
+            showAlert('Ngày kết thúc phải lớn hơn ngày bắt đầu', 'error');
+            return;
+        }
+    }
     
     try {
         const res = await fetch(url, {
@@ -2104,6 +2116,17 @@ function closePublishModal() {
 }
 
 const formPublish = document.getElementById('form-publish');
+
+const voucherStartInput = document.getElementById('voucher-start');
+const voucherEndInput = document.getElementById('voucher-end');
+if (voucherStartInput && voucherEndInput) {
+    voucherStartInput.addEventListener('change', function() {
+        if (this.value) {
+            voucherEndInput.min = this.value;
+        }
+    });
+}
+
 if (formPublish) {
     formPublish.addEventListener('submit', async (e) => {
         e.preventDefault();
