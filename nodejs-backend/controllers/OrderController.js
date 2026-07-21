@@ -335,6 +335,8 @@ class OrderController {
       const dangTraHang = await DonHang.count({ where: { trang_thai_don: 'dang_tra_hang' } });
       const daTraHang = await DonHang.count({ where: { trang_thai_don: 'da_tra_hang' } });
       const tuChoiTraHang = await DonHang.count({ where: { trang_thai_don: 'tu_choi_tra_hang' } });
+      const khongDuDieuKien = await DonHang.count({ where: { trang_thai_don: 'khong_du_dieu_kien' } });
+
 
       const [revenueResult] = await sequelize.query(
         `SELECT COALESCE(SUM(tong_thanh_toan), 0) AS tong_doanh_thu 
@@ -366,6 +368,7 @@ class OrderController {
           dang_tra_hang: dangTraHang,
           da_tra_hang: daTraHang,
           tu_choi_tra_hang: tuChoiTraHang,
+          khong_du_dieu_kien: khongDuDieuKien,
           tong_doanh_thu: Number(revenueResult.tong_doanh_thu),
           don_thang_nay: Number(monthResult.don_thang_nay),
           doanh_thu_thang: Number(monthResult.doanh_thu_thang),

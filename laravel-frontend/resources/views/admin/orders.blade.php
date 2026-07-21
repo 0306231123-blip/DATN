@@ -189,6 +189,7 @@ async function loadStats() {
             document.getElementById('count-dang_tra_hang').textContent = s.dang_tra_hang || 0;
             document.getElementById('count-da_tra_hang').textContent = s.da_tra_hang || 0;
             document.getElementById('count-tu_choi_tra_hang').textContent = s.tu_choi_tra_hang || 0; // ĐÃ THÊM
+            if(document.getElementById('count-khong_du_dieu_kien')) document.getElementById('count-khong_du_dieu_kien').textContent = s.khong_du_dieu_kien || 0;
 
             const summaryText = `${s.total} đơn · tháng ${new Date().getMonth() + 1}/${new Date().getFullYear()}`;
             const pageSubtitle = document.getElementById('page-subtitle');
