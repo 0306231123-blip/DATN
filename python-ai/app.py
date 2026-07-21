@@ -19,7 +19,7 @@ API_KEY = os.getenv("OPENROUTER_API_KEY", "")
 # OpenRouter API URL
 OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions"
 # Chọn model nhanh và nhẹ hơn (để tăng tốc độ phản hồi)
-AI_MODEL = "meta-llama/llama-3.1-8b-instruct:free"
+AI_MODEL = "google/gemma-4-31b-it:free"
 
 def get_db_connection():
     return mysql.connector.connect(
@@ -30,10 +30,10 @@ def get_db_connection():
     )
 
 FALLBACK_MODELS = [
-    "meta-llama/llama-3.1-8b-instruct:free",
-    "google/gemma-2-9b-it:free",
-    "meta-llama/llama-3.3-70b-instruct:free",
-    "tencent/hy3:free"
+    "google/gemma-4-31b-it:free",
+    "google/gemma-4-26b-a4b-it:free",
+    "nvidia/nemotron-3-nano-30b-a3b:free",
+    "openrouter/free"
 ]
 
 def call_openrouter_api(system_prompt, user_content_parts):
@@ -267,6 +267,10 @@ def ai_next_step_suggest():
         conn = get_db_connection()
         cursor = conn.cursor(dictionary=True)
         
+        cursor.execute("SELECT loai_da FROM nguoi_dung WHERE ma_nguoi_dung = %s", (user_id,))
+        user_info = cursor.fetchone()
+        loai_da_raw = user_info['loai_da'] if user_info and user_info['loai_da'] else 'da_thuong'
+
         query_recent_order = """
             SELECT ma_don_hang
             FROM don_hang
@@ -403,6 +407,7 @@ Nhiệm vụ:
                         LEFT JOIN danh_muc dm ON sp.ma_danh_muc = dm.ma_danh_muc
                         WHERE (sp.ten_san_pham LIKE %s OR dm.ten_danh_muc LIKE %s OR sp.mo_ta LIKE %s) 
                         AND sp.trang_thai = 'dang_ban' AND sp.hien_thi_web = 1
+                        AND (sp.loai_da_phu_hop = 'tat_ca' OR sp.loai_da_phu_hop = %s)
                         ORDER BY 
                             CASE 
                                 WHEN dm.ten_danh_muc LIKE %s THEN 1
@@ -410,7 +415,7 @@ Nhiệm vụ:
                                 ELSE 3
                             END
                         LIMIT 1
-                    """, (f"%{keyword}%", f"%{keyword}%", f"%{keyword}%", f"%{keyword}%", f"%{keyword}%"))
+                    """, (f"%{keyword}%", f"%{keyword}%", f"%{keyword}%", loai_da_raw, f"%{keyword}%", f"%{keyword}%"))
                     row = cursor.fetchone()
                     if row and row['ma_san_pham'] not in ma_san_pham_list:
                         ma_san_pham_list.append(row['ma_san_pham'])
@@ -442,6 +447,7 @@ Nhiệm vụ:
                         LEFT JOIN danh_muc dm ON sp.ma_danh_muc = dm.ma_danh_muc
                         WHERE (sp.ten_san_pham LIKE %s OR dm.ten_danh_muc LIKE %s OR sp.mo_ta LIKE %s) 
                         AND sp.trang_thai = 'dang_ban' AND sp.hien_thi_web = 1
+                        AND (sp.loai_da_phu_hop = 'tat_ca' OR sp.loai_da_phu_hop = %s)
                         ORDER BY 
                             CASE 
                                 WHEN dm.ten_danh_muc LIKE %s THEN 1
@@ -449,7 +455,7 @@ Nhiệm vụ:
                                 ELSE 3
                             END
                         LIMIT 1
-                    """, (f"%{keyword}%", f"%{keyword}%", f"%{keyword}%", f"%{keyword}%", f"%{keyword}%"))
+                    """, (f"%{keyword}%", f"%{keyword}%", f"%{keyword}%", loai_da_raw, f"%{keyword}%", f"%{keyword}%"))
                     row = cursor.fetchone()
                     if row:
                         ma_sp = row['ma_san_pham']
@@ -600,6 +606,7 @@ Nhiệm vụ:
                         LEFT JOIN danh_muc dm ON sp.ma_danh_muc = dm.ma_danh_muc
                         WHERE (sp.ten_san_pham LIKE %s OR dm.ten_danh_muc LIKE %s OR sp.mo_ta LIKE %s) 
                         AND sp.trang_thai = 'dang_ban' AND sp.hien_thi_web = 1
+                        AND (sp.loai_da_phu_hop = 'tat_ca' OR sp.loai_da_phu_hop = %s)
                         ORDER BY 
                             CASE 
                                 WHEN dm.ten_danh_muc LIKE %s THEN 1
@@ -607,7 +614,7 @@ Nhiệm vụ:
                                 ELSE 3
                             END
                         LIMIT 1
-                    """, (f"%{keyword}%", f"%{keyword}%", f"%{keyword}%", f"%{keyword}%", f"%{keyword}%"))
+                    """, (f"%{keyword}%", f"%{keyword}%", f"%{keyword}%", loai_da_raw, f"%{keyword}%", f"%{keyword}%"))
                     row = cursor.fetchone()
                     if row and row['ma_san_pham'] not in ma_san_pham_list:
                         ma_san_pham_list.append(row['ma_san_pham'])
