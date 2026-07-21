@@ -495,7 +495,7 @@ exports.deleteProduct = async (req, res) => {
     }
 
     // Kiểm tra: sản phẩm phải đã gỡ khỏi web (hien_thi_web = false) hoặc ngừng bán mới được xóa
-    if (product.hien_thi_web === true || product.trang_thai === 'dang_ban') {
+    if (product.hien_thi_web == true && product.trang_thai === 'dang_ban') {
       await t.rollback();
       return res.status(400).json({
         status: 'error',

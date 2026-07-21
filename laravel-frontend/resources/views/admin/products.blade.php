@@ -199,8 +199,8 @@
                     <span class="error-message" id="error-ten_san_pham"></span>
                 </div>
                 <div class="form-group">
-                    <label for="ma_danh_muc">Danh mục</label>
-                    <select id="ma_danh_muc" name="ma_danh_muc" class="form-control">
+                    <label for="ma_danh_muc">Danh mục *</label>
+                    <select id="ma_danh_muc" name="ma_danh_muc" class="form-control" required>
                         <option value="">-- Chọn danh mục --</option>
                     </select>
                 </div>
@@ -286,18 +286,18 @@
 
             <div class="form-row">
                 <div class="form-group">
-                    <label for="gia">Giá (VNĐ) *</label>
+                    <label for="gia" id="label-gia">Giá bán (VNĐ) *</label>
                     <input type="number" id="gia" name="gia" required class="form-control" min="0" step="1000">
                     <span class="error-message" id="error-gia"></span>
                 </div>
-                <div class="form-group">
+                <div class="form-group" id="group-gia-khuyen-mai" style="display: none;">
                     <label for="gia_khuyen_mai">Giá khuyến mãi</label>
                     <input type="number" id="gia_khuyen_mai" name="gia_khuyen_mai" class="form-control" min="0" step="1000">
                     <span class="error-message" id="error-gia_khuyen_mai"></span>
                 </div>
                 <div class="form-group">
                     <label for="so_luong_ton">Số lượng tồn *</label>
-                    <input type="number" id="so_luong_ton" name="so_luong_ton" class="form-control" min="0" value="0">
+                    <input type="number" id="so_luong_ton" name="so_luong_ton" required class="form-control" min="0" value="0">
                 </div>
             </div>
 
@@ -360,8 +360,8 @@
                             <tr>
                                 <th>Phân loại</th>
                                 <th>SKU</th>
-                                <th>Giá *</th>
-                                <th>Giá KM</th>
+                                <th id="th-gia">Giá bán *</th>
+                                <th class="th-gia-km" style="display: none;">Giá KM</th>
                                 <th>Tồn kho</th>
                                 <th></th>
                             </tr>
@@ -1077,6 +1077,17 @@ function showModal(title, productId = null) {
     clearSelectedImage();
     switchImageTab('upload');
 
+    // Logic for hiding/showing "Giá khuyến mãi"
+    const isEdit = !!productId;
+    const groupGiaKhuyenMai = document.getElementById('group-gia-khuyen-mai');
+    if (groupGiaKhuyenMai) groupGiaKhuyenMai.style.display = isEdit ? 'block' : 'none';
+    const labelGia = document.getElementById('label-gia');
+    if (labelGia) labelGia.textContent = isEdit ? 'Giá (VNĐ) *' : 'Giá bán (VNĐ) *';
+    const thGia = document.getElementById('th-gia');
+    if (thGia) thGia.textContent = isEdit ? 'Giá *' : 'Giá bán *';
+    document.querySelectorAll('.th-gia-km').forEach(el => el.style.display = isEdit ? 'table-cell' : 'none');
+    document.querySelectorAll('.td-gia-km').forEach(el => el.style.display = isEdit ? 'table-cell' : 'none');
+
     if (productId) {
         const product = products.find(p => p.ma_san_pham === productId);
         if (product) {
@@ -1161,7 +1172,7 @@ if (formProduct) {
             ma_danh_muc: document.getElementById('ma_danh_muc').value || null,
             anh_san_pham: document.getElementById('anh_san_pham').value.trim() || null,
             gia: document.getElementById('gia').value,
-            gia_khuyen_mai: document.getElementById('gia_khuyen_mai').value || null,
+            gia_khuyen_mai: document.getElementById('gia_khuyen_mai') && document.getElementById('gia_khuyen_mai').style.display !== 'none' ? document.getElementById('gia_khuyen_mai').value || null : null,
             so_luong_ton: document.getElementById('so_luong_ton').value || 0,
             thuong_hieu: document.getElementById('thuong_hieu') ? document.getElementById('thuong_hieu').value.trim() : null,
             xuat_xu: document.getElementById('xuat_xu') ? document.getElementById('xuat_xu').value.trim() : null,
@@ -1181,7 +1192,7 @@ if (formProduct) {
                 const ten_bien_the = r.querySelector('.v-ten').value;
                 const sku = r.querySelector('.v-sku').value;
                 const gia = r.querySelector('.v-gia').value;
-                const gia_khuyen_mai = r.querySelector('.v-giakm').value;
+                const gia_khuyen_mai = r.querySelector('.v-giakm') ? r.querySelector('.v-giakm').value : null;
                 const so_luong_ton = r.querySelector('.v-ton').value;
                 
                 formData.variants.push({
@@ -1199,11 +1210,11 @@ if (formProduct) {
         }
 
         if (!formData.gia || parseFloat(formData.gia) <= 0) {
-            document.getElementById('error-gia').textContent = 'Giá phải lớn hơn 0';
+            document.getElementById('error-gia').textContent = (currentEditId ? 'Giá' : 'Giá bán') + ' phải lớn hơn 0';
             return;
         }
 
-        if (formData.gia_khuyen_mai && parseFloat(formData.gia_khuyen_mai) >= parseFloat(formData.gia)) {
+        if (currentEditId && formData.gia_khuyen_mai && parseFloat(formData.gia_khuyen_mai) >= parseFloat(formData.gia)) {
             document.getElementById('error-gia_khuyen_mai').textContent = 'Giá khuyến mãi phải nhỏ hơn giá gốc';
             return;
         }
@@ -1374,7 +1385,7 @@ function toggleVariants() {
     
     // Disable main inputs if variants enabled
     document.getElementById('gia').disabled = checked;
-    document.getElementById('gia_khuyen_mai').disabled = checked;
+    if (document.getElementById('gia_khuyen_mai')) document.getElementById('gia_khuyen_mai').disabled = checked;
     document.getElementById('so_luong_ton').disabled = checked;
 }
 
@@ -1387,7 +1398,7 @@ function addVariantRow(data = {}) {
         <td><input type="text" class="form-control v-ten" placeholder="Màu đỏ..." value="${escapeHtml(data.ten_bien_the || '')}"></td>
         <td><input type="text" class="form-control v-sku" placeholder="SKU..." value="${escapeHtml(data.sku || '')}"></td>
         <td><input type="number" class="form-control v-gia" required min="0" value="${data.gia || ''}"></td>
-        <td><input type="number" class="form-control v-giakm" min="0" value="${data.gia_khuyen_mai || ''}"></td>
+        <td class="td-gia-km" style="display: ${currentEditId ? 'table-cell' : 'none'};"><input type="number" class="form-control v-giakm" min="0" value="${data.gia_khuyen_mai || ''}"></td>
         <td><input type="number" class="form-control v-ton" min="0" value="${data.so_luong_ton || 0}"></td>
         <td><button type="button" class="btn btn-sm btn-secondary" onclick="this.closest('tr').remove()">Xóa</button></td>
     `;
