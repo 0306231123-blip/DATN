@@ -765,7 +765,7 @@ function renderTable() {
         let statusBadge = '';
         if (product.trang_thai === 'ngung_ban') {
             statusBadge = '<span class="status-badge status-badge--inactive">Ngừng bán</span>';
-        } else if (product.so_luong_ton === 0) {
+        } else if (product.trang_thai === 'het_hang' || product.so_luong_ton === 0) {
             statusBadge = '<span class="status-badge status-badge--danger">Hết hàng</span>';
         } else if (product.so_luong_ton < settings.lowStockThreshold) {
             statusBadge = '<span class="status-badge" style="background-color: #fff7ed; color: #c2410c;">Sắp hết hàng</span>';
@@ -1235,6 +1235,9 @@ if (formProduct) {
                 showAlert(result.message || 'Lưu thành công', 'success');
                 closeModal();
                 loadProducts();
+                if (document.getElementById('view-inventory') && document.getElementById('view-inventory').style.display === 'block') {
+                    loadInventory(typeof currentInventoryPage !== 'undefined' ? currentInventoryPage : 1);
+                }
             } else {
                 showAlert(result.message || 'Lỗi lưu sản phẩm', 'error');
             }
@@ -1423,6 +1426,27 @@ showModal = function(title, productId = null) {
     toggleVariants();
 };
 
+async function viewInventoryProductDetails(id) {
+    try {
+        const response = await fetch(`${API_BASE_URL}/products/${id}`);
+        const result = await response.json();
+        if (result.status === 'success' || result.success) {
+            const prod = result.data;
+            const idx = products.findIndex(p => p.ma_san_pham === id);
+            if (idx === -1) {
+                products.push(prod);
+            } else {
+                products[idx] = prod;
+            }
+            editProduct(id);
+        } else {
+            showAlert('Lỗi tải thông tin sản phẩm', 'error');
+        }
+    } catch (error) {
+        showAlert('Lỗi kết nối', 'error');
+    }
+}
+
 // -- Inventory Logic --
 async function loadInventory(page = 1) {
     const tbody = document.getElementById('inventory-tbody');
@@ -1450,6 +1474,9 @@ async function loadInventory(page = 1) {
                             <td>
                                 <div class="action-btns">
                                     <button class="btn btn-sm btn-primary" onclick="openInvModal(${p.ma_san_pham}, ${v.ma_bien_the}, 'import', '${escapeHtml(p.ten_san_pham)} - ${escapeHtml(v.ten_bien_the)}')" style="display:inline-flex;align-items:center;gap:4px;"><i data-lucide="package-plus" style="width:14px;height:14px;"></i> Nhập kho</button>
+                                    <button class="icon-action-btn" title="Chi tiết" onclick="viewInventoryProductDetails(${p.ma_san_pham})">
+                                        <i data-lucide="info" class="icon-xs"></i>
+                                    </button>
                                     <button class="icon-action-btn icon-action-btn--danger" title="Xóa" onclick="deleteInventoryProduct(${p.ma_san_pham})">
                                         <i data-lucide="trash-2" class="icon-xs"></i>
                                     </button>
@@ -1469,6 +1496,9 @@ async function loadInventory(page = 1) {
                         <td>
                             <div class="action-btns">
                                 <button class="btn btn-sm btn-primary" onclick="openInvModal(${p.ma_san_pham}, null, 'import', '${escapeHtml(p.ten_san_pham)}')" style="display:inline-flex;align-items:center;gap:4px;"><i data-lucide="package-plus" style="width:14px;height:14px;"></i> Nhập kho</button>
+                                <button class="icon-action-btn" title="Chi tiết" onclick="viewInventoryProductDetails(${p.ma_san_pham})">
+                                    <i data-lucide="info" class="icon-xs"></i>
+                                </button>
                                 <button class="icon-action-btn icon-action-btn--danger" title="Xóa" onclick="deleteInventoryProduct(${p.ma_san_pham})">
                                     <i data-lucide="trash-2" class="icon-xs"></i>
                                 </button>
@@ -1874,7 +1904,13 @@ async function deleteVoucher(id) {
 
 // 0. Tải file Excel mẫu
 function downloadSampleExcel() {
-    const headers = ['Tên sản phẩm', 'SKU', 'Danh mục', 'Giá bán', 'Giá nhập', 'Số lượng tồn', 'Thương hiệu'];
+    const headers = [
+        'Tên sản phẩm', 'SKU', 'Danh mục', 'Thương hiệu', 
+        'Giá bán', 'Giá nhập', 'Giá khuyến mãi', 'Số lượng tồn', 
+        'Mô tả', 'Thành phần', 'Hướng dẫn sử dụng', 
+        'Xuất xứ', 'Loại da phù hợp', 'Ảnh sản phẩm', 
+        'Trạng thái', 'Hiển thị web'
+    ];
     const sampleData = [{}];
     headers.forEach(h => sampleData[0][h] = '');
 
@@ -1883,12 +1919,21 @@ function downloadSampleExcel() {
     // Đặt độ rộng cột cho dễ đọc
     ws['!cols'] = [
         { wch: 40 },  // Tên sản phẩm
-        { wch: 12 },  // SKU
+        { wch: 15 },  // SKU
         { wch: 20 },  // Danh mục
+        { wch: 20 },  // Thương hiệu
         { wch: 15 },  // Giá bán
         { wch: 15 },  // Giá nhập
+        { wch: 15 },  // Giá khuyến mãi
         { wch: 15 },  // Số lượng tồn
-        { wch: 20 },  // Thương hiệu
+        { wch: 30 },  // Mô tả
+        { wch: 30 },  // Thành phần
+        { wch: 30 },  // Hướng dẫn sử dụng
+        { wch: 20 },  // Xuất xứ
+        { wch: 20 },  // Loại da phù hợp
+        { wch: 40 },  // Ảnh sản phẩm
+        { wch: 15 },  // Trạng thái
+        { wch: 15 },  // Hiển thị web
     ];
 
     const wb = XLSX.utils.book_new();

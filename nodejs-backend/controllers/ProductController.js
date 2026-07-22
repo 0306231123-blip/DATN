@@ -397,7 +397,6 @@ exports.updateProduct = async (req, res) => {
       }
       updateData.hien_thi_web = shouldPublish;
     }
-    
     if (trang_thai !== undefined && ['dang_ban', 'ngung_ban', 'het_hang'].includes(trang_thai)) {
       updateData.trang_thai = trang_thai;
     }
@@ -697,7 +696,7 @@ function validateBulkImportItem(item, lineNumber) {
   }
   normalized.tenSp = tenSp ? String(tenSp).trim() : '';
 
-  const giaStr = findImportValue(item, ['giá', 'gia', 'price'], ['nhập', 'nhap']);
+  const giaStr = findImportValue(item, ['giá', 'gia', 'price'], ['nhập', 'nhap', 'khuyến', 'khuyen']);
   const gia = parseNumericValue(giaStr);
   if (giaStr !== null && giaStr !== undefined && giaStr !== '' && gia === null) {
     errors.push(`Dòng ${lineNumber}: giá bán không hợp lệ.`);
@@ -710,6 +709,13 @@ function validateBulkImportItem(item, lineNumber) {
     errors.push(`Dòng ${lineNumber}: giá nhập không hợp lệ.`);
   }
   normalized.giaNhap = giaNhap !== null ? giaNhap : 0;
+  
+  const giaKhuyenMaiStr = findImportValue(item, ['giá khuyến mãi', 'gia khuyen mai', 'sale price']);
+  const giaKhuyenMai = parseNumericValue(giaKhuyenMaiStr);
+  if (giaKhuyenMaiStr !== null && giaKhuyenMaiStr !== undefined && giaKhuyenMaiStr !== '' && giaKhuyenMai === null) {
+    errors.push(`Dòng ${lineNumber}: giá khuyến mãi không hợp lệ.`);
+  }
+  normalized.giaKhuyenMai = giaKhuyenMai !== null ? giaKhuyenMai : null;
 
   const soLuongStr = findImportValue(item, ['tồn', 'ton', 'số lượng', 'so luong', 'sl', 'stock']);
   const soLuong = parseNumericValue(soLuongStr);
@@ -729,6 +735,35 @@ function validateBulkImportItem(item, lineNumber) {
 
   const sku = findImportValue(item, ['sku', 'mã', 'ma_sp']);
   normalized.sku = sku ? String(sku).trim() : null;
+  
+  const moTa = findImportValue(item, ['mô tả', 'mo ta', 'description']);
+  normalized.moTa = moTa ? String(moTa).trim() : null;
+
+  const thanhPhan = findImportValue(item, ['thành phần', 'thanh phan', 'ingredients']);
+  normalized.thanhPhan = thanhPhan ? String(thanhPhan).trim() : null;
+
+  const hdsd = findImportValue(item, ['hướng dẫn', 'huong dan', 'sử dụng', 'su dung', 'hdsd', 'usage']);
+  normalized.hdsd = hdsd ? String(hdsd).trim() : null;
+
+  const xuatXu = findImportValue(item, ['xuất xứ', 'xuat xu', 'origin']);
+  normalized.xuatXu = xuatXu ? String(xuatXu).trim() : null;
+
+  const loaiDa = findImportValue(item, ['loại da', 'loai da', 'skin type']);
+  normalized.loaiDa = loaiDa ? String(loaiDa).trim() : null;
+
+  const anhSp = findImportValue(item, ['ảnh', 'anh', 'image', 'hình', 'hinh']);
+  normalized.anhSp = anhSp ? String(anhSp).trim() : null;
+
+  const trangThai = findImportValue(item, ['trạng thái', 'trang thai', 'status']);
+  normalized.trangThai = trangThai ? String(trangThai).trim().toLowerCase() : null;
+
+  const hienThiWebStr = findImportValue(item, ['hiển thị', 'hien thi', 'web']);
+  if (hienThiWebStr !== null && hienThiWebStr !== undefined && hienThiWebStr !== '') {
+    const s = String(hienThiWebStr).trim().toLowerCase();
+    normalized.hienThiWeb = (s === '1' || s === 'true' || s === 'có' || s === 'co' || s === 'yes') ? true : false;
+  } else {
+    normalized.hienThiWeb = null;
+  }
 
   return {
     isValid: errors.length === 0,
@@ -779,7 +814,7 @@ exports.bulkCreateProducts = async (req, res) => {
 
     // Process each valid item
     for (const itemData of itemsToProcess) {
-      const { tenSp, gia, giaNhap, soLuong, thuongHieu, danhMucName, sku } = itemData;
+      const { tenSp, gia, giaNhap, giaKhuyenMai, soLuong, thuongHieu, danhMucName, sku, moTa, thanhPhan, hdsd, xuatXu, loaiDa, anhSp, trangThai, hienThiWeb } = itemData;
       const normalizedSku = sku ? String(sku).trim() : null;
       const normalizedTenSp = String(tenSp).trim();
 
@@ -807,12 +842,26 @@ exports.bulkCreateProducts = async (req, res) => {
 
       if (product) {
         // Update existing product
-        if (gia > 0) product.gia = gia;
+        if (gia > 0) {
+          product.gia = gia;
+          product.gia_max = gia;
+        }
         if (giaNhap > 0) product.gia_nhap = giaNhap;
+        if (giaKhuyenMai !== null) product.gia_khuyen_mai = giaKhuyenMai;
         product.so_luong_ton = (Number(product.so_luong_ton) || 0) + soLuong;
-        if (thuongHieu) product.thuong_hieu = thuongHieu;
+        if (thuongHieu !== null) product.thuong_hieu = thuongHieu;
         if (maDanhMuc) product.ma_danh_muc = maDanhMuc;
         if (normalizedSku && !product.sku) product.sku = normalizedSku;
+        
+        if (moTa !== null) product.mo_ta = moTa;
+        if (thanhPhan !== null) product.thanh_phan = thanhPhan;
+        if (hdsd !== null) product.huong_dan_su_dung = hdsd;
+        if (xuatXu !== null) product.xuat_xu = xuatXu;
+        if (loaiDa !== null) product.loai_da_phu_hop = loaiDa;
+        if (anhSp !== null) product.anh_san_pham = anhSp;
+        if (trangThai !== null) product.trang_thai = trangThai;
+        if (hienThiWeb !== null) product.hien_thi_web = hienThiWeb;
+
         product.ngay_cap_nhat = new Date();
         await product.save({ transaction: t });
         updatedCount++;
@@ -841,11 +890,19 @@ exports.bulkCreateProducts = async (req, res) => {
           gia: gia > 0 ? gia : 0,
           gia_max: gia > 0 ? gia : 0,
           gia_nhap: giaNhap > 0 ? giaNhap : 0,
+          gia_khuyen_mai: giaKhuyenMai !== null ? giaKhuyenMai : null,
           so_luong_ton: soLuong > 0 ? soLuong : 0,
           thuong_hieu: thuongHieu ? String(thuongHieu).trim() : null,
           ma_danh_muc: maDanhMuc,
           sku: normalizedSku,
-          trang_thai: 'dang_ban',
+          mo_ta: moTa,
+          thanh_phan: thanhPhan,
+          huong_dan_su_dung: hdsd,
+          xuat_xu: xuatXu,
+          loai_da_phu_hop: loaiDa,
+          anh_san_pham: anhSp,
+          trang_thai: trangThai ? trangThai : 'dang_ban',
+          hien_thi_web: hienThiWeb !== null ? hienThiWeb : false,
           ngay_tao: new Date(),
         }, { transaction: t });
         createdCount++;
